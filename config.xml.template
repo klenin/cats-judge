@@ -1,0 +1,240 @@
+<?xml version="1.0"?>
+<judge
+    name="fox"
+    report_file="report.txt"
+    stdout_file="stdout.txt"
+    workdir="D:\ask\CATS\judge\"
+    rundir="D:\ask\CATS\judge\run"
+    formal_input_fname="formal.input"
+    show_child_stdout="0"
+    save_child_stdout="1"
+>
+
+
+<define name='#spawner' value='..\spawner\sp'/>
+<define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 %deadline'/>
+<define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
+<define name="#java" value="C:\Program Files\Java\jdk1.6.0\bin" />
+<define name="#ruby" value="C:\Lang\ruby\bin\ruby.exe" />
+<define name="#basic" value="C:\Lang\QBasic\QBasic.exe" />
+<define name="#freeBasic" value="C:\Program Files\FreeBasic\fbc.exe" />
+
+
+<!-- standart checkers -->
+<checker
+    name="nums"
+    exec='#spawner "..\check\nums.exe" #checker_args'/>
+
+<checker
+    name="strs"
+    exec='#spawner "..\check\strs.exe" #checker_args'/>
+
+<checker
+    name="longstrs"
+    exec='#spawner "..\check\longstrs.exe" #checker_args'/>
+
+<checker
+    name="longnums"
+    exec='#spawner "..\check\longnums.exe" #checker_args'/>
+
+<checker
+    name="floats2"
+    exec='#spawner "..\check\floats2.exe" #checker_args'/>
+
+<checker
+    name="text"
+    exec='#spawner "..\check\text.exe" #checker_args'/>
+
+
+<!-- development environments (de) -->
+<!-- Special: do not compile this file, used for modules -->
+<de
+    code="1"
+    compile=''
+    run=''
+    generate=''
+    check=''/>
+
+<!-- Special: unzip answers -->
+<de
+    code="2"
+    compile=''
+    run='#spawner -so:%output_file -ho:1 "C:\Program Files\7-Zip\7z.exe" x -so "%full_name" %test_rank.out'
+    generate=''
+    check=''/>
+
+<!-- Special: copy text as an answer -->
+<de
+    code="3"
+    compile=''
+    run='#spawner C:\WINDOWS\system32\cmd.exe /c move /y "%full_name" %output_file'
+    generate=''
+    check=''/>
+
+<!-- Special: zip code -->
+<de
+    code="4"
+    compile='#spawner "C:\Program Files\7-Zip\7z.exe" x "%full_name"'
+    run=''
+    generate=''
+    check=''/>
+
+<!-- Cross-platform C/C++ compiler -->
+<de
+    code="101"
+    compile='#spawner "C:\LANG\gcc\bin\g++.exe" -O2 "%full_name" -o "%name.exe"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- G++ 4.4.0 -->
+<de
+    code="102"
+    compile='#spawner "C:\LANG\gcc\bin\g++.exe" -O3 "%full_name" -o "%name.exe"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- Visual C++ -->
+<de
+    code="103"
+    compile='#spawner "C:\Program Files\Microsoft Visual Studio 8\VC\bin\cl.exe" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+
+<!-- BC 3.1 -->
+<de
+    code="104"
+    compile='#spawner %comspec% /C "C:\LANG\BC\BIN\bcc.exe" -ml "%full_name"'
+    run='#run %comspec% /C "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
+    check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
+
+
+<!-- GCC 4.4.0 C only -->
+<de
+    code="105"
+    compile='#spawner "C:\LANG\gcc\bin\gcc.exe" -x c -O2 "%full_name" -o "%name.exe"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- Visual C++ 2003 compatible -->
+<de
+    code="113"
+    compile='#spawner "C:\Program Files\Microsoft Visual Studio 8\VC\bin\cl.exe" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    run='#run "%name.exe"'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+
+<!-- BP -->
+<de
+    code="201"
+    compile='#spawner %comspec% /C "C:\LANG\BP\BIN\bpc.exe" /B "%full_name"'
+    run='#run %comspec% /C "%name.exe"'
+    generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
+    check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
+
+<!-- Free Pascal -->
+<de
+    code="202"
+    compile='#spawner "C:\LANG\fpc\bin\i386-win32\fpc.exe" "%full_name"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- Delphi -->
+<de
+    code="203"
+    compile='#spawner "C:\Program Files\Borland\BDS\4.0\Bin\dcc32.exe" -CC "%full_name"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+
+<!-- QBasic -->
+<de
+    code="301"
+    compile=''
+    run='#run "#basic" /run %full_name'
+    generate=''
+    check=''/>
+
+<!-- FreeBasic -->
+<de
+    code="302"
+    compile='#spawner "#freeBasic" -lang qb %full_name'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- Java -->
+<de
+    code="401"
+    compile='#spawner "#java\javac.exe" "%full_name"'
+    run='#run "#java\java.exe" -Xss64m "%name"'
+    runfile='%name.class'
+    generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xmx256m -Xss64m "%name" %args'
+    check='#spawner %limits "#java\java.exe" -Xss64m "%name" %checker_args'/>
+
+<!-- C# 1.1 -->
+<de
+    code="402"
+    compile='#spawner "C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\csc.exe" "%full_name"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
+<!-- Java + testlib4j.jar -->
+<de
+    code="403"
+    compile='#spawner "#java\javac.exe" "%full_name" -cp testlib4j.jar'
+    run='#run "#java\java.exe" -Xss64m "%name"'
+    generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xss64m "%name" %args'
+    check='#spawner %limits "#java\java.exe" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
+
+<!-- Perl -->
+<de
+    code="501"
+    compile=''
+    run='#run C:\Perl\Bin\perl.exe %full_name'
+    generate='#spawner%redir %limits C:\Perl\Bin\perl.exe %full_name %args'
+    check=''/>
+
+<!-- Python -->
+<de
+    code="502"
+    compile=''
+    run='#run C:\Lang\Python\python.exe %full_name'
+    generate='#spawner%redir %limits C:\Lang\Python\python.exe %full_name %args'
+    check=''/>
+
+<!-- Haskell -->
+<de
+    code="503"
+    compile='#spawner "C:\LANG\ghc\bin\ghc.exe" %full_name'
+    run='#run "main.exe"'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check=''/>
+
+<!-- Ruby -->
+<de
+    code="504"
+    compile=''
+    run='#run #ruby %full_name'
+    generate='#spawner%redir %limits #ruby %full_name %args'
+    check=''/>
+
+</judge>
