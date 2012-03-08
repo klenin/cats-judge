@@ -495,9 +495,11 @@ sub get_problem_sources($)
 }
 
 
-sub problem_supported
+sub unsupported_DEs
 {
-    0 == grep { !defined $judge_de{$_->{code}} } @{get_problem_sources($_[0])};
+	my %seen;
+	sort grep !$seen{$_}++, map $_->{code},
+		grep !defined($judge_de{$_->{code}}), @{get_problem_sources($_[0])};
 }
 
 
@@ -1229,9 +1231,10 @@ sub process_requests
 
         undef $problem_sources;
 
-        if (!problem_supported($r->{problem_id}))
+        if (my @u = unsupported_DEs($r->{problem_id}))
         {
-            log_msg("unsupported problem $r->{problem_id}\n");
+            my $m = join ', ', @u;
+            log_msg("unsupported DEs for problem $r->{problem_id}: $m\n");
             next;
         }
 
