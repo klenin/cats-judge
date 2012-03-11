@@ -216,7 +216,7 @@
 <!-- Python -->
 <de
     code="502"
-    compile=''
+    compile='#spawner C:\WINDOWS\system32\cmd.exe /c ..\pycompile.cmd "%full_name"'
     run='#run C:\Lang\Python\python.exe %full_name'
     generate='#spawner%redir %limits C:\Lang\Python\python.exe %full_name %args'
     check=''/>
