@@ -18,6 +18,7 @@
 <define name="#ruby" value="C:\Lang\ruby\bin\ruby.exe" />
 <define name="#basic" value="C:\Lang\QBasic\QBasic.exe" />
 <define name="#freeBasic" value="C:\Program Files\FreeBasic\fbc.exe" />
+<define name="#gcc" value="%comspec% /C ..\gcc.cmd" />
 
 
 <!-- standart checkers -->
@@ -82,7 +83,7 @@
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
-    compile='#spawner "C:\LANG\gcc\bin\g++.exe" -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gcc -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -91,7 +92,7 @@
 <!-- G++ 4.4.0 -->
 <de
     code="102"
-    compile='#spawner "C:\LANG\gcc\bin\g++.exe" -O3 "%full_name" -o "%name.exe"'
+    compile='#spawner #gcc -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -120,7 +121,7 @@
 <!-- GCC 4.4.0 C only -->
 <de
     code="105"
-    compile='#spawner "C:\LANG\gcc\bin\gcc.exe" -x c -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gcc -x c -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
