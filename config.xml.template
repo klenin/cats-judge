@@ -67,7 +67,7 @@
 <de
     code="3"
     compile=''
-    run='#spawner C:\WINDOWS\system32\cmd.exe /c move /y "%full_name" %output_file'
+    run='#spawner %comspec% /c move /y "%full_name" %output_file'
     generate=''
     check=''/>
 
@@ -216,7 +216,7 @@
 <!-- Python -->
 <de
     code="502"
-    compile='#spawner C:\WINDOWS\system32\cmd.exe /c ..\pycompile.cmd "%full_name"'
+    compile='#spawner %comspec% /c ..\pycompile.cmd "%full_name"'
     run='#run C:\Lang\Python\python.exe %full_name'
     generate='#spawner%redir %limits C:\Lang\Python\python.exe %full_name %args'
     check=''/>
