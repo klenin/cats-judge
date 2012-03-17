@@ -327,7 +327,8 @@ sub my_safe_copy
 sub apply_params
 {
     my ($str, $params) = @_;
-    $str =~ s/%$_/$params->{$_}/g for keys %$params;
+    $str =~ s/%$_/$params->{$_}/g
+        for sort { length $b <=> length $a } keys %$params;
     $str;
 }
 
@@ -1346,7 +1347,7 @@ sub apply_defines
     my $expr = shift;
     $expr or return $expr;
 
-    for (keys %defines)
+    for (sort { length $b <=> length $a } keys %defines)
     {
         $expr =~ s/$_/$defines{$_}/g;
     }
