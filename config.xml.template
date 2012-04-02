@@ -26,8 +26,12 @@
 <define name="#qbasic" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" value="C:\Lang\FreeBasic\0.23\fbc.exe" />
 
-<define name="#gcc" value="%comspec% /C ..\gcc.cmd" />
+<define name="#ms_cpp" value="C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\cl.exe" />
+<define name="#gnu_c" value="%comspec% /C ..\gcc.cmd" />
+<define name="#gnu_cpp" value="%comspec% /C ..\g++.cmd" />
 
+<define name="#delphi" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
+<define name="#fpc" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
 
 <!-- standart checkers -->
 <checker
@@ -91,7 +95,7 @@
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
-    compile='#spawner #gcc -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -100,7 +104,7 @@
 <!-- G++ 4.4.0 -->
 <de
     code="102"
-    compile='#spawner #gcc -O3 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -109,27 +113,25 @@
 <!-- Visual C++ -->
 <de
     code="103"
-    compile='#spawner "C:\Program Files\Microsoft Visual Studio 8\VC\bin\cl.exe" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    compile='#spawner "#ms_cpp" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
-
 <!-- BC 3.1 -->
 <de
     code="104"
-    compile='#spawner %comspec% /C "C:\LANG\BC\BIN\bcc.exe" -ml "%full_name"'
+    compile='#spawner #bcc -ml "%full_name"'
     run='#run %comspec% /C "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
     check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
 
-
 <!-- GCC 4.4.0 C only -->
 <de
     code="105"
-    compile='#spawner #gcc -x c -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_c -x c -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -138,11 +140,10 @@
 <!-- Visual C++ 2003 compatible -->
 <de
     code="113"
-    compile='#spawner "C:\Program Files\Microsoft Visual Studio 8\VC\bin\cl.exe" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    compile='#spawner "#ms_cpp" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
     run='#run "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
     check='#spawner %limits "%name.exe" %checker_args'/>
-
 
 <!-- BP -->
 <de
@@ -155,7 +156,7 @@
 <!-- Free Pascal -->
 <de
     code="202"
-    compile='#spawner "C:\LANG\fpc\bin\i386-win32\fpc.exe" "%full_name"'
+    compile='#spawner "#fpc" -Mobjfpc "%full_name"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
@@ -164,7 +165,7 @@
 <!-- Delphi -->
 <de
     code="203"
-    compile='#spawner "C:\Program Files\Borland\BDS\4.0\Bin\dcc32.exe" -CC "%full_name"'
+    compile='#spawner "#delphi" -CC "%full_name"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
