@@ -43,10 +43,13 @@ sub split_fname
         $fname = $3;
     }
 
-    if ($fname =~ m/^(.*)(\.)(.*)/)
-    {
+    if ($fname =~ m/^(.*)(\.)(.*)/) {
         $name = $1;
         $ext = $3;
+    }
+    else {
+        $name = $fname;
+        $ext = '';
     }
 
     return ($vol, $dir, $fname, $name, $ext);
