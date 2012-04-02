@@ -162,6 +162,14 @@
     generate='#spawner%redir %limits "%name.exe" %args'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
+<!-- Free Pascal in Delphi mode -->
+<de
+    code="204"
+    compile='#spawner "#fpc" -Mdelphi "%full_name"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- QBasic -->
 <de
