@@ -12,6 +12,7 @@
 
 
 <define name='#spawner' value='..\spawner\sp'/>
+<define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 %deadline'/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 
@@ -72,7 +73,7 @@
 <de
     code="2"
     compile=''
-    run='#spawner -so:%output_file -ho:1 "C:\Program Files\7-Zip\7z.exe" x -so "%full_name" %test_rank.out'
+    run='#spawner -so:%output_file -ho:1 "#arch_7z" x -so "%full_name" %test_rank.out'
     generate=''
     check=''/>
 
@@ -80,14 +81,14 @@
 <de
     code="3"
     compile=''
-    run='#spawner %comspec% /c move /y "%full_name" %output_file'
+    run='#spawner C:\WINDOWS\system32\cmd.exe /c move /y "%full_name" %output_file'
     generate=''
     check=''/>
 
 <!-- Special: zip code -->
 <de
     code="4"
-    compile='#spawner "C:\Program Files\7-Zip\7z.exe" x "%full_name"'
+    compile='#spawner "#arch_7z" x "%full_name"'
     run=''
     generate=''
     check=''/>
