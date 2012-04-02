@@ -226,7 +226,7 @@
 <de
     code="503"
     compile='#spawner "C:\LANG\ghc\bin\ghc.exe" %full_name'
-    run='#run "main.exe"'
+    run='#run "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
     check=''/>
 
