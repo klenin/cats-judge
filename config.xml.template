@@ -16,6 +16,7 @@
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#java" value="C:\Program Files\Java\jdk1.6.0\bin" />
 <define name="#ruby" value="C:\Lang\ruby\bin\ruby.exe" />
+<define name="#php" value="C:\Lang\PHP\5.4.0\php.exe" />
 <define name="#basic" value="C:\Lang\QBasic\QBasic.exe" />
 <define name="#freeBasic" value="C:\Program Files\FreeBasic\fbc.exe" />
 <define name="#gcc" value="%comspec% /C ..\gcc.cmd" />
@@ -244,6 +245,14 @@
     compile=''
     run='#run #ruby %full_name'
     generate='#spawner%redir %limits #ruby %full_name %args'
+    check=''/>
+
+<!-- PHP -->
+<de
+    code="505"
+    compile=''
+    run='#run "#php" %full_name'
+    generate='#spawner%redir %limits #php %full_name %args'
     check=''/>
 
 </judge>
