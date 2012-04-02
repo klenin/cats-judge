@@ -30,9 +30,11 @@
 <define name="#ms_cpp" value="C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\cl.exe" />
 <define name="#gnu_c" value="%comspec% /C ..\gcc.cmd" />
 <define name="#gnu_cpp" value="%comspec% /C ..\g++.cmd" />
+<define name="#bcc" value="%comspec% /C ..\bcc.cmd" />
 
 <define name="#delphi" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
 <define name="#fpc" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
+<define name="#bpc" value="%comspec% /C ..\bpc.cmd" />
 
 <!-- standart checkers -->
 <checker
@@ -149,7 +151,7 @@
 <!-- BP -->
 <de
     code="201"
-    compile='#spawner %comspec% /C "C:\LANG\BP\BIN\bpc.exe" /B "%full_name"'
+    compile='#spawner #bpc "%full_name"'
     run='#run %comspec% /C "%name.exe"'
     generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
     check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
