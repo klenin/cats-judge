@@ -836,7 +836,6 @@ sub run_checker
         test_output => $o,
         test_answer => $a,
         checker_args => qq~"$a" "$o" "$i"~,
-        full_name => $problem->{full_name},
     };
 
     my $checker_cmd;
@@ -846,23 +845,23 @@ sub run_checker
             or return undef;
     }
     else
-    {   
+    {
         my ($ps) = grep $_->{id} == $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy("tests/$problem->{id}/temp/$problem->{checker_id}/*", "$rundir", $problem->{id})
             or return undef;
-        
+
         (undef, undef, undef, $checker_params->{name}, undef) =
-            split_fname($ps->{fname});
+            split_fname($checker_params->{full_name} = $ps->{fname});
         $cats::source_modules{$ps->{stype}} || 0 == $cats::checker_module
             or die "Bad checker type $ps->{stype}";
         $checker_params->{checker_args} =
             $ps->{stype} == $cats::checker ? qq~"$a" "$o" "$i"~ : qq~"$i" "$o" "$a"~;
-            
+
         $checker_params->{limits} = get_special_limits($ps);
 
         $checker_cmd = get_cmd('check', $ps->{de_id})
-            or return undef;
+            or return log_msg("No 'check' action for DE: $ps->{code}\n");
     }
 
     for my $c (\$test_run_details{checker_comment})
