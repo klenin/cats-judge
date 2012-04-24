@@ -232,7 +232,7 @@
     compile=''
     run='#run "#perl" %full_name'
     generate='#spawner%redir %limits "#perl" %full_name %args'
-    check=''/>
+    check='#spawner %limits "#perl" %full_name %checker_args'/>
 
 <!-- Python -->
 <de
@@ -240,7 +240,7 @@
     compile='#spawner %comspec% /c ..\pycompile.cmd "%full_name"'
     run='#run "#python" %full_name'
     generate='#spawner%redir %limits "#python" %full_name %args'
-    check=''/>
+    check='#spawner %limits "#python" %full_name %checker_args'/>
 
 <!-- Haskell -->
 <de
@@ -248,7 +248,7 @@
     compile='#spawner "#haskell" %full_name'
     run='#run "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
-    check=''/>
+    check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- Ruby -->
 <de
@@ -256,7 +256,7 @@
     compile=''
     run='#run "#ruby" %full_name'
     generate='#spawner%redir %limits #ruby %full_name %args'
-    check=''/>
+    check='#spawner %limits "#ruby" %full_name %checker_args'/>
 
 <!-- PHP -->
 <de
@@ -264,6 +264,6 @@
     compile=''
     run='#run "#php" %full_name'
     generate='#spawner%redir %limits #php %full_name %args'
-    check=''/>
+    check='#spawner %limits "#php" %full_name %checker_args'/>
 
 </judge>
