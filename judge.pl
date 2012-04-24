@@ -1186,9 +1186,8 @@ sub set_request_state
 }
 
 
-sub process_requests 
+sub process_requests
 {
-   
     my $c = $dbh->prepare(qq~
         SELECT
             R.id, R.problem_id, R.contest_id, R.state, CA.is_jury,
@@ -1251,10 +1250,11 @@ sub process_requests
 
             # устанавливаем пакет с задачей            
             eval {
-                initialize_problem($r->{problem_id})
-                    or $state = $cats::st_unhandled_error;
-            };
-            $state = $cats::st_unhandled_error if $@;
+                initialize_problem($r->{problem_id});
+            } or do {
+                $state = $cats::st_unhandled_error;
+                log_msg("error: $@\n");
+            }
         }
         else
         {
