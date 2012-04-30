@@ -203,7 +203,7 @@
 <!-- Java -->
 <de
     code="401"
-    compile='#spawner "#java\javac.exe" "%full_name"'
+    compile='#spawner %comspec% /C ..\javac.cmd "%full_name"'
     run='#run "#java\java.exe" -Xss64m "%name"'
     runfile='%name.class'
     generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xmx256m -Xss64m "%name" %args'
