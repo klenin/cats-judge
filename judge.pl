@@ -3,6 +3,8 @@ use strict;
 use XML::Parser::Expat;
 
 use POSIX qw(strftime);
+use File::Spec;
+use constant FS => 'File::Spec';
 use File::NCopy qw(copy);
 
 use lib 'lib';
@@ -552,7 +554,7 @@ sub generate_test
     {
         $out = $input_fname;
     }
-    elsif ($out eq '*STDOUT')
+    if ($out =~ /^\*STD(IN|OUT)$/)
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
@@ -595,6 +597,17 @@ sub generate_test_group
             or return undef;
     }
     1;
+}
+
+
+sub input_or { $_[0] eq '*STDIN' ? 'input.txt' : $_[1] }
+sub output_or { $_[0] eq '*STDOUT' ? 'output.txt' : $_[1] }
+
+sub input_or_default { FS->catfile($rundir, input_or($_[0], $_[0])) }
+sub output_or_default { FS->catfile($rundir, output_or($_[0], $_[0])) }
+
+sub input_output_redir {
+    input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
 }
 
 
@@ -658,7 +671,7 @@ sub prepare_tests
             my_copy("tests/$pid/temp/$t->{std_solution_id}/*", "$rundir")
                 or return undef;
 
-            my_copy("tests/$pid/$t->{rank}.tst", "$rundir/$input_fname")
+            my_copy("tests/$pid/$t->{rank}.tst", input_or_default($input_fname))
                 or return undef;
 
             my $run_cmd = get_cmd('run', $ps->{de_id})
@@ -672,6 +685,7 @@ sub prepare_tests
                 time_limit => $ps->{time_limit} || $tlimit,
                 memory_limit => $ps->{memory_limit} || $mlimit,
                 deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
+                input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
             if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
@@ -679,7 +693,7 @@ sub prepare_tests
                 return undef;
             }
 
-            my_copy("$rundir/$output_fname", "tests/$pid/$t->{rank}.ans")
+            my_copy(output_or_default($output_fname), "tests/$pid/$t->{rank}.ans")
                 or return undef;
         }
         else 
@@ -830,7 +844,10 @@ sub run_checker
 
     my $problem = $p{problem};
 
-    my ($i, $o, $a) = ($problem->{input_file}, $problem->{output_file}, "$p{rank}.ans");
+    my $i = input_or_default($problem->{input_file});
+    my $o = output_or_default($problem->{output_file});
+    my $a = "$p{rank}.ans";
+
     my $checker_params = {
         test_input => $i,
         test_output => $o,
@@ -897,17 +914,19 @@ sub run_single_test
     $test_run_details{checker_comment} = '';
 
     my_remove "$rundir/*" or return undef;
-    my_safe_copy("solutions/$p{sid}/*", "$rundir", $problem->{id})
+    my_safe_copy("solutions/$p{sid}/*", $rundir, $problem->{id})
         or return undef;
     my_safe_copy(
-        "tests/$problem->{id}/$p{rank}.tst", "$rundir/$problem->{input_file}", $problem->{id}
-    ) or return undef;
+        "tests/$problem->{id}/$p{rank}.tst",
+        input_or_default($problem->{input_file}), $problem->{id})
+        or return undef;
     my $run_cmd = get_cmd('run', $p{de_id})
         or return undef;
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
-        test_rank => sprintf('%02d', $p{rank})
+        input_output_redir(@$problem{qw(input_file output_file)}),
+        test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
     execute($run_cmd, $exec_params) or return undef;
@@ -938,7 +957,9 @@ sub run_single_test
         }
     }
 
-    my_safe_copy("tests/$problem->{id}/$p{rank}.tst", "$rundir/$problem->{input_file}", $problem->{id})
+    my_safe_copy(
+        "tests/$problem->{id}/$p{rank}.tst",
+        input_or_default($problem->{input_file}), $problem->{id})
         or return undef;
     my_safe_copy("tests/$problem->{id}/$p{rank}.ans", "$rundir/$p{rank}.ans", $problem->{id})
         or return undef;
