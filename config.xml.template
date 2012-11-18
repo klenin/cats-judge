@@ -15,6 +15,7 @@
 <define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 %deadline'/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
+<define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
 
 <define name="#java" value="C:\Program Files\Java\jdk1.7.0_03\bin" />
 <define name="#ms_csc" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
@@ -82,8 +83,8 @@
 <!-- Special: copy text as an answer -->
 <de
     code="3"
-    compile=''
-    run='#spawner C:\WINDOWS\system32\cmd.exe /c move /y "%full_name" %output_file'
+    compile='#move "%full_name" _cats_output_copy'
+    run='#move _cats_output_copy %output_file'
     generate=''
     check=''/>
 
