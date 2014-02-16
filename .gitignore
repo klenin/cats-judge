@@ -1,6 +1,8 @@
+.idea
 solutions
 run
 tests
 *.log
 *.rar
+*.iml
 config.xml

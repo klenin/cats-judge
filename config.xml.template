@@ -24,6 +24,7 @@
 <define name="#python" value="C:\Lang\Python\3.2.2\python.exe" />
 <define name="#haskell" value="C:\Lang\Haskell\2011.2.0.1\bin\ghc.exe" />
 <define name="#php" value="C:\Lang\PHP\5.4.0\php.exe" />
+<define name="#erlang" value="C:\Lang\Erlang\erl5.10.4\bin" />
 
 <define name="#qbasic" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" value="C:\Lang\FreeBasic\0.23\fbc.exe" />
@@ -266,5 +267,13 @@
     run='#run "#php" %full_name'
     generate='#spawner%redir %limits #php %full_name %args'
     check='#spawner %limits "#php" %full_name %checker_args'/>
+
+<!-- Erlang -->
+<de
+    code="506"
+    compile='#spawner %comspec% /C ..\erlc.cmd "%full_name"'
+    run='#run "#erlang\erl.exe" -run "%name" -run init stop'
+    generate='#spawner%redir %limits #erlang\erl.exe -run "%name" %args -run init stop'
+    check='#spawner %limits #erlang\erl.exe -run "%name" %checker_args -run init stop'/>
 
 </judge>
