@@ -108,7 +108,7 @@
 <!-- G++ 4.4.0 -->
 <de
     code="102"
-    compile='#spawner #gnu_cpp -O3 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp -Wl,--stack=268435456 -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
