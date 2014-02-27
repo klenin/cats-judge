@@ -36,6 +36,7 @@
 
 <define name="#delphi" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
 <define name="#fpc" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
+<define name="#pascalabc" value="C:\Lang\PascalABC.NET\2.2\pabcnetcclear.exe" />
 <define name="#bpc" value="%comspec% /C ..\bpc.cmd" />
 
 <!-- standart checkers -->
@@ -185,6 +186,15 @@
     generate='#spawner%redir %limits "%name.exe" %args'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
+<!-- PascalABC.NET -->
+<de
+    code="205"
+    compile='#spawner "#pascalabc" "%full_name"'
+    run='#run "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    check='#spawner %limits "%name.exe" %checker_args'/>
+
 <!-- QBasic -->
 <de
     code="301"
@@ -276,4 +286,5 @@
     runfile='%name.beam'
     generate='#spawner%redir %limits "#erlang" -run "%name" %args -run init stop'
     check='#spawner %limits "#erlang" -run "%name" %checker_args -run init stop'/>
+
 </judge>
