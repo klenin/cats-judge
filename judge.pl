@@ -1143,7 +1143,7 @@ sub auth_judge
     unless (defined $jid)
     {
         log_msg("unknown judge name: '$judge_name'\n");
-        return 1;
+        return 0;
     }
 
     my @ch = ('A'..'Z','a'..'z','0'..'9');
