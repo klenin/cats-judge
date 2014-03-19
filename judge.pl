@@ -13,6 +13,7 @@ use CATS::Constants;
 use CATS::Utils qw(split_fname);
 use CATS::DB qw(new_id $dbh);
 use CATS::Testset;
+use CATS::Judge::Server;
 
 use open IN => ':crlf', OUT => ':raw';
 
@@ -27,8 +28,8 @@ my $exit_status;
 my $user_time;
 my $memory_used;
 my $written;
-  
-my $judge_name;
+
+my $judge;
 my $workdir;
 my $rundir;
 my $report_file;
@@ -1139,10 +1140,10 @@ sub auth_judge
 {
 
     $jid = $dbh->selectrow_array(qq~
-        SELECT id FROM judges WHERE nick = ?~, {}, $judge_name);
+        SELECT id FROM judges WHERE nick = ?~, {}, $judge->name);
     unless (defined $jid)
     {
-        log_msg("unknown judge name: '$judge_name'\n");
+        log_msg("unknown judge name: '%s'\n", $judge->name);
         return 0;
     }
 
@@ -1319,9 +1320,9 @@ sub process_requests
 }
 
 
-sub main_loop 
-{    
-    log_msg("judge: $judge_name\n");
+sub main_loop
+{
+    log_msg("judge: %s\n", $judge->name);
 
     my_chdir($workdir) 
         or return undef;
@@ -1389,12 +1390,13 @@ sub start_handler
     {
         $workdir = $atts{'workdir'};
         $rundir = $atts{'rundir'};
-        $judge_name = $atts{'name'};      
+        my $judge_name = $atts{'name'};
         $report_file = $atts{'report_file'};
         $stdout_file = $atts{'stdout_file'};
         $formal_input_fname = $atts{'formal_input_fname'};
         $show_child_stdout = $atts{'show_child_stdout'};
         $save_child_stdout = $atts{'save_child_stdout'};
+        $judge = CATS::Judge::Server->new(name => $judge_name);
     }
     
     if ($el eq 'de') 
@@ -1436,7 +1438,7 @@ sub read_cfg
     
     close CFG;
 
-    $judge_name     || die "$judge_cfg: undefined judge name";
+    $judge->name    || die "$judge_cfg: undefined judge name";
     $workdir        || die "$judge_cfg: undefined judge working directory";
     $rundir         || die "$judge_cfg: undefined judge running directory";
     $report_file    || die "$judge_cfg: undefined spawner report file";
