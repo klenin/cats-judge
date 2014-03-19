@@ -143,7 +143,7 @@ sub dump_child_stdout
                         
         if ($save_child_stdout) {
             syswrite FDLOG, $_;
-            $dump .= $_;
+            $dump .= $_ if length $dump < 50000;
         }
 
         if ($duplicate_to) {
