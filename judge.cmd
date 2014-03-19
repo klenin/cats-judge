@@ -17,4 +17,5 @@ SET CATS_JUDGE=1
 
 :1
 perl judge.pl
+timeout 2
 GOTO 1
