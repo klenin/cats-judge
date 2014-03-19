@@ -51,9 +51,10 @@ my $problem_sources;
 my ($log_month, $log_year);
 my $last_log_line = '';
 
-sub log_msg 
+sub log_msg
 {
-    my $s = shift;    
+    my $fmt = shift;
+    my $s = sprintf $fmt, @_;
     syswrite STDOUT, $s;
     if ($last_log_line ne $s)
     {
@@ -363,7 +364,7 @@ sub execute
 
     close(FSTDOUT);
 
-    log_msg("> $exec_str\n");
+    log_msg("> %s\n", $exec_str);
     my $rc = system($exec_str) >> 8;
 
     dump_child_stdout(duplicate_to => $rest{duplicate_output});
