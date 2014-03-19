@@ -1,4 +1,5 @@
 #!perl -w
+use v5.10;
 use strict;
 use XML::Parser::Expat;
 
@@ -564,7 +565,7 @@ sub generate_test
         $generate_cmd, {
         full_name => $fname, name => $name,
         limits => get_special_limits($ps),
-        args => $test->{param} || '', redir => $redir }
+        args => $test->{param} // '', redir => $redir }
     ) or return undef;
 
     if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
