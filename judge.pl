@@ -1292,35 +1292,12 @@ sub main_loop
     log_msg("judge: %s\n", $judge->name);
     $jid = $judge->{id};
 
-    my_chdir($workdir) 
-        or return undef;
-    
-    for (my $i = 0; ; $i++)
-    {
+    my_chdir($workdir) or return;
+    for (my $i = 0; ; $i++) {
         sleep 2;
-
-        my ($is_alive, $lock_counter, $current_sid) = $dbh->selectrow_array(qq~
-            SELECT is_alive, lock_counter, jsid FROM judges WHERE id = ?~, {}, $jid);
-        
-        if (!$is_alive)
-        {
-            log_msg("pong\n");
-            $dbh->do(qq~
-                UPDATE judges SET is_alive = 1, alive_date = CURRENT_DATE
-                    WHERE id = ? AND is_alive = 0~, {},
-                $jid);
-        }
-        $dbh->commit;
-        
+        log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
-
-        next if $lock_counter; # judge locked
-        if ($current_sid ne $judge->{sid})
-        {
-            log_msg "killed: $current_sid != $judge->{sid}\n";
-            last;
-        }
-        
+        next if $judge->is_locked;
         last unless process_requests;
     }
 }
