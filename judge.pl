@@ -43,7 +43,6 @@ my %defines;
 my %judge_de;
 my %checkers;
 
-my $jsid;
 my $jid;
 my $dump;
 
@@ -1136,38 +1135,6 @@ sub test_solution
 }
 
 
-sub auth_judge 
-{
-
-    $jid = $dbh->selectrow_array(qq~
-        SELECT id FROM judges WHERE nick = ?~, {}, $judge->name);
-    unless (defined $jid)
-    {
-        log_msg("unknown judge name: '%s'\n", $judge->name);
-        return 0;
-    }
-
-    my @ch = ('A'..'Z','a'..'z','0'..'9');
-    for (1..20)
-    {
-        $jsid = '';
-        for (1..30)
-        {
-            $jsid .= @ch[rand @ch];
-        }
-    
-        if ($dbh->do(qq~UPDATE judges SET jsid=? WHERE id=?~, {}, $jsid, $jid) )
-        { 
-            $dbh->commit;
-            return 1;
-        }
-    }
-    
-    log_msg("login failed\n"); 
-    0;
-}
-
-
 sub problem_ready
 {
     my ($pid) = @_;
@@ -1323,6 +1290,7 @@ sub process_requests
 sub main_loop
 {
     log_msg("judge: %s\n", $judge->name);
+    $jid = $judge->{id};
 
     my_chdir($workdir) 
         or return undef;
@@ -1347,9 +1315,9 @@ sub main_loop
         log_msg("...\n") if $i % 5 == 0;
 
         next if $lock_counter; # judge locked
-        if ($current_sid ne $jsid)
+        if ($current_sid ne $judge->{sid})
         {
-            log_msg "killed: $current_sid != $jsid\n";
+            log_msg "killed: $current_sid != $judge->{sid}\n";
             last;
         }
         
@@ -1453,7 +1421,8 @@ sub read_cfg
 open FDLOG, sprintf '>>judge-%04d-%02d.log', $log_year + 1900, $log_month + 1;
 CATS::DB::sql_connect;
 read_cfg;
-main_loop if auth_judge;
+$judge->auth;
+main_loop;
 CATS::DB::sql_disconnect;
 
 close FDLOG;

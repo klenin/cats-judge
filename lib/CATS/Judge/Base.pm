@@ -14,6 +14,9 @@ sub abstract { die sprintf "%s::%s is abstract", ref $_[0], (caller 1)[3] =~ /([
 
 sub name { $_[0]->{name} }
 
-sub sid { abstract @_ }
+my @sid_alph = ('0'..'9', 'A'..'Z', 'a'..'z');
+sub make_sid { join '', map $sid_alph[rand @sid_alph], 1..30 }
+
+sub auth { $_[0]->{sid} = $_[0]->make_sid; 1; }
 
 1;
