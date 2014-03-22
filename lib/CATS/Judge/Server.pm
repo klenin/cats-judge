@@ -3,6 +3,7 @@ package CATS::Judge::Server;
 use strict;
 use warnings;
 
+use CATS::Constants;
 use CATS::DB qw(new_id $dbh);
 
 use base qw(CATS::Judge::Base);
@@ -44,5 +45,20 @@ sub update_state {
 }
 
 sub is_locked { $_[0]->{lock_counter} }
+
+sub set_request_state {
+    my ($self, $req, $state, %p) = @_;
+    $dbh->do(qq~
+        UPDATE reqs SET state = ?, failed_test = ?, result_time = CURRENT_TIMESTAMP
+        WHERE id = ? AND judge_id = ?~, {},
+        $state, $p{failed_test}, $req->{id}, $self->{id});
+    if ($state == $cats::st_unhandled_error && defined $p{problem_id} && defined $p{contest_id}) {
+        $dbh->do(qq~
+            UPDATE contest_problems SET status = ?
+            WHERE problem_id = ? AND contest_id = ?~, {},
+            $cats::problem_st_suspended, $p{problem_id}, $p{contest_id});
+    }
+    $dbh->commit;
+}
 
 1;

@@ -1158,25 +1158,6 @@ sub problem_ready
     $is_uptodate;
 }
 
-
-sub set_request_state
-{
-    my ($rid, $state, %p) = @_;
-    $dbh->do(qq~
-        UPDATE reqs SET state = ?, failed_test = ?, result_time = CURRENT_TIMESTAMP
-        WHERE id = ? AND judge_id = ?~, {},
-        $state, $p{failed_test}, $rid, $jid);
-    if ($state == $cats::st_unhandled_error && defined $p{problem_id} && defined $p{contest_id})
-    {
-        $dbh->do(qq~
-            UPDATE contest_problems SET status = ?
-                WHERE problem_id = ? AND contest_id = ?~, {},
-            $cats::problem_st_suspended, $p{problem_id}, $p{contest_id});
-    }
-    $dbh->commit;
-}
-
-
 sub process_requests
 {
     my $c = $dbh->prepare(qq~
@@ -1196,10 +1177,7 @@ sub process_requests
         if (!defined $r->{status})
         {
             log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
-            $dbh->do(q~
-                UPDATE reqs SET state=? WHERE id=?~, undef,
-                $cats::st_unhandled_error, $r->{id});
-            $dbh->commit;
+            $judge->set_request_state($r, $cats::st_unhandled_error);
             next;
         }
         $r->{status} == $cats::problem_st_ready || $r->{is_jury}
@@ -1213,8 +1191,7 @@ sub process_requests
         if (!defined $judge_de{$de_code})
         {  
             log_msg("unsupported DE $de_code in request $r->{id}\n");
-            $dbh->do(q~UPDATE reqs SET state=? WHERE id=?~, undef, $cats::st_unhandled_error, $r->{id});
-            $dbh->commit;
+            $judge->set_request_state($r, $cats::st_unhandled_error);
             log_msg("set to unhandled_error\n");
             last;
         }
@@ -1229,17 +1206,19 @@ sub process_requests
         }
 
         # блокируем запись
-        $dbh->do(qq~UPDATE reqs SET judge_id = ? WHERE id = ?~, {}, $jid, $r->{id});
-        set_request_state($r->{id}, $cats::st_install_processing);
+        $dbh->do(qq~
+            UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
+            $cats::st_install_processing, $judge->{id}, $r->{id});
+        $dbh->commit;
 
         clear_log_dump;
-                
+
         my $state = $cats::st_testing;
         if (!problem_ready($r->{problem_id}))
         {
             log_msg("install problem $r->{problem_id} log:\n");
 
-            # устанавливаем пакет с задачей            
+            # устанавливаем пакет с задачей
             eval {
                 initialize_problem($r->{problem_id});
             } or do {
@@ -1251,12 +1230,11 @@ sub process_requests
         {
             log_msg("problem $r->{problem_id} cached\n");
         }
-          
         save_log_dump($r->{id});
 
-        set_request_state($r->{id}, $state, %$r);
+        $judge->set_request_state($r, $state, %$r);
         if ($state != $cats::st_unhandled_error)
-        { 
+        {
             # тестируем решение
             log_msg("test log:\n");
 
@@ -1276,16 +1254,13 @@ sub process_requests
 
             save_log_dump($r->{id});
 
-            set_request_state($r->{id}, $state, failed_test => $failed_test, %$r);
-            
-            $dbh->commit;
+            $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
         }
         last;
     }
 
     1;
 }
-
 
 sub main_loop
 {
@@ -1355,7 +1330,6 @@ sub read_cfg {
     $stdout_file    || die "$judge_cfg: undefined spawner stdout file";
     $formal_input_fname || die "$judge_cfg: undefined file name for formal input";
 }
-
 
 #$fatal_error_html_style = 0;
 

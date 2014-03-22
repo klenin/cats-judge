@@ -23,4 +23,6 @@ sub update_state { 0 }
 
 sub is_locked { 0 }
 
+sub set_request_state { abstract @_ }
+
 1;
