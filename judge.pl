@@ -1302,86 +1302,51 @@ sub main_loop
     }
 }
 
-
-sub char_handler
-{
-
-    my ($p, $text) = @_;
-}
-
-
 sub apply_defines
 {
-    my $expr = shift;
-    $expr or return $expr;
-
-    for (sort { length $b <=> length $a } keys %defines)
-    {
-        $expr =~ s/$_/$defines{$_}/g;
-    }
-    
+    my $expr = shift // '';
+    $expr =~ s/$_/$defines{$_}/g for sort { length $b <=> length $a } keys %defines;
     $expr;
 }
 
-
-sub start_handler
-{
-
+sub start_handler {
     my ($p, $el, %atts) = @_;
-
-    my %de;
-
-    if ($el eq 'judge') 
-    {
-        $workdir = $atts{'workdir'};
-        $rundir = $atts{'rundir'};
-        my $judge_name = $atts{'name'};
-        $report_file = $atts{'report_file'};
-        $stdout_file = $atts{'stdout_file'};
-        $formal_input_fname = $atts{'formal_input_fname'};
-        $show_child_stdout = $atts{'show_child_stdout'};
-        $save_child_stdout = $atts{'save_child_stdout'};
-        $judge = CATS::Judge::Server->new(name => $judge_name);
-    }
-    
-    if ($el eq 'de') 
-    {
-        $de{$_} = apply_defines($atts{$_})
-            for qw(compile run generate check runfile);
-        $judge_de{$atts{'code'}} = \%de;        
-    }
-                            
-    if ($el eq 'define')
-    {        
-        $defines{$atts{'name'}} = apply_defines($atts{'value'});
-    }
-
-    if ($el eq 'checker')
-    {        
-        $checkers{$atts{'name'}} = apply_defines($atts{'exec'});
-    }
+    my $h = {
+        judge => sub {
+            $workdir = $atts{'workdir'};
+            $rundir = $atts{'rundir'};
+            my $judge_name = $atts{'name'};
+            $report_file = $atts{'report_file'};
+            $stdout_file = $atts{'stdout_file'};
+            $formal_input_fname = $atts{'formal_input_fname'};
+            $show_child_stdout = $atts{'show_child_stdout'};
+            $save_child_stdout = $atts{'save_child_stdout'};
+            $judge = CATS::Judge::Server->new(name => $judge_name);
+        },
+        de => sub {
+            my %de;
+            $de{$_} = apply_defines($atts{$_})
+                for qw(compile run generate check runfile);
+            $judge_de{$atts{'code'}} = \%de;
+        },
+        define => sub {
+            $defines{$atts{'name'}} = apply_defines($atts{'value'});
+        },
+        checker => sub {
+            $checkers{$atts{'name'}} = apply_defines($atts{'exec'});
+        },
+    }->{$el} or die "Unknown tag $el";
+    $h->();
 }
 
+sub read_cfg {
+    my $parser = XML::Parser::Expat->new;
+    $parser->setHandlers(Start => \&start_handler);
 
-sub end_handler
-{
-
-    my ($p, $el) = @_;
-} 
-
-
-sub read_cfg
-{ 
-    my $parser = new XML::Parser::Expat;
-
-    $parser->setHandlers('Start' => \&start_handler, 'End' => \&end_handler, 'Char'  => \&char_handler);
-
-    open(CFG, $judge_cfg) 
-        or die "Couldn't open $judge_cfg\n";
-
-    $parser->parse(*CFG);
-    
-    close CFG;
+    {
+        open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
+        $parser->parse($cfg_file);
+    }
 
     $judge->name    || die "$judge_cfg: undefined judge name";
     $workdir        || die "$judge_cfg: undefined judge working directory";
