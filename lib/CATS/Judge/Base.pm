@@ -25,4 +25,6 @@ sub is_locked { 0 }
 
 sub set_request_state { abstract @_ }
 
+sub select_request { abstract @_ }
+
 1;

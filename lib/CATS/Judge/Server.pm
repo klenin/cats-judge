@@ -61,4 +61,20 @@ sub set_request_state {
     $dbh->commit;
 }
 
+sub select_request {
+    my ($self, $supported_DEs) = @_;
+    my $sth = $dbh->prepare_cached(qq~
+        SELECT
+            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, CP.status, S.fname, S.src, S.de_id
+        FROM reqs R
+        INNER JOIN contest_accounts CA ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
+        INNER JOIN sources S ON S.req_id = R.id
+        INNER JOIN default_de D ON D.id = S.de_id
+        LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
+        WHERE R.state = ? AND
+            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($supported_DEs)
+        ROWS 1~); # AND judge_id IS NULL~
+    $dbh->selectrow_hashref($sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready);
+}
+
 1;

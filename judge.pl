@@ -43,7 +43,6 @@ my %defines;
 my %judge_de;
 my %checkers;
 
-my $jid;
 my $dump;
 
 my $problem_sources;
@@ -1160,20 +1159,8 @@ sub problem_ready
 
 sub process_request
 {
-    my ($supported_DEs) = @_;
-    my $r = $dbh->selectrow_hashref(qq~
-        SELECT
-            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, CP.status, S.fname, S.src, S.de_id
-        FROM reqs R
-        INNER JOIN contest_accounts CA ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
-        INNER JOIN sources S ON S.req_id = R.id
-        INNER JOIN default_de D ON D.id = S.de_id
-        LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
-        WHERE R.state = ? AND
-            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($supported_DEs)
-        ROWS 1~, # AND judge_id IS NULL~
-        { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready
-    ) or return;
+    my ($r) = @_;
+    $r or return;
 
     if (!defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
@@ -1235,7 +1222,6 @@ sub main_loop
     log_msg("judge: %s\n", $judge->name);
     my $supported_DEs = join(',', sort { $a <=> $b } keys %judge_de);
     log_msg("suppoted DEs: %s\n", $supported_DEs);
-    $jid = $judge->{id};
 
     my_chdir($workdir) or return;
     for (my $i = 0; ; $i++) {
@@ -1243,7 +1229,7 @@ sub main_loop
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        process_request($supported_DEs);
+        process_request($judge->select_request($supported_DEs));
     }
 }
 
