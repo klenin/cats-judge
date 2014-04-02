@@ -1158,113 +1158,83 @@ sub problem_ready
     $is_uptodate;
 }
 
-sub process_requests
+sub process_request
 {
-    my $c = $dbh->prepare(qq~
+    my ($supported_DEs) = @_;
+    my $r = $dbh->selectrow_hashref(qq~
         SELECT
-            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury,
-            (SELECT CP.status FROM contest_problems CP
-                WHERE CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id) AS status
+            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, CP.status, S.fname, S.src, S.de_id
         FROM reqs R
-        INNER JOIN contest_accounts CA
-            ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
-        WHERE R.state = ?~
-    ); # AND judge_id IS NULL~);
-    $c->execute($cats::st_not_processed);
+        INNER JOIN contest_accounts CA ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
+        INNER JOIN sources S ON S.req_id = R.id
+        INNER JOIN default_de D ON D.id = S.de_id
+        LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
+        WHERE R.state = ? AND
+            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($supported_DEs)
+        ROWS 1~, # AND judge_id IS NULL~
+        { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready
+    ) or return;
 
-    while (my $r = $c->fetchrow_hashref)
-    {
-        if (!defined $r->{status})
-        {
-            log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
-            $judge->set_request_state($r, $cats::st_unhandled_error);
-            next;
-        }
-        $r->{status} == $cats::problem_st_ready || $r->{is_jury}
-            or next;
-        my ($src, $fname, $de_id, $de_code) =
-        $dbh->selectrow_array(qq~
-            SELECT S.src, S.fname, D.id, D.code 
-            FROM sources S, default_de D
-            WHERE S.req_id = ? AND D.id = S.de_id~, {}, $r->{id});
-        # данная среда разработки не поддерживается
-        if (!defined $judge_de{$de_code})
-        {  
-            log_msg("unsupported DE $de_code in request $r->{id}\n");
-            $judge->set_request_state($r, $cats::st_unhandled_error);
-            log_msg("set to unhandled_error\n");
-            last;
-        }
-
-        undef $problem_sources;
-
-        if (my @u = unsupported_DEs($r->{problem_id}))
-        {
-            my $m = join ', ', @u;
-            log_msg("unsupported DEs for problem $r->{problem_id}: $m\n");
-            next;
-        }
-
-        # блокируем запись
-        $dbh->do(qq~
-            UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
-            $cats::st_install_processing, $judge->{id}, $r->{id});
-        $dbh->commit;
-
-        clear_log_dump;
-
-        my $state = $cats::st_testing;
-        if (!problem_ready($r->{problem_id}))
-        {
-            log_msg("install problem $r->{problem_id} log:\n");
-
-            # устанавливаем пакет с задачей
-            eval {
-                initialize_problem($r->{problem_id});
-            } or do {
-                $state = $cats::st_unhandled_error;
-                log_msg("error: $@\n");
-            }
-        }
-        else
-        {
-            log_msg("problem $r->{problem_id} cached\n");
-        }
-        save_log_dump($r->{id});
-
-        $judge->set_request_state($r, $state, %$r);
-        if ($state != $cats::st_unhandled_error)
-        {
-            # тестируем решение
-            log_msg("test log:\n");
-
-            my $failed_test;
-            if ($fname =~ /[^_a-zA-Z0-9\.\\\:\$]/)
-            {
-                log_msg("renamed from '$fname'\n");
-                $fname =~ tr/_a-zA-Z0-9\.\\:$/x/c;
-            }
-            ($state, $failed_test) = test_solution(
-                $r->{problem_id}, $r->{id}, $fname, $src, $de_id, $r->{contest_id});
-
-            if (!defined $state)
-            {
-                insert_test_run_details(result => ($state = $cats::st_unhandled_error));
-            }
-
-            save_log_dump($r->{id});
-
-            $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
-        }
-        last;
+    if (!defined $r->{status}) {
+        log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
+        $judge->set_request_state($r, $cats::st_unhandled_error);
+        return;
     }
 
-    1;
+    # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
+    undef $problem_sources;
+    if (my @u = unsupported_DEs($r->{problem_id})) {
+        log_msg("unsupported DEs for problem $r->{problem_id}: " . join ', ', @u);
+        $judge->set_request_state($r, $cats::st_unhandled_error);
+        return;
+    }
+
+    # Lock the request record.
+    $dbh->do(qq~
+        UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
+        $cats::st_install_processing, $judge->{id}, $r->{id});
+    $dbh->commit;
+
+    clear_log_dump;
+
+    my $state = $cats::st_testing;
+    if (!problem_ready($r->{problem_id})) {
+        log_msg("install problem $r->{problem_id} log:\n");
+        eval {
+            initialize_problem($r->{problem_id});
+        } or do {
+            $state = $cats::st_unhandled_error;
+            log_msg("error: $@\n");
+        }
+    }
+    else {
+        log_msg("problem $r->{problem_id} cached\n");
+    }
+    save_log_dump($r->{id});
+    $judge->set_request_state($r, $state, %$r);
+    return if $state == $cats::st_unhandled_error;
+
+    log_msg("test log:\n");
+    my $failed_test;
+    if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
+        log_msg("renamed from '$r->{fname}'\n");
+        $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
+    }
+    ($state, $failed_test) = test_solution(
+        $r->{problem_id}, $r->{id}, $r->{fname}, $r->{src}, $r->{de_id}, $r->{contest_id});
+
+    defined $state
+        or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
+
+    save_log_dump($r->{id});
+    $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
 }
 
 sub main_loop
 {
     log_msg("judge: %s\n", $judge->name);
+    my $supported_DEs = join(',', sort { $a <=> $b } keys %judge_de);
+    log_msg("suppoted DEs: %s\n", $supported_DEs);
     $jid = $judge->{id};
 
     my_chdir($workdir) or return;
@@ -1273,7 +1243,7 @@ sub main_loop
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        last unless process_requests;
+        process_request($supported_DEs);
     }
 }
 
