@@ -11,7 +11,7 @@ use File::NCopy qw(copy);
 use lib 'lib';
 use CATS::Constants;
 use CATS::Utils qw(split_fname);
-use CATS::DB qw(new_id $dbh);
+use CATS::DB qw($dbh);
 use CATS::Testset;
 use CATS::Judge::Server;
 
@@ -173,29 +173,6 @@ sub dump_child_stdout
     close FSTDOUT;
 
     1;
-}
-
-
-sub save_log_dump
-{
-    my $rid = shift;
-
-    my $did = $dbh->selectrow_array(qq~SELECT id FROM log_dumps WHERE req_id=?~, {}, $rid);
-    if (defined $did)
-    {
-        my $c = $dbh->prepare(qq~UPDATE log_dumps SET dump=? WHERE id=?~);
-        $c->bind_param(1, $dump, { ora_type => 113 });
-        $c->bind_param(2, $did);
-        $c->execute;
-    }
-    else
-    {
-        my $c = $dbh->prepare(qq~INSERT INTO log_dumps (id, dump, req_id) VALUES(?,?,?)~);
-        $c->bind_param(1, new_id);
-        $c->bind_param(2, $dump, { ora_type => 113 });
-        $c->bind_param(3, $rid);
-        $c->execute;
-    }
 }
 
 
@@ -1192,7 +1169,7 @@ sub process_request
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    save_log_dump($r->{id});
+    $judge->save_log_dump($r, $dump);
     $judge->set_request_state($r, $state, %$r);
     return if $state == $cats::st_unhandled_error;
 
@@ -1208,7 +1185,7 @@ sub process_request
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
 
-    save_log_dump($r->{id});
+    $judge->save_log_dump($r, $dump);
     $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
 }
 

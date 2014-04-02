@@ -29,4 +29,6 @@ sub select_request { abstract @_ }
 
 sub lock_request {}
 
+sub save_log_dump {}
+
 1;

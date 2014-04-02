@@ -79,10 +79,30 @@ sub select_request {
 
 sub lock_request {
     my ($self, $req) = @_;
-    $dbh->do(qq~
+    $dbh->do(q~
         UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
         $cats::st_install_processing, $self->{id}, $req->{id});
     $dbh->commit;
+}
+
+sub save_log_dump {
+    my ($self, $req, $dump) = @_;
+
+    my $id = $dbh->selectrow_array(q~
+        SELECT id FROM log_dumps WHERE req_id = ?~, undef, $req->{id});
+    if (defined $id) {
+        my $c = $dbh->prepare(q~UPDATE log_dumps SET dump = ? WHERE id = ?~);
+        $c->bind_param(1, $dump, { ora_type => 113 });
+        $c->bind_param(2, $id);
+        $c->execute;
+    }
+    else {
+        my $c = $dbh->prepare(q~INSERT INTO log_dumps (id, dump, req_id) VALUES (?, ?, ?)~);
+        $c->bind_param(1, new_id);
+        $c->bind_param(2, $dump, { ora_type => 113 });
+        $c->bind_param(3, $req->{id});
+        $c->execute;
+    }
 }
 
 1;
