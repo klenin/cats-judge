@@ -77,4 +77,12 @@ sub select_request {
     $dbh->selectrow_hashref($sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready);
 }
 
+sub lock_request {
+    my ($self, $req) = @_;
+    $dbh->do(qq~
+        UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
+        $cats::st_install_processing, $self->{id}, $req->{id});
+    $dbh->commit;
+}
+
 1;

@@ -27,4 +27,6 @@ sub set_request_state { abstract @_ }
 
 sub select_request { abstract @_ }
 
+sub lock_request {}
+
 1;

@@ -1176,12 +1176,7 @@ sub process_request
         return;
     }
 
-    # Lock the request record.
-    $dbh->do(qq~
-        UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
-        $cats::st_install_processing, $judge->{id}, $r->{id});
-    $dbh->commit;
-
+    $judge->lock_request($r);
     clear_log_dump;
 
     my $state = $cats::st_testing;
