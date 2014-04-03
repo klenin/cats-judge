@@ -31,4 +31,7 @@ sub lock_request {}
 
 sub save_log_dump {}
 
+sub set_DEs { $_[1]->{$_}->{code} = $_ for keys %{$_[1]} }
+
+
 1;

@@ -72,7 +72,7 @@ sub select_request {
         INNER JOIN default_de D ON D.id = S.de_id
         LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
         WHERE R.state = ? AND
-            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($supported_DEs)
+            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($self->{supported_DEs})
         ROWS 1~); # AND judge_id IS NULL~
     $dbh->selectrow_hashref($sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready);
 }
@@ -103,6 +103,19 @@ sub save_log_dump {
         $c->bind_param(3, $req->{id});
         $c->execute;
     }
+}
+
+sub set_DEs {
+    my ($self, $cfg_de) = @_;
+    my $db_de = $dbh->selectall_arrayref(q~
+        SELECT id, code, description, memory_handicap FROM default_de~, { Slice => {} });
+    for my $de (@$db_de) {
+        my $c = $de->{code};
+        exists $cfg_de->{$c} or next;
+        $cfg_de->{$c} = { %{$cfg_de->{$c}}, %$de };
+    }
+    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
+    $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
 }
 
 1;

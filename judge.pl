@@ -1192,8 +1192,7 @@ sub process_request
 sub main_loop
 {
     log_msg("judge: %s\n", $judge->name);
-    my $supported_DEs = join(',', sort { $a <=> $b } keys %judge_de);
-    log_msg("suppoted DEs: %s\n", $supported_DEs);
+    log_msg("suppoted DEs: %s\n", join ',', sort { $a <=> $b } keys %judge_de);
 
     my_chdir($workdir) or return;
     for (my $i = 0; ; $i++) {
@@ -1201,7 +1200,7 @@ sub main_loop
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        process_request($judge->select_request($supported_DEs));
+        process_request($judge->select_request);
     }
 }
 
@@ -1266,6 +1265,7 @@ open FDLOG, sprintf '>>judge-%04d-%02d.log', $log_year + 1900, $log_month + 1;
 CATS::DB::sql_connect;
 read_cfg;
 $judge->auth;
+$judge->set_DEs(\%judge_de);
 main_loop;
 CATS::DB::sql_disconnect;
 
