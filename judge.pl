@@ -41,6 +41,7 @@ my $judge_cfg = 'config.xml';
 
 my %defines;
 my %judge_de;
+my %judge_de_idx;
 my %checkers;
 
 my $dump;
@@ -78,7 +79,7 @@ sub get_cmd
 {
     my ($action, $de_id) = @_;
 
-    my $code = $dbh->selectrow_array(qq~SELECT code FROM default_de WHERE id=?~, {}, $de_id);
+    my $code = $judge_de_idx{$de_id}->{code};
 
     if (!defined $judge_de{ $code }) {
         log_msg("unknown de code: $code\n");
@@ -977,9 +978,8 @@ sub test_solution
     my ($run_all_tests) = $dbh->selectrow_array(qq~
         SELECT run_all_tests FROM contests WHERE id = ?~, undef, $cid);
 
-    my ($memory_handicap) = $dbh->selectrow_array(qq~
-        SELECT memory_handicap FROM default_de WHERE id = ?~, undef, $de_id);
-    
+    my $memory_handicap = $judge_de_idx{$de_id}->{memory_handicap};
+
     ($problem->{checker_id}) = map $_->{id}, grep
         { ($cats::source_modules{$_->{stype}} || -1) == $cats::checker_module }
         @$problem_sources;
@@ -1266,6 +1266,7 @@ CATS::DB::sql_connect;
 read_cfg;
 $judge->auth;
 $judge->set_DEs(\%judge_de);
+$judge_de_idx{$_->{id}} = $_ for values %judge_de;
 main_loop;
 CATS::DB::sql_disconnect;
 
