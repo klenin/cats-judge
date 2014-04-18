@@ -118,4 +118,20 @@ sub set_DEs {
     $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
 }
 
+sub get_problem_sources {
+    my ($self, $pid) = @_;
+    my $problem_sources = $dbh->selectall_arrayref(q~
+        SELECT ps.*, dd.code FROM problem_sources ps
+            INNER JOIN default_de dd ON dd.id = ps.de_id
+        WHERE ps.problem_id = ? ORDER BY ps.id~, { Slice => {} },
+        $pid);
+    my $imported = $dbh->selectall_arrayref(q~
+        SELECT ps.*, dd.code FROM problem_sources ps
+            INNER JOIN default_de dd ON dd.id = ps.de_id
+            INNER JOIN problem_sources_import psi ON ps.guid = psi.guid
+        WHERE psi.problem_id = ? ORDER BY ps.id~, { Slice => {} },
+        $pid);
+    [ @$problem_sources, @$imported ];
+}
+
 1;

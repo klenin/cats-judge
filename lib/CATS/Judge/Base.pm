@@ -33,5 +33,6 @@ sub save_log_dump {}
 
 sub set_DEs { $_[1]->{$_}->{code} = $_[1]->{$_}->{id} = $_ for keys %{$_[1]} }
 
+sub get_problem_sources { [] }
 
 1;

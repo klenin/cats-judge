@@ -457,33 +457,12 @@ sub execute
     return 1;
 }
 
-
-sub get_problem_sources($)
-{
-    return $problem_sources if $problem_sources;
-    $problem_sources = $dbh->selectall_arrayref(qq~
-        SELECT ps.*, dd.code FROM problem_sources ps
-            INNER JOIN default_de dd ON dd.id = ps.de_id
-        WHERE ps.problem_id = ? ORDER BY ps.id~, { Slice => {} },
-        $_[0]);
-    my $imported = $dbh->selectall_arrayref(qq~
-        SELECT ps.*, dd.code FROM problem_sources ps
-            INNER JOIN default_de dd ON dd.id = ps.de_id
-            INNER JOIN problem_sources_import psi ON ps.guid = psi.guid
-        WHERE psi.problem_id = ? ORDER BY ps.id~, { Slice => {} },
-        $_[0]);
-    push @$problem_sources, @$imported;
-    return $problem_sources;
-}
-
-
-sub unsupported_DEs
-{
+sub unsupported_DEs {
+    $problem_sources ||= $judge->get_problem_sources($_[0]);
 	my %seen;
 	sort grep !$seen{$_}++, map $_->{code},
-		grep !defined($judge_de{$_->{code}}), @{get_problem_sources($_[0])};
+        grep !defined($judge_de{$_->{code}}), @$problem_sources;
 }
-
 
 sub save_problem_description
 {
