@@ -916,14 +916,10 @@ sub run_single_test
 }
 
 
-sub test_solution
-{
-    my ($pid, $sid, $fname_with_path, $src, $de_id, $cid) = @_;
+sub test_solution {
+    my ($r, $pid, $sid, $fname_with_path, $src, $de_id) = @_;
     log_msg("Testing solution: $sid for problem: $pid\n");
     my $problem = $judge->get_problem($pid);
-
-    my ($run_all_tests) = $dbh->selectrow_array(qq~
-        SELECT run_all_tests FROM contests WHERE id = ?~, undef, $cid);
 
     my $memory_handicap = $judge_de_idx{$de_id}->{memory_handicap};
 
@@ -1003,8 +999,7 @@ sub test_solution
         }
     
         # получаем случайный порядок тестов
-        if ($pass == 1 && !$run_all_tests) 
-        {
+        if ($pass == 1 && !$r->{run_all_tests}) {
             for (@tests) {
                 my $r = \$tests[rand @tests];
                 ($_, $$r) = ($$r, $_);
@@ -1031,10 +1026,10 @@ sub test_solution
                 {
                     $failed_test = $rank;
                 }
-                $run_all_tests or last;
+                $r->{run_all_tests} or last;
             }
         }
-        last if $res == $cats::st_accepted || $run_all_tests;
+        last if $res == $cats::st_accepted || $r->{run_all_tests};
     }
     'FALL';
     };
@@ -1049,8 +1044,7 @@ sub test_solution
         last;
     }
     } # for
-    if ($run_all_tests && $failed_test)
-    {
+    if ($r->{run_all_tests} && $failed_test) {
         $res = $inserted_details{$failed_test};
     }
     return ($res, $failed_test);
@@ -1125,7 +1119,7 @@ sub process_request
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
     ($state, $failed_test) = test_solution(
-        $r->{problem_id}, $r->{id}, $r->{fname}, $r->{src}, $r->{de_id}, $r->{contest_id});
+        $r, $r->{problem_id}, $r->{id}, $r->{fname}, $r->{src}, $r->{de_id}, $r->{contest_id});
 
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));

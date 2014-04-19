@@ -65,9 +65,11 @@ sub select_request {
     my ($self, $supported_DEs) = @_;
     my $sth = $dbh->prepare_cached(qq~
         SELECT
-            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, CP.status, S.fname, S.src, S.de_id
+            R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, C.run_all_tests,
+            CP.status, S.fname, S.src, S.de_id
         FROM reqs R
         INNER JOIN contest_accounts CA ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
+        INNER JOIN contests C ON C.id = R.contest_id
         INNER JOIN sources S ON S.req_id = R.id
         INNER JOIN default_de D ON D.id = S.de_id
         LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
