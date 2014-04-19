@@ -40,7 +40,6 @@ my $save_child_stdout;
 my $judge_cfg = 'config.xml';
 
 my %defines;
-my %judge_de;
 my %judge_de_idx;
 my %checkers;
 
@@ -74,21 +73,11 @@ sub trim
     $s;
 }
 
-
-sub get_cmd
-{
+sub get_cmd {
     my ($action, $de_id) = @_;
-
-    my $code = $judge_de_idx{$de_id}->{code};
-
-    if (!defined $judge_de{ $code }) {
-        log_msg("unknown de code: $code\n");
-        return undef;
-    }
-
-    return $judge_de{$code}->{$action};
+    exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
+    $judge_de_idx{$de_id}->{$action};
 }
-
 
 sub get_std_checker_cmd
 {
@@ -455,13 +444,6 @@ sub execute
         or return undef;
 
     return 1;
-}
-
-sub unsupported_DEs {
-    $problem_sources ||= $judge->get_problem_sources($_[0]);
-	my %seen;
-	sort grep !$seen{$_}++, map $_->{code},
-        grep !defined($judge_de{$_->{code}}), @$problem_sources;
 }
 
 sub save_problem_description
@@ -1118,22 +1100,25 @@ sub process_request
     my ($r) = @_;
     $r or return;
 
+    $judge->lock_request($r);
+    clear_log_dump;
+
     if (!defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
         $judge->set_request_state($r, $cats::st_unhandled_error);
         return;
     }
 
+    $problem_sources = $judge->get_problem_sources($r->{problem_id});
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
-    undef $problem_sources;
-    if (my @u = unsupported_DEs($r->{problem_id})) {
-        log_msg("unsupported DEs for problem $r->{problem_id}: " . join ', ', @u);
-        $judge->set_request_state($r, $cats::st_unhandled_error);
+    my %unsupported_DEs =
+        map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
+    if (%unsupported_DEs) {
+        log_msg("unsupported DEs for problem %s: %s\n",
+            $r->{problem_id}, join ', ', sort keys %unsupported_DEs);
+        $judge->set_request_state($r, $cats::st_unhandled_error, %$r);
         return;
     }
-
-    $judge->lock_request($r);
-    clear_log_dump;
 
     my $state = $cats::st_testing;
     if (!problem_ready($r->{problem_id})) {
@@ -1167,6 +1152,8 @@ sub process_request
     $judge->save_log_dump($r, $dump);
     $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
 }
+
+my %judge_de;
 
 sub main_loop
 {
