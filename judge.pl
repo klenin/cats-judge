@@ -11,7 +11,6 @@ use File::NCopy qw(copy);
 use lib 'lib';
 use CATS::Constants;
 use CATS::Utils qw(split_fname);
-use CATS::DB qw($dbh);
 use CATS::Testset;
 use CATS::Judge::Server;
 
@@ -667,17 +666,9 @@ sub initialize_problem
 {
     my $pid = shift;
 
-    my (
-        $title, $upload_date, $input_fname, $output_fname,
-        $tlimit, $mlimit, $cid, $formal_input
-    ) =
-        $dbh->selectrow_array(qq~
-            SELECT
-                title, upload_date, input_file, output_file,
-                time_limit, memory_limit, contest_id, formal_input
-            FROM problems WHERE id=?~, {}, $pid);
+    my $p = $judge->get_problem($pid);
 
-    save_problem_description($pid, $title, $upload_date, 'not ready')
+    save_problem_description($pid, $p->{title}, $p->{upload_date}, 'not ready')
         or return undef;
 
     # компилируем вспомогательные программы (эталонные решения, генераторы тестов, программы проверки)
@@ -713,9 +704,8 @@ sub initialize_problem
             }    
         }
 
-        # после компиляции генератора положить ему formal_input_fname
-        if ($ps->{stype} == $cats::generator && $formal_input) {
-           write_to_file("$rundir/$formal_input_fname", $formal_input)
+        if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
+           write_to_file("$rundir/$formal_input_fname", $p->{formal_input})
               or return undef;
         }
 
@@ -725,7 +715,7 @@ sub initialize_problem
         my_copy("$rundir/*", "tests/$pid/temp/$ps->{id}")
             or return undef;
     }
-    prepare_tests($pid, $input_fname, $output_fname, $tlimit, $mlimit)
+    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit}, $p->{memory_limit})
         or return undef;
 
     # проверяем, что эталонное решение проходит на всех тестах
@@ -733,7 +723,7 @@ sub initialize_problem
     {
         log_msg("==== testing ====\n");
         my ($state, $failed_test) =
-            test_solution($pid, $ps->{id}, $ps->{fname}, $ps->{src}, $ps->{de_id}, $cid);
+            test_solution($pid, $ps->{id}, $ps->{fname}, $ps->{src}, $ps->{de_id}, $p->{contest_id});
 
         if (!defined($state) || $state != $cats::st_accepted) 
         {
@@ -744,7 +734,7 @@ sub initialize_problem
         log_msg("=== test completed ===\n");
     }
 
-    save_problem_description($pid, $title, $upload_date, 'ready')
+    save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
         or return undef;
 
     1;

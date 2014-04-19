@@ -165,7 +165,9 @@ sub get_problem_tests {
 sub get_problem {
     my ($self, $pid) = @_;
     $dbh->selectrow_hashref(q~
-        SELECT id, time_limit, memory_limit, input_file, output_file, std_checker
+        SELECT
+            id, title, upload_date, time_limit, memory_limit,
+            input_file, output_file, std_checker, contest_id, formal_input
         FROM problems WHERE id = ?~, { Slice => {} }, $pid);
 }
 
