@@ -951,8 +951,7 @@ sub test_solution
         return undef;
     }
 
-    $dbh->do('DELETE FROM req_details WHERE req_id = ?', undef, $sid);
-    $dbh->commit;
+    $judge->delete_req_details($sid);
     %test_run_details = (req_id => $sid, test_rank => 1);
     %inserted_details = ();
 

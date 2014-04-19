@@ -35,4 +35,6 @@ sub set_DEs { $_[1]->{$_}->{code} = $_[1]->{$_}->{id} = $_ for keys %{$_[1]} }
 
 sub get_problem_sources { [] }
 
+sub delete_req_details {}
+
 1;

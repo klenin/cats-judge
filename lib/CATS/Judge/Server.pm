@@ -134,4 +134,10 @@ sub get_problem_sources {
     [ @$problem_sources, @$imported ];
 }
 
+sub delete_req_details {
+    my ($self, $req_id) = @_;
+    $dbh->do(q~DELETE FROM req_details WHERE req_id = ?~, undef, $req_id);
+    $dbh->commit;
+}
+
 1;
