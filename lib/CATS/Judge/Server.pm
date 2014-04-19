@@ -152,4 +152,12 @@ sub insert_req_details {
     $dbh->commit;
 }
 
+sub get_problem_tests {
+    my ($self, $pid) = @_;
+    $dbh->selectall_arrayref(q~
+        SELECT generator_id, rank, param, std_solution_id, in_file, out_file, gen_group
+        FROM tests WHERE problem_id = ? ORDER BY rank~, { Slice => {} },
+        $pid);
+}
+
 1;

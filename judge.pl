@@ -554,14 +554,9 @@ sub input_output_redir {
 sub prepare_tests
 {
     my ($pid, $input_fname, $output_fname, $tlimit, $mlimit) = @_;
-    # создаем тесты
-    my $tests = $dbh->selectall_arrayref(qq~
-        SELECT generator_id, rank, param, std_solution_id, in_file, out_file, gen_group
-            FROM tests WHERE problem_id = ? ORDER BY rank~, { Slice => {} },
-        $pid);
+    my $tests = $judge->get_problem_tests($pid);
 
-    if (!@$tests)   
-    {
+    if (!@$tests) {
         log_msg("no tests defined\n");
         return undef;
     }

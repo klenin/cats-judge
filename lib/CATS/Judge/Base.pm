@@ -39,4 +39,6 @@ sub delete_req_details {}
 
 sub insert_req_details {}
 
+sub get_problem_tests { [] }
+
 1;
