@@ -2,7 +2,6 @@
 use v5.10;
 use strict;
 
-use POSIX qw(strftime);
 use File::Spec;
 use constant FS => 'File::Spec';
 use File::NCopy qw(copy);
@@ -11,8 +10,9 @@ use lib 'lib';
 use CATS::Constants;
 use CATS::Utils qw(split_fname);
 use CATS::Testset;
-use CATS::Judge::Server;
 use CATS::Judge::Config;
+use CATS::Judge::Log;
+use CATS::Judge::Server;
 
 use open IN => ':crlf', OUT => ':raw';
 
@@ -28,32 +28,14 @@ my $user_time;
 my $memory_used;
 my $written;
 
-my $judge;
 my $cfg = CATS::Judge::Config->new;
-
+my $log = CATS::Judge::Log->new;
+my $judge;
 my %judge_de_idx;
-
-my $dump;
 
 my $problem_sources;
 
-my ($log_month, $log_year);
-my $last_log_line = '';
-
-sub log_msg
-{
-    my $fmt = shift;
-    my $s = sprintf $fmt, @_;
-    syswrite STDOUT, $s;
-    if ($last_log_line ne $s)
-    {
-        syswrite FDLOG, strftime('%d.%m %H:%M:%S', localtime) . " $s";
-        $last_log_line = $s;
-    }
-    $dump .= $s;
-    undef;
-}
-
+sub log_msg { $log->msg(@_); }
 
 sub trim
 {
@@ -96,13 +78,6 @@ sub write_to_file
     1;
 }
 
-
-sub clear_log_dump 
-{
-    $dump = '';
-}
-
-
 sub dump_child_stdout
 {    
     my %p = @_;
@@ -122,13 +97,11 @@ sub dump_child_stdout
         }
                         
         if ($cfg->save_child_stdout) {
-            syswrite FDLOG, $_;
-            $dump .= $_ if length $dump < 50000;
+            $log->dump_write($_);
         }
 
         if ($duplicate_to) {
             $$duplicate_to .= $_;
-            syswrite FDLOG, '!!';
         }
         
         $eol = (substr($_, -2, 2) eq '\n');
@@ -141,8 +114,7 @@ sub dump_child_stdout
         }
 
         if ($cfg->save_child_stdout) {
-            syswrite FDLOG, "\n";
-            $dump .= '\n';
+            $log->dump_write("\n");
         }
 
         if ($duplicate_to) {
@@ -1058,7 +1030,7 @@ sub process_request
     $r or return;
 
     $judge->lock_request($r);
-    clear_log_dump;
+    $log->clear_dump;
 
     if (!defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
@@ -1090,7 +1062,7 @@ sub process_request
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    $judge->save_log_dump($r, $dump);
+    $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
     return if $state == $cats::st_unhandled_error;
 
@@ -1106,7 +1078,7 @@ sub process_request
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
 
-    $judge->save_log_dump($r, $dump);
+    $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
 }
 
@@ -1125,8 +1097,7 @@ sub main_loop
     }
 }
 
-(undef, undef, undef, undef, $log_month, $log_year) = localtime;
-open FDLOG, sprintf '>>judge-%04d-%02d.log', $log_year + 1900, $log_month + 1;
+$log->init;
 {
     my $judge_cfg = 'config.xml';
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
@@ -1139,7 +1110,5 @@ $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 main_loop;
 CATS::DB::sql_disconnect;
-
-close FDLOG;
 
 1;
