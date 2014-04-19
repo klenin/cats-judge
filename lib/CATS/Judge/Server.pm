@@ -140,4 +140,16 @@ sub delete_req_details {
     $dbh->commit;
 }
 
+sub insert_req_details {
+    my ($self, $p) = @_;
+    $dbh->do(
+        sprintf(
+            q~INSERT INTO req_details (%s) VALUES (%s)~,
+            join(', ', keys %$p), join(', ', ('?') x keys %$p)
+        ),
+        undef, values %$p
+    );
+    $dbh->commit;
+}
+
 1;

@@ -767,14 +767,7 @@ sub insert_test_run_details
         return if $_;
         $_ = $p{result};
     }
-    $dbh->do(
-        sprintf(
-            q~INSERT INTO req_details (%s) VALUES (%s)~,
-            join(', ', keys %p), join(', ', ('?') x keys(%p))
-        ),
-        undef, values %p
-    ) or log_msg("Details failed\n");
-    $dbh->commit;
+    $judge->insert_req_details(\%p);
 }
 
 

@@ -37,4 +37,6 @@ sub get_problem_sources { [] }
 
 sub delete_req_details {}
 
+sub insert_req_details {}
+
 1;
