@@ -1070,14 +1070,10 @@ sub problem_ready
 
     $state eq 'state:ready' or return 0;
 
-    # Эмулируем старый формат CATS_TO_EXACT_DATE
+    # Emulate old CATS_TO_EXACT_DATE format.
     $date =~ m/^date:(\d+)-(\d+)-(\d+)\s(.+)$/ or return 0;
     $date = "$3-$2-$1 $4";
-    my ($is_uptodate) = $dbh->selectrow_array(qq~
-        SELECT 1 FROM problems
-        WHERE id = ? AND upload_date - 1.0000000000 / 24 / 60 / 60 <= ?~, undef,
-        $pid, $date);
-    $is_uptodate;
+    $judge->is_problem_uptodate($pid, $date);
 }
 
 sub process_request

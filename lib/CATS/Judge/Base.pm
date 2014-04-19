@@ -43,4 +43,6 @@ sub get_problem_tests { [] }
 
 sub get_problem { {} }
 
+sub is_problem_uptodate { 0 }
+
 1;
