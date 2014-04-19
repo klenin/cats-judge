@@ -1,7 +1,6 @@
 #!perl -w
 use v5.10;
 use strict;
-use XML::Parser::Expat;
 
 use POSIX qw(strftime);
 use File::Spec;
@@ -13,6 +12,7 @@ use CATS::Constants;
 use CATS::Utils qw(split_fname);
 use CATS::Testset;
 use CATS::Judge::Server;
+use CATS::Judge::Config;
 
 use open IN => ':crlf', OUT => ':raw';
 
@@ -29,18 +29,9 @@ my $memory_used;
 my $written;
 
 my $judge;
-my $workdir;
-my $rundir;
-my $report_file;
-my $stdout_file;
-my $formal_input_fname;
-my $show_child_stdout;
-my $save_child_stdout;
-my $judge_cfg = 'config.xml';
+my $cfg = CATS::Judge::Config->new;
 
-my %defines;
 my %judge_de_idx;
-my %checkers;
 
 my $dump;
 
@@ -82,12 +73,12 @@ sub get_std_checker_cmd
 {
     my $std_checker_name = shift;
 
-    if (!defined $checkers{$std_checker_name}) {
+    if (!defined $cfg->checkers->{$std_checker_name}) {
         log_msg("unknown std checker: $std_checker_name\n");
         return undef;
     }
 
-    $checkers{$std_checker_name};
+     $cfg->checkers->{$std_checker_name};
 }
 
 
@@ -117,20 +108,20 @@ sub dump_child_stdout
     my %p = @_;
     my $duplicate_to = $p{duplicate_to};
 
-    unless (open(FSTDOUT, "<$stdout_file"))
+    unless (open(FSTDOUT, '<', $cfg->stdout_file))
     {
-        log_msg("open failed: '$stdout_file' ($!)\n");
+        log_msg("open failed: '%s' ($!)\n", $cfg->stdout_file);
         return undef;
     }
 
     my $eol = 0;
     while (<FSTDOUT>)
     {
-        if ($show_child_stdout) {
+        if ($cfg->show_child_stdout) {
             print STDERR $_;
         }
                         
-        if ($save_child_stdout) {
+        if ($cfg->save_child_stdout) {
             syswrite FDLOG, $_;
             $dump .= $_ if length $dump < 50000;
         }
@@ -145,11 +136,11 @@ sub dump_child_stdout
 
     if ($eol)
     {
-        if ($show_child_stdout) {
+        if ($cfg->show_child_stdout) {
             print STDERR "\n";
         }
 
-        if ($save_child_stdout) {
+        if ($cfg->save_child_stdout) {
             syswrite FDLOG, "\n";
             $dump .= '\n';
         }
@@ -315,17 +306,17 @@ sub execute
     #    $exec_str =~ s/%$_/$subst{$_}/g;
     #}
     $exec_str = apply_params($exec_str, $params);
-    $exec_str =~ s/%report_file/$report_file/g;
-    $exec_str =~ s/%stdout_file/$stdout_file/g;
+    $exec_str =~ s/%report_file/$cfg->report_file/eg;
+    $exec_str =~ s/%stdout_file/$cfg->stdout_file/eg;
     $exec_str =~ s/%deadline//g;
         
-    my_chdir($rundir)
+    my_chdir($cfg->rundir)
         or return undef;
 
 
     # очистим stdout_file
-    open(FSTDOUT, ">$stdout_file") or
-        do { my_chdir($workdir); return undef; };
+    open(FSTDOUT, '>', $cfg->stdout_file) or
+        do { my_chdir($cfg->workdir); return undef; };
 
     close(FSTDOUT);
 
@@ -337,14 +328,14 @@ sub execute
     if ($rc)
     {
         log_msg("exit code: $rc\n $!\n");
-        my_chdir($workdir);
+        my_chdir($cfg->workdir);
         return undef;
     }
 
-    unless (open(FREPORT, "<$report_file"))
+    unless (open(FREPORT, '<', $cfg->report_file))
     {
-        log_msg("open failed: '$report_file' ($!)\n");
-        my_chdir($workdir);
+        log_msg("open failed: '%s' ($!)\n", $cfg->report_file);
+        my_chdir($cfg->workdir);
         return undef;
     }
 
@@ -374,7 +365,7 @@ sub execute
     if ($signature ne "--------------- Spawner report ---------------\n")
     {
         log_msg("malformed spawner report: $signature\n");
-        my_chdir($workdir);
+        my_chdir($cfg->workdir);
         return undef;
     }
 
@@ -397,7 +388,7 @@ sub execute
     if ($_ ne '<none>')
     {
         log_msg("\tspawner error: $_\n");
-        my_chdir($workdir);
+        my_chdir($cfg->workdir);
         return undef;
     }
 
@@ -438,8 +429,8 @@ sub execute
     }
     log_msg(
         "-> UserTime: $user_time s | MemoryUsed: $memory_used Mb | Written: $written Mb\n");
-    
-    my_chdir($workdir) 
+
+    my_chdir($cfg->workdir)
         or return undef;
 
     return 1;
@@ -477,10 +468,10 @@ sub generate_test
 
     my ($ps) = grep $_->{id} == $test->{generator_id}, @$problem_sources or die;
 
-    my_remove "$rundir/*"
+    my_remove $cfg->rundir . '/*'
         or return undef;
 
-    my_copy("tests/$pid/temp/$test->{generator_id}/*", "$rundir")
+    my_copy("tests/$pid/temp/$test->{generator_id}/*", $cfg->rundir)
         or return undef;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
@@ -532,7 +523,7 @@ sub generate_test_group
     {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
-        my_copy(sprintf("$rundir/$out", $_->{rank}), "tests/$pid/$_->{rank}.tst")
+        my_copy($cfg->rundir . sprintf("/$out", $_->{rank}), "tests/$pid/$_->{rank}.tst")
             or return undef;
     }
     1;
@@ -542,8 +533,8 @@ sub generate_test_group
 sub input_or { $_[0] eq '*STDIN' ? 'input.txt' : $_[1] }
 sub output_or { $_[0] eq '*STDOUT' ? 'output.txt' : $_[1] }
 
-sub input_or_default { FS->catfile($rundir, input_or($_[0], $_[0])) }
-sub output_or_default { FS->catfile($rundir, output_or($_[0], $_[0])) }
+sub input_or_default { FS->catfile($cfg->rundir, input_or($_[0], $_[0])) }
+sub output_or_default { FS->catfile($cfg->rundir, output_or($_[0], $_[0])) }
 
 sub input_output_redir {
     input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
@@ -579,7 +570,7 @@ sub prepare_tests
             {
                 my $out = generate_test($pid, $t, $input_fname)
                     or return undef;
-                my_copy("$rundir/$out", "tests/$pid/$t->{rank}.tst")
+                my_copy($cfg->rundir . "/$out", "tests/$pid/$t->{rank}.tst")
                     or return undef;
             }
         }
@@ -599,10 +590,10 @@ sub prepare_tests
         {
             my ($ps) = grep $_->{id} == $t->{std_solution_id}, @$problem_sources;
 
-            my_remove "$rundir/*"
+            my_remove $cfg->rundir . '/*'
                 or return undef;
  
-            my_copy("tests/$pid/temp/$t->{std_solution_id}/*", "$rundir")
+            my_copy("tests/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
                 or return undef;
 
             my_copy("tests/$pid/$t->{rank}.tst", input_or_default($input_fname))
@@ -649,7 +640,7 @@ sub prepare_modules
     {
         my (undef, undef, $fname, $name, undef) = split_fname($m->{fname});
         log_msg("module: $fname\n");
-        write_to_file("$rundir/$fname", $m->{src})
+        write_to_file($cfg->rundir . "/$fname", $m->{src})
             or return undef;
 
         # в данном случае ничего страшного, если compile_cmd нету, 
@@ -683,14 +674,14 @@ sub initialize_problem
 
     for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources)
     {
-        my_remove "$rundir/*"
+        my_remove $cfg->rundir . '/*'
             or return undef;
-        
+
         prepare_modules($cats::source_modules{$ps->{stype}} || 0)
             or return undef;
 
         my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
-        write_to_file("$rundir/$fname", $ps->{src}) 
+        write_to_file($cfg->rundir . "/$fname", $ps->{src})
             or return undef;
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
@@ -705,14 +696,14 @@ sub initialize_problem
         }
 
         if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
-           write_to_file("$rundir/$formal_input_fname", $p->{formal_input})
+           write_to_file($cfg->rundir . '/' . $cfg->formal_input_fname, $p->{formal_input})
               or return undef;
         }
 
         my_mkdir("tests/$pid/temp/$ps->{id}")
             or return undef;
 
-        my_copy("$rundir/*", "tests/$pid/temp/$ps->{id}")
+        my_copy($cfg->rundir . '/*', "tests/$pid/temp/$ps->{id}")
             or return undef;
     }
     prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit}, $p->{memory_limit})
@@ -783,7 +774,7 @@ sub run_checker
     {
         my ($ps) = grep $_->{id} == $problem->{checker_id}, @$problem_sources;
 
-        my_safe_copy("tests/$problem->{id}/temp/$problem->{checker_id}/*", "$rundir", $problem->{id})
+        my_safe_copy("tests/$problem->{id}/temp/$problem->{checker_id}/*", $cfg->rundir, $problem->{id})
             or return undef;
 
         (undef, undef, undef, $checker_params->{name}, undef) =
@@ -831,8 +822,9 @@ sub run_single_test
     $test_run_details{test_rank} = $p{rank};
     $test_run_details{checker_comment} = '';
 
-    my_remove "$rundir/*" or return undef;
-    my_safe_copy("solutions/$p{sid}/*", $rundir, $problem->{id})
+    my_remove $cfg->rundir . '/*'
+        or return undef;
+    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $problem->{id})
         or return undef;
     my_safe_copy(
         "tests/$problem->{id}/$p{rank}.tst",
@@ -879,7 +871,7 @@ sub run_single_test
         "tests/$problem->{id}/$p{rank}.tst",
         input_or_default($problem->{input_file}), $problem->{id})
         or return undef;
-    my_safe_copy("tests/$problem->{id}/$p{rank}.ans", "$rundir/$p{rank}.ans", $problem->{id})
+    my_safe_copy("tests/$problem->{id}/$p{rank}.ans", $cfg->rundir . "/$p{rank}.ans", $problem->{id})
         or return undef;
 
     run_checker(problem => $problem, rank => $p{rank})
@@ -937,11 +929,11 @@ sub test_solution {
     {
     my $r = eval
     {
-    my_remove "$rundir/*"
+    my_remove $cfg->rundir . '/*'
         or return undef;
       
     prepare_modules($cats::solution_module) or return undef;
-    write_to_file("$rundir/$problem->{full_name}", $src)
+    write_to_file($cfg->rundir . "/$problem->{full_name}", $src)
         or return undef;
 
     my $compile_cmd = get_cmd('compile', $de_id);
@@ -956,7 +948,7 @@ sub test_solution {
         {
             my $runfile = get_cmd('runfile', $de_id);
             $runfile = apply_params($runfile, $problem) if $runfile;
-            if ($runfile && !(-f "$rundir/$runfile"))
+            if ($runfile && !(-f $cfg->rundir . "/$runfile"))
             {
                 $ok = 0;
                 log_msg("Runfile '$runfile' not created\n");
@@ -973,7 +965,7 @@ sub test_solution {
     my_mkdir("solutions/$sid")
         or return undef;
 
-    my_copy("$rundir/*", "solutions/$sid")
+    my_copy($cfg->rundir . '/*', "solutions/$sid")
         or return undef;
 
     # сначале тестируем в случайном порядке,
@@ -1118,14 +1110,12 @@ sub process_request
     $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
 }
 
-my %judge_de;
-
 sub main_loop
 {
     log_msg("judge: %s\n", $judge->name);
-    log_msg("suppoted DEs: %s\n", join ',', sort { $a <=> $b } keys %judge_de);
+    log_msg("suppoted DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
-    my_chdir($workdir) or return;
+    my_chdir($cfg->workdir) or return;
     for (my $i = 0; ; $i++) {
         sleep 2;
         log_msg("pong\n") if $judge->update_state;
@@ -1135,69 +1125,18 @@ sub main_loop
     }
 }
 
-sub apply_defines
-{
-    my $expr = shift // '';
-    $expr =~ s/$_/$defines{$_}/g for sort { length $b <=> length $a } keys %defines;
-    $expr;
-}
-
-sub start_handler {
-    my ($p, $el, %atts) = @_;
-    my $h = {
-        judge => sub {
-            $workdir = $atts{'workdir'};
-            $rundir = $atts{'rundir'};
-            my $judge_name = $atts{'name'};
-            $report_file = $atts{'report_file'};
-            $stdout_file = $atts{'stdout_file'};
-            $formal_input_fname = $atts{'formal_input_fname'};
-            $show_child_stdout = $atts{'show_child_stdout'};
-            $save_child_stdout = $atts{'save_child_stdout'};
-            $judge = CATS::Judge::Server->new(name => $judge_name);
-        },
-        de => sub {
-            my %de;
-            $de{$_} = apply_defines($atts{$_})
-                for qw(compile run generate check runfile);
-            $judge_de{$atts{'code'}} = \%de;
-        },
-        define => sub {
-            $defines{$atts{'name'}} = apply_defines($atts{'value'});
-        },
-        checker => sub {
-            $checkers{$atts{'name'}} = apply_defines($atts{'exec'});
-        },
-    }->{$el} or die "Unknown tag $el";
-    $h->();
-}
-
-sub read_cfg {
-    my $parser = XML::Parser::Expat->new;
-    $parser->setHandlers(Start => \&start_handler);
-
-    {
-        open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
-        $parser->parse($cfg_file);
-    }
-
-    $judge->name    || die "$judge_cfg: undefined judge name";
-    $workdir        || die "$judge_cfg: undefined judge working directory";
-    $rundir         || die "$judge_cfg: undefined judge running directory";
-    $report_file    || die "$judge_cfg: undefined spawner report file";
-    $stdout_file    || die "$judge_cfg: undefined spawner stdout file";
-    $formal_input_fname || die "$judge_cfg: undefined file name for formal input";
-}
-
-#$fatal_error_html_style = 0;
-
 (undef, undef, undef, undef, $log_month, $log_year) = localtime;
 open FDLOG, sprintf '>>judge-%04d-%02d.log', $log_year + 1900, $log_month + 1;
+{
+    my $judge_cfg = 'config.xml';
+    open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
+    $cfg->read_file($cfg_file);
+}
 CATS::DB::sql_connect;
-read_cfg;
+$judge = CATS::Judge::Server->new(name => $cfg->name);
 $judge->auth;
-$judge->set_DEs(\%judge_de);
-$judge_de_idx{$_->{id}} = $_ for values %judge_de;
+$judge->set_DEs($cfg->DEs);
+$judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 main_loop;
 CATS::DB::sql_disconnect;
 
