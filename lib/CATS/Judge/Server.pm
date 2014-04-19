@@ -160,4 +160,11 @@ sub get_problem_tests {
         $pid);
 }
 
+sub get_problem {
+    my ($self, $pid) = @_;
+    $dbh->selectrow_hashref(q~
+        SELECT id, time_limit, memory_limit, input_file, output_file, std_checker
+        FROM problems WHERE id = ?~, { Slice => {} }, $pid);
+}
+
 1;

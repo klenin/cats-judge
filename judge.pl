@@ -920,9 +920,7 @@ sub test_solution
 {
     my ($pid, $sid, $fname_with_path, $src, $de_id, $cid) = @_;
     log_msg("Testing solution: $sid for problem: $pid\n");
-    my $problem = $dbh->selectrow_hashref(qq~
-        SELECT id, time_limit, memory_limit, input_file, output_file, std_checker        
-        FROM problems WHERE id = ?~, { Slice => {} }, $pid);
+    my $problem = $judge->get_problem($pid);
 
     my ($run_all_tests) = $dbh->selectrow_array(qq~
         SELECT run_all_tests FROM contests WHERE id = ?~, undef, $cid);

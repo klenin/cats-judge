@@ -41,4 +41,6 @@ sub insert_req_details {}
 
 sub get_problem_tests { [] }
 
+sub get_problem { {} }
+
 1;
