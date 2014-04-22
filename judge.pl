@@ -1002,7 +1002,8 @@ sub test_solution {
     if ($r->{run_all_tests} && $failed_test) {
         $res = $inserted_details{$failed_test};
     }
-    return ($res, $failed_test);
+    $r->{failed_test} = $failed_test;
+    return $res;
 }
 
 
@@ -1068,18 +1069,17 @@ sub process_request
     return if $state == $cats::st_unhandled_error;
 
     log_msg("test log:\n");
-    my $failed_test;
     if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
         log_msg("renamed from '$r->{fname}'\n");
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
-    ($state, $failed_test) = test_solution($r);
+    $state = test_solution($r);
 
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
 
     $judge->save_log_dump($r, $log->{dump});
-    $judge->set_request_state($r, $state, failed_test => $failed_test, %$r);
+    $judge->set_request_state($r, $state, %$r);
 }
 
 sub main_loop
