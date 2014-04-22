@@ -871,9 +871,11 @@ sub run_single_test
 
 
 sub test_solution {
-    my ($r, $pid, $sid, $fname_with_path, $src, $de_id) = @_;
-    log_msg("Testing solution: $sid for problem: $pid\n");
-    my $problem = $judge->get_problem($pid);
+    my ($r) = @_;
+    my ($sid, $de_id) = ($r->{id}, $r->{de_id});
+
+    log_msg("Testing solution: $sid for problem: $r->{problem_id}\n");
+    my $problem = $judge->get_problem($r->{problem_id});
 
     my $memory_handicap = $judge_de_idx{$de_id}->{memory_handicap};
 
@@ -891,8 +893,7 @@ sub test_solution {
     %test_run_details = (req_id => $sid, test_rank => 1);
     %inserted_details = ();
 
-    (undef, undef, $problem->{full_name}, $problem->{name}, undef) =
-        split_fname($fname_with_path);
+    (undef, undef, $problem->{full_name}, $problem->{name}, undef) = split_fname($r->{fname});
         
     my $res = undef;
     my $failed_test = undef;
@@ -905,7 +906,7 @@ sub test_solution {
         or return undef;
       
     prepare_modules($cats::solution_module) or return undef;
-    write_to_file($cfg->rundir . "/$problem->{full_name}", $src)
+    write_to_file($cfg->rundir . "/$problem->{full_name}", $r->{src})
         or return undef;
 
     my $compile_cmd = get_cmd('compile', $de_id);
@@ -1072,8 +1073,7 @@ sub process_request
         log_msg("renamed from '$r->{fname}'\n");
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
-    ($state, $failed_test) = test_solution(
-        $r, $r->{problem_id}, $r->{id}, $r->{fname}, $r->{src}, $r->{de_id}, $r->{contest_id});
+    ($state, $failed_test) = test_solution($r);
 
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
