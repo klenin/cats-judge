@@ -236,7 +236,7 @@ sub my_copy
 {
     my ($src, $dest) = @_;
     #return 1
-    if (copy \1, $src, $dest) { return 1; }
+    if (copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest)) { return 1; }
     use Carp;
     log_msg "copy failed: 'cp $src $dest' '$!' " . Carp::longmess('') . "\n";
     return undef;
@@ -246,7 +246,7 @@ sub my_copy
 sub my_safe_copy
 {
     my ($src, $dest, $pid) = @_;
-    return 1 if copy \1, $src, $dest;
+    return 1 if copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest);
     log_msg "copy failed: 'cp $src $dest' $!, trying to reinitialize\n";
     # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
     # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
@@ -945,7 +945,10 @@ sub test_solution {
     # если найдена ошибка -- подряд до первого ошибочного теста
     for my $pass (1..2)
     {
-        my @tests = CATS::Testset::get_testset($sid, 1);
+        my @tests = (0);
+        if ($judge->isa('CATS::Judge::Server')) {
+            @tests = CATS::Testset::get_testset($sid, 1);
+        }
 
         if (!@tests)
         {
