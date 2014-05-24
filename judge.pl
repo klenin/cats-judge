@@ -22,11 +22,6 @@ my $tm_memory_limit_exceeded  = 'MemoryLimitExceeded';
 my $tm_write_limit_exceeded   = 'WriteLimitExceeded';
 my $tm_abnormal_exit_process  = 'AbnormalExitProcess';
 
-my $terminate_reason;
-my $exit_status;
-my $user_time;
-my $memory_used;
-my $written;
 
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
@@ -139,7 +134,7 @@ sub recurse_dir
         return 0;
     }
       
-    my @files = grep {! /^\.\.?$/} readdir DIR;   
+    my @files = grep {! /^\.\.?$/} readdir DIR;
     closedir DIR;
 
     my $res = 1;
@@ -151,7 +146,7 @@ sub recurse_dir
                 $res = 0;
             }
         }
-        elsif (-d $f && ! -l $f) {            
+        elsif (-d $f && ! -l $f) {
             recurse_dir($f)
                 or $res = 0;
 
@@ -268,9 +263,6 @@ sub execute
 {
     my ($exec_str, $params, %rest) = @_;
 
-    $terminate_reason = undef;
-    $exit_status = undef;
-
     #my %subst = %$params;
    
     #for (keys %subst)
@@ -334,6 +326,7 @@ sub execute
     
     my $skip = <FREPORT>;
     my $signature = <FREPORT>;
+    my $sp_report = { };
     if ($signature ne "--------------- Spawner report ---------------\n")
     {
         log_msg("malformed spawner report: $signature\n");
@@ -344,17 +337,19 @@ sub execute
     for (1..10) {
         my $skip = <FREPORT>;
     }
-    $user_time          = <FREPORT>;
-    $memory_used        = <FREPORT>;
-    $written            = <FREPORT>;
-    $terminate_reason   = <FREPORT>;
-    $exit_status        = <FREPORT>;
-    $skip               = <FREPORT>;
-    my $spawner_error   = <FREPORT>;
+    $sp_report->{UserTime}          = <FREPORT>;
+    $sp_report->{PeakMemoryUsed}    = <FREPORT>;
+    $sp_report->{Written}           = <FREPORT>;
+    $sp_report->{TerminateReason}   = <FREPORT>;
+    $sp_report->{ExitStatus}        = <FREPORT>;
+
+    $skip                          = <FREPORT>;
+
+    $sp_report->{SpawnerError}      = <FREPORT>;
     
     close FREPORT;
 
-    $spawner_error =~ m/^SpawnerError:(.*)/; 
+    $sp_report->{SpawnerError} =~ m/^SpawnerError:(.*)/; 
 
     $_ = trim($1);
     if ($_ ne '<none>')
@@ -364,48 +359,48 @@ sub execute
         return undef;
     }
 
-    $terminate_reason =~ m/^TerminateReason:(.*)/; 
-    $terminate_reason = trim($1);
+    $sp_report->{TerminateReason} =~ m/^TerminateReason:(.*)/; 
+    $sp_report->{TerminateReason} = trim($1);
 
-    $exit_status =~ m/^ExitStatus:(.*)/;
-    $exit_status = trim($1);
+    $sp_report->{ExitStatus} =~ m/^ExitStatus:(.*)/;
+    $sp_report->{ExitStatus} = trim($1);
     
-    $user_time =~ m/^UserTime:(.*) \(sec\)/;
-    $user_time = trim($1);
+    $sp_report->{UserTime} =~ m/^UserTime:(.*) \(sec\)/;
+    $sp_report->{UserTime} = trim($1);
     
-    $memory_used =~ m/^PeakMemoryUsed:(.*)\(Mb\)/;
-    $memory_used = trim($1);
+    $sp_report->{PeakMemoryUsed} =~ m/^PeakMemoryUsed:(.*)\(Mb\)/;
+    $sp_report->{PeakMemoryUsed} = trim($1);
 
-    $written =~ m/^Written:(.*)\(Mb\)/;
-    $written = trim($1);
+    $sp_report->{Written} =~ m/^Written:(.*)\(Mb\)/;
+    $sp_report->{Written} = trim($1);
 
-    if ($terminate_reason eq $tm_exit_process && $exit_status ne '0')
+    if ($sp_report->{TerminateReason} eq $tm_exit_process && $sp_report->{ExitStatus} ne '0')
     {
-        log_msg("process exit code: $exit_status\n");
+        log_msg("process exit code: $sp_report->{ExitStatus}\n");
     }
-    elsif ($terminate_reason eq $tm_time_limit_exceeded)
+    elsif ($sp_report->{TerminateReason} eq $tm_time_limit_exceeded)
     {
         log_msg("time limit exceeded\n");
     }
-    elsif ($terminate_reason eq $tm_write_limit_exceeded)
+    elsif ($sp_report->{Written} eq $tm_write_limit_exceeded)
     {
         log_msg("write limit exceeded\n");
     }
-    elsif ($terminate_reason eq $tm_memory_limit_exceeded)
+    elsif ($sp_report->{TerminateReason} eq $tm_memory_limit_exceeded)
     {
         log_msg("memory limit exceeded\n");
     }
-    elsif ($terminate_reason eq $tm_abnormal_exit_process)
+    elsif ($sp_report->{TerminateReason} eq $tm_abnormal_exit_process)
     {
-        log_msg("abnormal process termination. Process exit status: $exit_status\n");
+        log_msg("abnormal process termination. Process exit status: $sp_report->{ExitStatus}\n");
     }
     log_msg(
-        "-> UserTime: $user_time s | MemoryUsed: $memory_used Mb | Written: $written Mb\n");
+        "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} Mb | Written: $sp_report->{Written} Mb\n");
 
     my_chdir($cfg->workdir)
         or return undef;
 
-    return 1;
+    $sp_report;
 }
 
 sub save_problem_description
@@ -462,14 +457,14 @@ sub generate_test
         $out = 'stdout1.txt';
         $redir = " -so:$out -ho:1";
     }
-    execute(
+    my $sp_report = execute(
         $generate_cmd, {
         full_name => $fname, name => $name,
         limits => get_special_limits($ps),
         args => $test->{param} // '', redir => $redir }
     ) or return undef;
 
-    if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+    if ($sp_report->{TerminateReason} ne $tm_exit_process || $sp_report->{ExitStatus} ne '0')
     {
         return undef;
     }
@@ -576,7 +571,7 @@ sub prepare_tests
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-            execute($run_cmd, {
+            my $sp_report = execute($run_cmd, {
                 full_name => $fname, 
                 name => $name, 
                 time_limit => $ps->{time_limit} || $tlimit,
@@ -585,7 +580,7 @@ sub prepare_tests
                 input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
-            if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+            if ($sp_report->{TerminateReason} ne $tm_exit_process || $sp_report->{ExitStatus} ne '0')
             {
                 return undef;
             }
@@ -658,9 +653,9 @@ sub initialize_problem
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
         {
-            execute($compile_cmd, { full_name => $fname, name => $name })
+            my $sp_report = execute($compile_cmd, { full_name => $fname, name => $name })
                 or return undef;
-            if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+            if ($sp_report->{TerminateReason} ne $tm_exit_process || $sp_report->{ExitStatus} ne '0')
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
@@ -762,17 +757,19 @@ sub run_checker
             or return log_msg("No 'check' action for DE: $ps->{code}\n");
     }
 
+    my $sp_report;
     for my $c (\$test_run_details{checker_comment})
     {
         $$c = undef;
-        execute($checker_cmd, $checker_params, duplicate_output => $c)
+        $sp_report = execute($checker_cmd, $checker_params, duplicate_output => $c)
             or return undef;
         #Encode::from_to($$c, 'cp866', 'utf8');
         # обрезать для надёжности, чтобы влезло в поле БД
         $$c = substr($$c, 0, 199) if defined $$c;
     }
 
-    $terminate_reason eq $tm_exit_process or return undef;
+    # checked only once?
+    $sp_report->{TerminateReason} eq $tm_exit_process or return undef;
 
     1;
 }
@@ -811,19 +808,19 @@ sub run_single_test
         test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
-    execute($run_cmd, $exec_params) or return undef;
+    my $sp_report = execute($run_cmd, $exec_params) or return undef;
 
-    $test_run_details{time_used} = $user_time;
-    $test_run_details{memory_used} = int($memory_used * 1024 * 1024);
-    $test_run_details{disk_used} = int($written * 1024 * 1024);
+    $test_run_details{time_used} = $sp_report->{UserTime};
+    $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
+    $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
 
-    for ($terminate_reason)
+    for ($sp_report->{TerminateReason})
     {
         if ($_ eq $tm_exit_process)
         {
-            if ($exit_status ne '0')
+            if ($sp_report->{ExitStatus} ne '0')
             {
-                $test_run_details{checker_comment} = $exit_status;
+                $test_run_details{checker_comment} = $sp_report->{ExitStatus};
                 return $cats::st_runtime_error;
             }
         }
@@ -849,22 +846,22 @@ sub run_single_test
     run_checker(problem => $problem, rank => $p{rank})
         or return undef;
 
-    if ($exit_status eq '0')
+    if ($sp_report->{ExitStatus} eq '0')
     {
         log_msg("OK\n");
         return $cats::st_accepted;
     }
-    elsif ($exit_status eq '1')
+    elsif ($sp_report->{ExitStatus} eq '1')
     {
         return $cats::st_wrong_answer;
     }
-    elsif ($exit_status eq '2')
+    elsif ($sp_report->{ExitStatus} eq '2')
     {
         return $cats::st_presentation_error;
     }
     else
     {
-        log_msg("checker error (exit code '$exit_status')\n");
+        log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
         return undef;
     }
 }
@@ -914,9 +911,9 @@ sub test_solution {
 
     if ($compile_cmd ne '')
     {
-        execute($compile_cmd, { filter_hash($problem, qw/full_name name/) })
+        my $sp_report = execute($compile_cmd, { filter_hash($problem, qw/full_name name/) })
             or return undef;
-        my $ok = $terminate_reason eq $tm_exit_process && $exit_status eq '0';
+        my $ok = $sp_report->{TerminateReason} eq $tm_exit_process && $sp_report->{ExitStatus} eq '0';
         if ($ok)
         {
             my $runfile = get_cmd('runfile', $de_id);
