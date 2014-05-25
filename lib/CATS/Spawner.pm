@@ -153,7 +153,6 @@ sub execute
     
     my $skip = <FREPORT>;
     my $signature = <FREPORT>;
-    my $sp_report = { };
     if ($signature ne "--------------- Spawner report ---------------\n")
     {
         $log->msg("malformed spawner report: $signature\n");
@@ -161,45 +160,32 @@ sub execute
         return undef;
     }
 
-    for (1..10) {
-        my $skip = <FREPORT>;
+    my $checking = 0;
+    my $sp_report = { };
+    while (my $line = <FREPORT>) {
+        if ($line =~ /^(.+):\s+(.+)$/) {
+            my $p = $1;
+            my $v = $2;
+            if ($v =~ /^(\d+\.?\d*)\s*\((.+)\)/) {
+                $v = $1;
+                #check $2
+            }
+            if ($p ne $cats::required_fields[$checking]) {
+                $log->msg("Wrong position for $p\n");
+                return undef;
+            }
+            $checking++;
+            $sp_report->{$p} = $v;
+        }
     }
-    $sp_report->{UserTime}          = <FREPORT>;
-    $sp_report->{PeakMemoryUsed}    = <FREPORT>;
-    $sp_report->{Written}           = <FREPORT>;
-    $sp_report->{TerminateReason}   = <FREPORT>;
-    $sp_report->{ExitStatus}        = <FREPORT>;
-
-    $skip                          = <FREPORT>;
-
-    $sp_report->{SpawnerError}      = <FREPORT>;
     
     close FREPORT;
-
-    $sp_report->{SpawnerError} =~ m/^SpawnerError:(.*)/; 
-
-    $_ = trim($1);
-    if ($_ ne '<none>')
+    if ($sp_report->{SpawnerError} ne '<none>')
     {
-        $log->msg("\tspawner error: $_\n");
+        $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
         $self->my_chdir($self->{cfg}->workdir);
         return undef;
     }
-
-    $sp_report->{TerminateReason} =~ m/^TerminateReason:(.*)/; 
-    $sp_report->{TerminateReason} = trim($1);
-
-    $sp_report->{ExitStatus} =~ m/^ExitStatus:(.*)/;
-    $sp_report->{ExitStatus} = trim($1);
-    
-    $sp_report->{UserTime} =~ m/^UserTime:(.*) \(sec\)/;
-    $sp_report->{UserTime} = trim($1);
-    
-    $sp_report->{PeakMemoryUsed} =~ m/^PeakMemoryUsed:(.*)\(Mb\)/;
-    $sp_report->{PeakMemoryUsed} = trim($1);
-
-    $sp_report->{Written} =~ m/^Written:(.*)\(Mb\)/;
-    $sp_report->{Written} = trim($1);
 
     if ($sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} ne '0')
     {

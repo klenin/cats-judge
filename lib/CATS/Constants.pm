@@ -70,6 +70,25 @@ $st_testing = 3;
 
 $request_processed = 9;
 
+@required_fields = (
+    'Application', 
+    'Parameters', 
+    'SecurityLevel', 
+    'CreateProcessMethod',
+    'UserName',
+    'UserTimeLimit',
+    'DeadLine',
+    'MemoryLimit',
+    'WriteLimit',
+    'UserTime',
+    'PeakMemoryUsed',
+    'Written',
+    'TerminateReason',
+    'ExitStatus',
+    'SpawnerError'
+);
+
+
 $tm_exit_process           = 'ExitProcess';
 $tm_time_limit_exceeded    = 'TimeLimitExceeded';
 $tm_memory_limit_exceeded  = 'MemoryLimitExceeded';
