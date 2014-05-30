@@ -697,24 +697,14 @@ sub run_single_test
         my $sp_report = run_checker(problem => $problem, rank => $p{rank})
             or return undef;
 
-        if ($sp_report->{ExitStatus} eq '0')
-        {
-            log_msg("OK\n");
-            return $cats::st_accepted;
-        }
-        elsif ($sp_report->{ExitStatus} eq '1')
-        {
-            return $cats::st_wrong_answer;
-        }
-        elsif ($sp_report->{ExitStatus} eq '2')
-        {
-            return $cats::st_presentation_error;
-        }
-        else
-        {
-            log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
-            return undef;
-        }
+        my $result = {
+            0 => $cats::st_accepted,
+            1 => $cats::st_wrong_answer,
+            2 => $cats::st_presentation_error
+        }->{$sp_report->{ExitStatus}}
+            // return log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
+        log_msg("OK\n") if $result == $cats::st_accepted;
+        $result;
     }
 }
 
@@ -925,7 +915,13 @@ sub process_request
         log_msg("renamed from '$r->{fname}'\n");
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
-    $state = test_solution($r);
+
+    eval {
+        $state = test_solution($r); 1;
+    } or do {
+        $state = undef;
+        log_msg("error: $@\n");
+    };
 
     defined $state
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
