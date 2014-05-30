@@ -95,6 +95,17 @@ sub dump_child_stdout
 sub execute
 {
     my ($self, $exec_str, $params, %rest) = @_;
+    $self->my_chdir($self->{cfg}->rundir)
+        or return undef;
+    my $result = $self->execute_inplace($exec_str, $params, %rest);
+    $self->my_chdir($self->{cfg}->workdir)
+        or return undef;
+    $result;
+}
+
+sub execute_inplace
+{
+    my ($self, $exec_str, $params, %rest) = @_;
     my $log = $self->{log};
 
     $exec_str = apply_params($exec_str, $params);
@@ -102,14 +113,8 @@ sub execute
     $exec_str =~ s/%stdout_file/$self->{cfg}{stdout_file}/eg;
     $exec_str =~ s/%deadline//g;
 
-    $self->my_chdir($self->{cfg}->rundir)
-        or return undef;
-
-
     # очистим stdout_file
-    open(FSTDOUT, '>', $self->{cfg}->stdout_file) or
-        do { $self->my_chdir($self->{cfg}->workdir); return undef; };
-
+    open(FSTDOUT, '>', $self->{cfg}->stdout_file) or return undef;
     close(FSTDOUT);
 
     $log->msg("> %s\n", $exec_str);
@@ -120,14 +125,12 @@ sub execute
     if ($rc)
     {
         $log->msg("exit code: $rc\n $!\n");
-        $self->my_chdir($self->{cfg}->workdir);
         return undef;
     }
 
     unless (open(FREPORT, '<', $self->{cfg}->report_file))
     {
         $log->msg("open failed: '%s' ($!)\n", $self->{cfg}->report_file);
-        $self->my_chdir($self->{cfg}->workdir);
         return undef;
     }
 
@@ -157,7 +160,6 @@ sub execute
     if ($signature ne "--------------- Spawner report ---------------\n")
     {
         $log->msg("malformed spawner report: $signature\n");
-        $self->my_chdir($self->{cfg}->workdir);
         return undef;
     }
 
@@ -184,7 +186,6 @@ sub execute
     if ($sp_report->{SpawnerError} ne '<none>')
     {
         $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
-        $self->my_chdir($self->{cfg}->workdir);
         return undef;
     }
 
@@ -210,9 +211,6 @@ sub execute
     }
     $log->msg(
         "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} Mb | Written: $sp_report->{Written} Mb\n");
-
-    $self->my_chdir($self->{cfg}->workdir)
-        or return undef;
 
     $sp_report;
 }
