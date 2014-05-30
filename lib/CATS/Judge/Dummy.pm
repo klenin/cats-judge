@@ -4,16 +4,15 @@ use strict;
 use warnings;
 
 use CATS::Constants;
-use CATS::DB qw(new_id $dbh);
 
 use base qw(CATS::Judge::Base);
 
 my $dummy_counter = 0;
-my $source = 'print "Hello world!\n"; open(H, ">output.txt") or die;1;';
+my $source = 'print "Hello world!\n"; open(H, ">output.txt") or die; print H q~bb~;';
 my $file_name = 'test.pl';
 my $de = 501; #perl
-my $test_output = '';
-my $test_input = '';
+my $test_output = 'bb';
+my $test_input = 'aa';
 
 sub auth {
     my ($self) = @_;
@@ -25,7 +24,7 @@ sub update_state {
     0;
 }
 
-sub is_locked { 
+sub is_locked {
     $dummy_counter = $dummy_counter + 1;
     $dummy_counter - 1;
 }
@@ -59,10 +58,9 @@ sub save_log_dump {
 }
 
 sub set_DEs {
-    my ($self, $cfg_de) = @_;        
-    while ( my ($key, $value) = each($cfg_de) ) {
-        $value->{id} = $key;
-        $value->{code} = $key;
+    my ($self, $cfg_de) = @_;
+    while (my ($key, $value) = each %$cfg_de) {
+        $value->{code} = $value->{id} = $key;
     }
     $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
 }
