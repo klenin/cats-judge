@@ -38,23 +38,14 @@ sub apply_params
     $str;
 }
 
-sub trim
-{
-    my $s = shift;
-    $s =~ s/^\s+//;
-    $s =~ s/\s+$//;
-    $s;
-}
-
 #move this to FileUtils.pm or Utils.pm
-sub my_chdir 
+sub my_chdir
 {
     my $self = shift;
     my $path = shift;
     my $log = $self->{log};
     unless (chdir($path))
     {
-
         $log->msg("couldn't set directory '$path': $!\n");
         return undef;
     }
@@ -62,7 +53,7 @@ sub my_chdir
 }
 
 sub dump_child_stdout
-{    
+{
     my ($self, $duplicate_to) = @_;
     my $log = $self->{log};
     unless (open(FSTDOUT, '<', $self->{cfg}->{stdout_file}))
@@ -103,22 +94,14 @@ sub dump_child_stdout
 
 sub execute
 {
-
     my ($self, $exec_str, $params, %rest) = @_;
     my $log = $self->{log};
 
-    #my %subst = %$params;
-   
-    #for (keys %subst)
-    #{
-    #    $exec_str =~ s/%$_/$subst{$_}/g;
-    #}
     $exec_str = apply_params($exec_str, $params);
     $exec_str =~ s/%report_file/$self->{cfg}{report_file}/eg;
     $exec_str =~ s/%stdout_file/$self->{cfg}{stdout_file}/eg;
     $exec_str =~ s/%deadline//g;
 
-        
     $self->my_chdir($self->{cfg}->rundir)
         or return undef;
 
@@ -168,7 +151,7 @@ sub execute
     #ExitStatus:            0
     #----------------------------------------------
     #SpawnerError:          <none>
-    
+
     my $skip = <FREPORT>;
     my $signature = <FREPORT>;
     if ($signature ne "--------------- Spawner report ---------------\n")
@@ -196,8 +179,8 @@ sub execute
             $sp_report->{$p} = $v;
         }
     }
-    
     close FREPORT;
+
     if ($sp_report->{SpawnerError} ne '<none>')
     {
         $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
