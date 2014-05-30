@@ -221,7 +221,9 @@ sub my_copy
 {
     my ($src, $dest) = @_;
     #return 1
-    if (copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest)) { return 1; }
+    $src = File::Spec->canonpath($src);
+    $dest = File::Spec->canonpath($dest);
+    if (copy \1, $src, $dest) { return 1; }
     use Carp;
     log_msg "copy failed: 'cp $src $dest' '$!' " . Carp::longmess('') . "\n";
     return undef;
@@ -231,7 +233,9 @@ sub my_copy
 sub my_safe_copy
 {
     my ($src, $dest, $pid) = @_;
-    return 1 if copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest);
+    $src = File::Spec->canonpath($src);
+    $dest = File::Spec->canonpath($dest);
+    return 1 if copy \1, $src, $dest;
     log_msg "copy failed: 'cp $src $dest' $!, trying to reinitialize\n";
     # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
     # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
