@@ -5,6 +5,24 @@ use warnings;
 use CATS::Constants;
 use CATS::Judge::Log;
 
+my @required_fields = qw(
+    Application
+    Parameters
+    SecurityLevel
+    CreateProcessMethod
+    UserName
+    UserTimeLimit
+    DeadLine
+    MemoryLimit
+    WriteLimit
+    UserTime
+    PeakMemoryUsed
+    Written
+    TerminateReason
+    ExitStatus
+    SpawnerError
+);
+
 sub new {
     my ($class) = shift;
     my $self = { @_ }; #cfg => $params{cfg}, log => $params{log} };
@@ -170,7 +188,7 @@ sub execute
                 $v = $1;
                 #check $2
             }
-            if ($p ne $cats::required_fields[$checking]) {
+            if ($p ne $required_fields[$checking]) {
                 $log->msg("Wrong position for $p\n");
                 return undef;
             }
