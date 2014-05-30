@@ -621,7 +621,7 @@ sub run_checker
     # checked only once?
     $sp_report->{TerminateReason} eq $cats::tm_exit_process or return undef;
 
-    1;
+    $sp_report;
 }
 
 
@@ -658,61 +658,63 @@ sub run_single_test
         test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
-    my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
-
-    $test_run_details{time_used} = $sp_report->{UserTime};
-    $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
-    $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
-
-    for ($sp_report->{TerminateReason})
     {
-        if ($_ eq $cats::tm_exit_process)
+        my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
+
+        $test_run_details{time_used} = $sp_report->{UserTime};
+        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
+        $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
+
+        for ($sp_report->{TerminateReason})
         {
-            if ($sp_report->{ExitStatus} ne '0')
+            if ($_ eq $cats::tm_exit_process)
             {
-                $test_run_details{checker_comment} = $sp_report->{ExitStatus};
-                return $cats::st_runtime_error;
+                if ($sp_report->{ExitStatus} ne '0')
+                {
+                    $test_run_details{checker_comment} = $sp_report->{ExitStatus};
+                    return $cats::st_runtime_error;
+                }
+            }
+            else
+            {
+                return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
+                return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
+                return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
+                return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
+
+                log_msg("unknown terminate reason: $_\n");
+                return undef;
             }
         }
-        else
-        {
-            return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
-            return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
-            return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
-            return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
-            
-            log_msg("unknown terminate reason: $_\n");
-            return undef;
-        }
     }
-
     my_safe_copy(
         "tests/$problem->{id}/$p{rank}.tst",
         input_or_default($problem->{input_file}), $problem->{id})
         or return undef;
     my_safe_copy("tests/$problem->{id}/$p{rank}.ans", $cfg->rundir . "/$p{rank}.ans", $problem->{id})
         or return undef;
+    {
+        my $sp_report = run_checker(problem => $problem, rank => $p{rank})
+            or return undef;
 
-    run_checker(problem => $problem, rank => $p{rank})
-        or return undef;
-
-    if ($sp_report->{ExitStatus} eq '0')
-    {
-        log_msg("OK\n");
-        return $cats::st_accepted;
-    }
-    elsif ($sp_report->{ExitStatus} eq '1')
-    {
-        return $cats::st_wrong_answer;
-    }
-    elsif ($sp_report->{ExitStatus} eq '2')
-    {
-        return $cats::st_presentation_error;
-    }
-    else
-    {
-        log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
-        return undef;
+        if ($sp_report->{ExitStatus} eq '0')
+        {
+            log_msg("OK\n");
+            return $cats::st_accepted;
+        }
+        elsif ($sp_report->{ExitStatus} eq '1')
+        {
+            return $cats::st_wrong_answer;
+        }
+        elsif ($sp_report->{ExitStatus} eq '2')
+        {
+            return $cats::st_presentation_error;
+        }
+        else
+        {
+            log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
+            return undef;
+        }
     }
 }
 
