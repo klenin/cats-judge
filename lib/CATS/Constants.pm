@@ -70,6 +70,31 @@ $st_testing = 3;
 
 $request_processed = 9;
 
+@required_fields = (
+    'Application', 
+    'Parameters', 
+    'SecurityLevel', 
+    'CreateProcessMethod',
+    'UserName',
+    'UserTimeLimit',
+    'DeadLine',
+    'MemoryLimit',
+    'WriteLimit',
+    'UserTime',
+    'PeakMemoryUsed',
+    'Written',
+    'TerminateReason',
+    'ExitStatus',
+    'SpawnerError'
+);
+
+
+$tm_exit_process           = 'ExitProcess';
+$tm_time_limit_exceeded    = 'TimeLimitExceeded';
+$tm_memory_limit_exceeded  = 'MemoryLimitExceeded';
+$tm_write_limit_exceeded   = 'WriteLimitExceeded';
+$tm_abnormal_exit_process  = 'AbnormalExitProcess';
+
 $st_accepted = 10;
 $st_wrong_answer = 11;
 $st_presentation_error = 12;

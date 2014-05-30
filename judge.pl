@@ -14,36 +14,20 @@ use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
 
+use CATS::Spawner;
+
 use open IN => ':crlf', OUT => ':raw';
 
-my $tm_exit_process           = 'ExitProcess';
-my $tm_time_limit_exceeded    = 'TimeLimitExceeded';
-my $tm_memory_limit_exceeded  = 'MemoryLimitExceeded';
-my $tm_write_limit_exceeded   = 'WriteLimitExceeded';
-my $tm_abnormal_exit_process  = 'AbnormalExitProcess';
-
-my $terminate_reason;
-my $exit_status;
-my $user_time;
-my $memory_used;
-my $written;
 
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
 my $judge;
+my $spawner;
 my %judge_de_idx;
 
 my $problem_sources;
 
 sub log_msg { $log->msg(@_); }
-
-sub trim
-{
-    my $s = shift;
-    $s =~ s/^\s+//;
-    $s =~ s/\s+$//;
-    $s;
-}
 
 sub get_cmd {
     my ($action, $de_id) = @_;
@@ -139,7 +123,7 @@ sub recurse_dir
         return 0;
     }
       
-    my @files = grep {! /^\.\.?$/} readdir DIR;   
+    my @files = grep {! /^\.\.?$/} readdir DIR;
     closedir DIR;
 
     my $res = 1;
@@ -151,7 +135,8 @@ sub recurse_dir
                 $res = 0;
             }
         }
-        elsif (-d $f && ! -l $f) {            
+
+        elsif (-d $f && ! -l $f) {
             recurse_dir($f)
                 or $res = 0;
 
@@ -236,7 +221,7 @@ sub my_copy
 {
     my ($src, $dest) = @_;
     #return 1
-    if (copy \1, $src, $dest) { return 1; }
+    if (copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest)) { return 1; }
     use Carp;
     log_msg "copy failed: 'cp $src $dest' '$!' " . Carp::longmess('') . "\n";
     return undef;
@@ -246,7 +231,7 @@ sub my_copy
 sub my_safe_copy
 {
     my ($src, $dest, $pid) = @_;
-    return 1 if copy \1, $src, $dest;
+    return 1 if copy \1, File::Spec->canonpath($src), File::Spec->canonpath($dest);
     log_msg "copy failed: 'cp $src $dest' $!, trying to reinitialize\n";
     # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
     # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
@@ -262,150 +247,6 @@ sub apply_params
     $str =~ s/%$_/$params->{$_}/g
         for sort { length $b <=> length $a } keys %$params;
     $str;
-}
-
-sub execute
-{
-    my ($exec_str, $params, %rest) = @_;
-
-    $terminate_reason = undef;
-    $exit_status = undef;
-
-    #my %subst = %$params;
-   
-    #for (keys %subst)
-    #{
-    #    $exec_str =~ s/%$_/$subst{$_}/g;
-    #}
-    $exec_str = apply_params($exec_str, $params);
-    $exec_str =~ s/%report_file/$cfg->report_file/eg;
-    $exec_str =~ s/%stdout_file/$cfg->stdout_file/eg;
-    $exec_str =~ s/%deadline//g;
-        
-    my_chdir($cfg->rundir)
-        or return undef;
-
-
-    # очистим stdout_file
-    open(FSTDOUT, '>', $cfg->stdout_file) or
-        do { my_chdir($cfg->workdir); return undef; };
-
-    close(FSTDOUT);
-
-    log_msg("> %s\n", $exec_str);
-    my $rc = system($exec_str) >> 8;
-
-    dump_child_stdout(duplicate_to => $rest{duplicate_output});
-
-    if ($rc)
-    {
-        log_msg("exit code: $rc\n $!\n");
-        my_chdir($cfg->workdir);
-        return undef;
-    }
-
-    unless (open(FREPORT, '<', $cfg->report_file))
-    {
-        log_msg("open failed: '%s' ($!)\n", $cfg->report_file);
-        my_chdir($cfg->workdir);
-        return undef;
-    }
-
-    # Пример файла отчета:
-    #
-    #--------------- Spawner report ---------------
-    #Application:           test.exe
-    #Parameters:            <none>
-    #SecurityLevel:         0
-    #CreateProcessMethod:   CreateProcessAsUser
-    #UserName:              acm3
-    #UserTimeLimit:         0.001000 (sec)
-    #DeadLine:              Infinity
-    #MemoryLimit:           20.000000 (Mb)
-    #WriteLimit:            Infinity
-    #----------------------------------------------
-    #UserTime:              0.010014 (sec)
-    #PeakMemoryUsed:        20.140625 (Mb)
-    #Written:               0.000000 (Mb)
-    #TerminateReason:       TimeLimitExceeded
-    #ExitStatus:            0
-    #----------------------------------------------
-    #SpawnerError:          <none>
-    
-    my $skip = <FREPORT>;
-    my $signature = <FREPORT>;
-    if ($signature ne "--------------- Spawner report ---------------\n")
-    {
-        log_msg("malformed spawner report: $signature\n");
-        my_chdir($cfg->workdir);
-        return undef;
-    }
-
-    for (1..10) {
-        my $skip = <FREPORT>;
-    }
-    $user_time          = <FREPORT>;
-    $memory_used        = <FREPORT>;
-    $written            = <FREPORT>;
-    $terminate_reason   = <FREPORT>;
-    $exit_status        = <FREPORT>;
-    $skip               = <FREPORT>;
-    my $spawner_error   = <FREPORT>;
-    
-    close FREPORT;
-
-    $spawner_error =~ m/^SpawnerError:(.*)/; 
-
-    $_ = trim($1);
-    if ($_ ne '<none>')
-    {
-        log_msg("\tspawner error: $_\n");
-        my_chdir($cfg->workdir);
-        return undef;
-    }
-
-    $terminate_reason =~ m/^TerminateReason:(.*)/; 
-    $terminate_reason = trim($1);
-
-    $exit_status =~ m/^ExitStatus:(.*)/;
-    $exit_status = trim($1);
-    
-    $user_time =~ m/^UserTime:(.*) \(sec\)/;
-    $user_time = trim($1);
-    
-    $memory_used =~ m/^PeakMemoryUsed:(.*)\(Mb\)/;
-    $memory_used = trim($1);
-
-    $written =~ m/^Written:(.*)\(Mb\)/;
-    $written = trim($1);
-
-    if ($terminate_reason eq $tm_exit_process && $exit_status ne '0')
-    {
-        log_msg("process exit code: $exit_status\n");
-    }
-    elsif ($terminate_reason eq $tm_time_limit_exceeded)
-    {
-        log_msg("time limit exceeded\n");
-    }
-    elsif ($terminate_reason eq $tm_write_limit_exceeded)
-    {
-        log_msg("write limit exceeded\n");
-    }
-    elsif ($terminate_reason eq $tm_memory_limit_exceeded)
-    {
-        log_msg("memory limit exceeded\n");
-    }
-    elsif ($terminate_reason eq $tm_abnormal_exit_process)
-    {
-        log_msg("abnormal process termination. Process exit status: $exit_status\n");
-    }
-    log_msg(
-        "-> UserTime: $user_time s | MemoryUsed: $memory_used Mb | Written: $written Mb\n");
-
-    my_chdir($cfg->workdir)
-        or return undef;
-
-    return 1;
 }
 
 sub save_problem_description
@@ -462,14 +303,14 @@ sub generate_test
         $out = 'stdout1.txt';
         $redir = " -so:$out -ho:1";
     }
-    execute(
+    my $sp_report = $spawner->execute(
         $generate_cmd, {
         full_name => $fname, name => $name,
         limits => get_special_limits($ps),
         args => $test->{param} // '', redir => $redir }
     ) or return undef;
 
-    if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+    if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
     {
         return undef;
     }
@@ -576,7 +417,7 @@ sub prepare_tests
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-            execute($run_cmd, {
+            my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname, 
                 name => $name, 
                 time_limit => $ps->{time_limit} || $tlimit,
@@ -585,7 +426,7 @@ sub prepare_tests
                 input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
-            if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
             {
                 return undef;
             }
@@ -619,7 +460,7 @@ sub prepare_modules
         # это значит, что модуль компилировать не надо (de_code=1)
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
-        execute($compile_cmd, { full_name => $fname, name => $name })
+        $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
             or return undef;
     }
     1;
@@ -658,9 +499,9 @@ sub initialize_problem
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
         {
-            execute($compile_cmd, { full_name => $fname, name => $name })
+            my $sp_report = $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
                 or return undef;
-            if ($terminate_reason ne $tm_exit_process || $exit_status ne '0')
+            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
@@ -762,17 +603,19 @@ sub run_checker
             or return log_msg("No 'check' action for DE: $ps->{code}\n");
     }
 
+    my $sp_report;
     for my $c (\$test_run_details{checker_comment})
     {
         $$c = undef;
-        execute($checker_cmd, $checker_params, duplicate_output => $c)
+        $sp_report = $spawner->execute($checker_cmd, $checker_params, duplicate_output => $c)
             or return undef;
         #Encode::from_to($$c, 'cp866', 'utf8');
         # обрезать для надёжности, чтобы влезло в поле БД
         $$c = substr($$c, 0, 199) if defined $$c;
     }
 
-    $terminate_reason eq $tm_exit_process or return undef;
+    # checked only once?
+    $sp_report->{TerminateReason} eq $cats::tm_exit_process or return undef;
 
     1;
 }
@@ -811,28 +654,28 @@ sub run_single_test
         test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
-    execute($run_cmd, $exec_params) or return undef;
+    my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
 
-    $test_run_details{time_used} = $user_time;
-    $test_run_details{memory_used} = int($memory_used * 1024 * 1024);
-    $test_run_details{disk_used} = int($written * 1024 * 1024);
+    $test_run_details{time_used} = $sp_report->{UserTime};
+    $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
+    $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
 
-    for ($terminate_reason)
+    for ($sp_report->{TerminateReason})
     {
-        if ($_ eq $tm_exit_process)
+        if ($_ eq $cats::tm_exit_process)
         {
-            if ($exit_status ne '0')
+            if ($sp_report->{ExitStatus} ne '0')
             {
-                $test_run_details{checker_comment} = $exit_status;
+                $test_run_details{checker_comment} = $sp_report->{ExitStatus};
                 return $cats::st_runtime_error;
             }
         }
         else
         {
-            return $cats::st_runtime_error         if $_ eq $tm_abnormal_exit_process;
-            return $cats::st_time_limit_exceeded   if $_ eq $tm_time_limit_exceeded;
-            return $cats::st_memory_limit_exceeded if $_ eq $tm_memory_limit_exceeded;
-            return $cats::st_security_violation    if $_ eq $tm_write_limit_exceeded;
+            return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
+            return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
+            return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
+            return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
             
             log_msg("unknown terminate reason: $_\n");
             return undef;
@@ -849,22 +692,22 @@ sub run_single_test
     run_checker(problem => $problem, rank => $p{rank})
         or return undef;
 
-    if ($exit_status eq '0')
+    if ($sp_report->{ExitStatus} eq '0')
     {
         log_msg("OK\n");
         return $cats::st_accepted;
     }
-    elsif ($exit_status eq '1')
+    elsif ($sp_report->{ExitStatus} eq '1')
     {
         return $cats::st_wrong_answer;
     }
-    elsif ($exit_status eq '2')
+    elsif ($sp_report->{ExitStatus} eq '2')
     {
         return $cats::st_presentation_error;
     }
     else
     {
-        log_msg("checker error (exit code '$exit_status')\n");
+        log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
         return undef;
     }
 }
@@ -914,9 +757,9 @@ sub test_solution {
 
     if ($compile_cmd ne '')
     {
-        execute($compile_cmd, { filter_hash($problem, qw/full_name name/) })
+        my $sp_report = $spawner->execute($compile_cmd, { filter_hash($problem, qw/full_name name/) })
             or return undef;
-        my $ok = $terminate_reason eq $tm_exit_process && $exit_status eq '0';
+        my $ok = $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
         if ($ok)
         {
             my $runfile = get_cmd('runfile', $de_id);
@@ -945,7 +788,10 @@ sub test_solution {
     # если найдена ошибка -- подряд до первого ошибочного теста
     for my $pass (1..2)
     {
-        my @tests = CATS::Testset::get_testset($sid, 1);
+        my @tests = (0);
+        if ($judge->isa('CATS::Judge::Server')) {
+            @tests = CATS::Testset::get_testset($sid, 1);
+        }
 
         if (!@tests)
         {
@@ -1108,6 +954,7 @@ $judge = CATS::Judge::Server->new(name => $cfg->name);
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
+$spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 main_loop;
 CATS::DB::sql_disconnect;
 
