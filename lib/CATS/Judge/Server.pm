@@ -5,6 +5,7 @@ use warnings;
 
 use CATS::Constants;
 use CATS::DB qw(new_id $dbh);
+use CATS::Testset;
 
 use base qw(CATS::Judge::Base);
 
@@ -177,6 +178,11 @@ sub is_problem_uptodate {
         SELECT 1 FROM problems
         WHERE id = ? AND upload_date - 1.0000000000 / 24 / 60 / 60 <= ?~, undef,
         $pid, $date);
+}
+
+sub get_testset {
+    my ($self, $rid, $update) = @_;
+    CATS::Testset::get_testset($rid, $update);
 }
 
 1;

@@ -122,8 +122,8 @@ sub get_problem {
     };
 }
 
-sub is_problem_uptodate {
-    1;
-}
+sub is_problem_uptodate { 1 }
+
+sub get_testset { (0) }
 
 1;
