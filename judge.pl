@@ -61,56 +61,6 @@ sub write_to_file
     1;
 }
 
-sub dump_child_stdout
-{    
-    my %p = @_;
-    my $duplicate_to = $p{duplicate_to};
-
-    unless (open(FSTDOUT, '<', $cfg->stdout_file))
-    {
-        log_msg("open failed: '%s' ($!)\n", $cfg->stdout_file);
-        return undef;
-    }
-
-    my $eol = 0;
-    while (<FSTDOUT>)
-    {
-        if ($cfg->show_child_stdout) {
-            print STDERR $_;
-        }
-                        
-        if ($cfg->save_child_stdout) {
-            $log->dump_write($_);
-        }
-
-        if ($duplicate_to) {
-            $$duplicate_to .= $_;
-        }
-        
-        $eol = (substr($_, -2, 2) eq '\n');
-    }
-
-    if ($eol)
-    {
-        if ($cfg->show_child_stdout) {
-            print STDERR "\n";
-        }
-
-        if ($cfg->save_child_stdout) {
-            $log->dump_write("\n");
-        }
-
-        if ($duplicate_to) {
-            $$duplicate_to .= $_;
-        }
-    }
-
-    close FSTDOUT;
-
-    1;
-}
-
-
 sub recurse_dir
 {
     my $dir = shift;
@@ -295,11 +245,7 @@ sub generate_test
     my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
     my $redir = '';
-    my $out = $ps->{output_file};
-    if (!defined $out)
-    {
-        $out = $input_fname;
-    }
+    my $out = $ps->{output_file} // $input_fname;
     if ($out =~ /^\*STD(IN|OUT)$/)
     {
         $test->{gen_group} and return undef;
