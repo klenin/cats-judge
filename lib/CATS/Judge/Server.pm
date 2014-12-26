@@ -75,9 +75,11 @@ sub select_request {
         INNER JOIN default_de D ON D.id = S.de_id
         LEFT JOIN contest_problems CP ON CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
         WHERE R.state = ? AND
-            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND D.code IN ($self->{supported_DEs})
-        ROWS 1~); # AND judge_id IS NULL~
-    $dbh->selectrow_hashref($sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready);
+            (CP.status IS NULL OR CP.status = ? OR CA.is_jury = 1) AND
+            D.code IN ($self->{supported_DEs}) AND (judge_id IS NULL OR judge_id = ?)
+        ROWS 1~);
+    $dbh->selectrow_hashref(
+        $sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready, $self->{id});
 }
 
 sub lock_request {
