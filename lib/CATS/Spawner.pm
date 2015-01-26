@@ -164,9 +164,9 @@ sub execute_inplace
     }
 
     my $checking = 0;
-    my $sp_report = { };
+    my $sp_report = {};
     while (my $line = <FREPORT>) {
-        if ($line =~ /^(.+):\s+(.+)$/) {
+        if ($line =~ /^([a-zA-Z]+):\s+(.+)$/) {
             my $p = $1;
             my $v = $2;
             if ($v =~ /^(\d+\.?\d*)\s*\((.+)\)/) {
@@ -174,7 +174,7 @@ sub execute_inplace
                 #check $2
             }
             if ($p ne $required_fields[$checking]) {
-                $log->msg("Wrong position for $p\n");
+                $log->msg("Expected $required_fields[$checking], got $p at pos $checking\n");
                 return undef;
             }
             $checking++;
