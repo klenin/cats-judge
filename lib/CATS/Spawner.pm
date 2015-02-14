@@ -204,6 +204,10 @@ sub execute_inplace
     {
         $log->msg("time limit exceeded\n");
     }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_idleness_limit_exceeded)
+    {
+        $log->msg("idleness limit exceeded\n");
+    }
     elsif ($sp_report->{Written} eq $cats::tm_write_limit_exceeded)
     {
         $log->msg("write limit exceeded\n");

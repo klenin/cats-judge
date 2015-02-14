@@ -13,7 +13,7 @@
 
 <define name='#spawner' value='..\spawner\sp'/>
 <define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
-<define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 %deadline'/>
+<define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
 

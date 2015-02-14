@@ -624,6 +624,7 @@ sub run_single_test
             {
                 return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
                 return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
+                return $cats::st_idleness_limit_exceeded if $_ eq $cats::tm_idleness_limit_exceeded;
                 return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
                 return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
 
