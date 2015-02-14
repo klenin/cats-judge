@@ -5,6 +5,13 @@ use warnings;
 use CATS::Constants;
 use CATS::Judge::Log;
 
+$cats::tm_exit_process            = 'ExitProcess';
+$cats::tm_time_limit_exceeded     = 'TimeLimitExceeded';
+$cats::tm_memory_limit_exceeded   = 'MemoryLimitExceeded';
+$cats::tm_write_limit_exceeded    = 'WriteLimitExceeded';
+$cats::tm_abnormal_exit_process   = 'AbnormalExitProcess';
+$cats::tm_idleness_limit_exceeded = 'IdleTimeLimitExceeded';
+
 my @required_fields = qw(
     Application
     Parameters

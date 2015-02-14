@@ -1,5 +1,6 @@
 package cats;
 
+#$htdocs = "http://imcs.dvgu.ru/acm/cats/docs";
 $htdocs = "./docs";
 $flags_path = "./images/std/countries/";
 
@@ -11,6 +12,9 @@ $anonymous_login = 'anonymous';
     { id => "alt", path => "./../templates/alt" }
 );
 
+@langs = qw(ru en);
+
+$repos_dir = 'repos/';
 
 # максимальное количество записей, извлекаемых из датасета
 $max_fetch_row_count = 1000;
@@ -70,12 +74,6 @@ $st_testing = 3;
 
 $request_processed = 9;
 
-$tm_exit_process           = 'ExitProcess';
-$tm_time_limit_exceeded    = 'TimeLimitExceeded';
-$tm_memory_limit_exceeded  = 'MemoryLimitExceeded';
-$tm_write_limit_exceeded   = 'WriteLimitExceeded';
-$tm_abnormal_exit_process  = 'AbnormalExitProcess';
-
 $st_accepted = 10;
 $st_wrong_answer = 11;
 $st_presentation_error = 12;
@@ -105,6 +103,9 @@ $penalty = 20;
 $slow_refresh = 30;
 $medium_refresh = 10;
 $fast_refresh = 3;
+
+@problem_codes = ('A'..'Z', '1'..'9');
+sub is_good_problem_code { $_[0] =~ /^[A-Z1-9]$/ }
 
 @skins = (
     { id => "std", path => "./../templates/std" },
@@ -223,4 +224,4 @@ $fast_refresh = 3;
 
 );
 
-1;                                          
+1;
