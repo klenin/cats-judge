@@ -471,22 +471,6 @@ sub initialize_problem
     prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit}, $p->{memory_limit})
         or return undef;
 
-    # проверяем, что эталонное решение проходит на всех тестах
-    for my $ps (grep $_->{stype} == $cats::adv_solution, @$problem_sources)
-    {
-        log_msg("==== testing ====\n");
-        my ($state, $failed_test) =
-            test_solution($pid, $ps->{id}, $ps->{fname}, $ps->{src}, $ps->{de_id}, $p->{contest_id});
-
-        if (!defined($state) || $state != $cats::st_accepted) 
-        {
-            log_msg("==== test failed ====\n");
-            return undef;
-        }
-
-        log_msg("=== test completed ===\n");
-    }
-
     save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
         or return undef;
 
