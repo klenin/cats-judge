@@ -110,6 +110,99 @@ sub execute
     $result;
 }
 
+sub parse_report
+{
+    my ($self, $file) = @_;
+    my $log = $self->{log};
+    # Пример файла отчета:
+    #
+    #--------------- Spawner report ---------------
+    #Application:           test.exe
+    #Parameters:            <none>
+    #SecurityLevel:         0
+    #CreateProcessMethod:   CreateProcessAsUser
+    #UserName:              acm3
+    #UserTimeLimit:         0.001000 (sec)
+    #DeadLine:              Infinity
+    #MemoryLimit:           20.000000 (Mb)
+    #WriteLimit:            Infinity
+    #----------------------------------------------
+    #UserTime:              0.010014 (sec)
+    #PeakMemoryUsed:        20.140625 (Mb)
+    #Written:               0.000000 (Mb)
+    #TerminateReason:       TimeLimitExceeded
+    #ExitStatus:            0
+    #----------------------------------------------
+    #SpawnerError:          <none>
+
+    my $skip = <$file>;
+    my $signature = <$file>;
+    if ($signature ne "--------------- Spawner report ---------------\n")
+    {
+        $log->msg("malformed spawner report: $signature\n");
+        return undef;
+    }
+
+    my $checking = 0;
+    my $sp_report = {};
+    while (my $line = <$file>) {
+        if ($line =~ /^([a-zA-Z]+):\s+(.+)$/) {
+            my $p = $1;
+            my $v = $2;
+            if ($v =~ /^(\d+\.?\d*)\s*\((.+)\)/) {
+                $v = $1;
+                #check $2
+            }
+            if ($p ne $required_fields[$checking]) {
+                $log->msg("Expected $required_fields[$checking], got $p at pos $checking\n");
+                return undef;
+            }
+            $checking++;
+            $sp_report->{$p} = $v;
+        }
+    }
+    $sp_report;
+}
+
+sub check_report
+{
+    my ($self, $sp_report) = @_;
+    my $log = $self->{log};
+    if ($sp_report->{SpawnerError} ne '<none>')
+    {
+        $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
+        return undef;
+    }
+
+    if ($sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} ne '0')
+    {
+        $log->msg("process exit code: $sp_report->{ExitStatus}\n");
+    }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_time_limit_exceeded)
+    {
+        $log->msg("time limit exceeded\n");
+    }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_idleness_limit_exceeded)
+    {
+        $log->msg("idleness limit exceeded\n");
+    }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_write_limit_exceeded)
+    {
+        $log->msg("write limit exceeded\n");
+    }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_memory_limit_exceeded)
+    {
+        $log->msg("memory limit exceeded\n");
+    }
+    elsif ($sp_report->{TerminateReason} eq $cats::tm_abnormal_exit_process)
+    {
+        $log->msg("abnormal process termination. Process exit status: $sp_report->{ExitStatus}\n");
+    }
+    $log->msg(
+        "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} bytes | Written: $sp_report->{Written} bytes\n");
+    1;
+}
+
 sub execute_inplace
 {
     my ($self, $exec_str, $params, %rest) = @_;
@@ -141,87 +234,16 @@ sub execute_inplace
         return undef;
     }
 
-    # Пример файла отчета:
-    #
-    #--------------- Spawner report ---------------
-    #Application:           test.exe
-    #Parameters:            <none>
-    #SecurityLevel:         0
-    #CreateProcessMethod:   CreateProcessAsUser
-    #UserName:              acm3
-    #UserTimeLimit:         0.001000 (sec)
-    #DeadLine:              Infinity
-    #MemoryLimit:           20.000000 (Mb)
-    #WriteLimit:            Infinity
-    #----------------------------------------------
-    #UserTime:              0.010014 (sec)
-    #PeakMemoryUsed:        20.140625 (Mb)
-    #Written:               0.000000 (Mb)
-    #TerminateReason:       TimeLimitExceeded
-    #ExitStatus:            0
-    #----------------------------------------------
-    #SpawnerError:          <none>
+    my $sp_report = $self->parse_report(*FREPORT);
 
-    my $skip = <FREPORT>;
-    my $signature = <FREPORT>;
-    if ($signature ne "--------------- Spawner report ---------------\n")
-    {
-        $log->msg("malformed spawner report: $signature\n");
-        return undef;
-    }
-
-    my $checking = 0;
-    my $sp_report = {};
-    while (my $line = <FREPORT>) {
-        if ($line =~ /^([a-zA-Z]+):\s+(.+)$/) {
-            my $p = $1;
-            my $v = $2;
-            if ($v =~ /^(\d+\.?\d*)\s*\((.+)\)/) {
-                $v = $1;
-                #check $2
-            }
-            if ($p ne $required_fields[$checking]) {
-                $log->msg("Expected $required_fields[$checking], got $p at pos $checking\n");
-                return undef;
-            }
-            $checking++;
-            $sp_report->{$p} = $v;
-        }
-    }
     close FREPORT;
 
-    if ($sp_report->{SpawnerError} ne '<none>')
-    {
-        $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
+    unless ($sp_report) {
         return undef;
     }
 
-    if ($sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} ne '0')
-    {
-        $log->msg("process exit code: $sp_report->{ExitStatus}\n");
-    }
-    elsif ($sp_report->{TerminateReason} eq $cats::tm_time_limit_exceeded)
-    {
-        $log->msg("time limit exceeded\n");
-    }
-    elsif ($sp_report->{TerminateReason} eq $cats::tm_idleness_limit_exceeded)
-    {
-        $log->msg("idleness limit exceeded\n");
-    }
-    elsif ($sp_report->{Written} eq $cats::tm_write_limit_exceeded)
-    {
-        $log->msg("write limit exceeded\n");
-    }
-    elsif ($sp_report->{TerminateReason} eq $cats::tm_memory_limit_exceeded)
-    {
-        $log->msg("memory limit exceeded\n");
-    }
-    elsif ($sp_report->{TerminateReason} eq $cats::tm_abnormal_exit_process)
-    {
-        $log->msg("abnormal process termination. Process exit status: $sp_report->{ExitStatus}\n");
-    }
-    $log->msg(
-        "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} Mb | Written: $sp_report->{Written} Mb\n");
+    $self->check_report($sp_report) or return undef;
+
 
     $sp_report;
 }
