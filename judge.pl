@@ -250,7 +250,7 @@ sub generate_test
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
-        $redir = " -so:$out -ho:1";
+        $redir = " --out=nul --out=$out";
     }
     my $sp_report = $spawner->execute(
         $generate_cmd, {
