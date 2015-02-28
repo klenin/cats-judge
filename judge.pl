@@ -28,6 +28,14 @@ my $problem_sources;
 
 sub log_msg { $log->msg(@_); }
 
+sub get_run_key {
+    my $run_method = shift;
+    return {
+        $cats::rm_default => 'run',
+        $cats::rm_interactive => 'run_interactive',
+    }->{$run_method};
+}
+
 sub get_cmd {
     my ($action, $de_id) = @_;
     exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
@@ -305,7 +313,7 @@ sub input_output_redir {
 
 sub prepare_tests
 {
-    my ($pid, $input_fname, $output_fname, $tlimit, $mlimit) = @_;
+    my ($pid, $input_fname, $output_fname, $tlimit, $mlimit, $run_method) = @_;
     my $tests = $judge->get_problem_tests($pid);
 
     if (!@$tests) {
@@ -361,8 +369,9 @@ sub prepare_tests
             my_copy("tests/$pid/$t->{rank}.tst", input_or_default($input_fname))
                 or return undef;
 
-            my $run_cmd = get_cmd('run', $ps->{de_id})
-                or return undef;
+            my $run_key = get_run_key($run_method);
+            my $run_cmd = get_cmd($run_key, $ps->{de_id})
+                or return log_msg("No '$run_key' action for DE: $ps->{code}\n");;
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
@@ -468,7 +477,8 @@ sub initialize_problem
         my_copy($cfg->rundir . '/*', "tests/$pid/temp/$ps->{id}")
             or return undef;
     }
-    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit}, $p->{memory_limit})
+    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit},
+        $p->{memory_limit}, $p->{run_method})
         or return undef;
 
     save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
@@ -572,14 +582,19 @@ sub run_single_test
 
     my_remove $cfg->rundir . '/*'
         or return undef;
-    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $problem->{id})
+
+    my $pid = $problem->{id};
+
+    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $pid)
         or return undef;
     my_safe_copy(
         "tests/$problem->{id}/$p{rank}.tst",
-        input_or_default($problem->{input_file}), $problem->{id})
+        input_or_default($problem->{input_file}), $pid)
         or return undef;
-    my $run_cmd = get_cmd('run', $p{de_id})
-        or return undef;
+
+    my $run_key = get_run_key($problem->{run_method});
+    my $run_cmd = get_cmd($run_key, $p{de_id})
+        or return log_msg("No '$run_key' action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),

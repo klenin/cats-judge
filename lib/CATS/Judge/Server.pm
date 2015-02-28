@@ -170,7 +170,8 @@ sub get_problem {
     $dbh->selectrow_hashref(q~
         SELECT
             id, title, upload_date, time_limit, memory_limit,
-            input_file, output_file, std_checker, contest_id, formal_input
+            input_file, output_file, std_checker, contest_id, formal_input,
+            run_method
         FROM problems WHERE id = ?~, { Slice => {} }, $pid);
 }
 
