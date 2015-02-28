@@ -125,9 +125,14 @@ sub my_remove
     for (@files)
     {
         if (-f $_ || -l $_) {
-            unless (unlink $_) {
-                log_msg("rm $_: $!\n");
-                $res = 0;
+            for my $retry (0..9) {
+                -f $_ || -l $_ or last;
+                $retry and log_msg("rm: retry $retry: $_\n");
+                unless (unlink $_) {
+                    log_msg("rm $_: $!\n");
+                    $res = 0;
+                }
+                $retry and sleep 1;
             }
         }
         elsif (-d $_)
