@@ -28,6 +28,14 @@ my $problem_sources;
 
 sub log_msg { $log->msg(@_); }
 
+sub get_run_key {
+    my $run_method = shift;
+    return {
+        $cats::rm_default => 'run',
+        $cats::rm_interactive => 'run_interactive',
+    }->{$run_method};
+}
+
 sub get_cmd {
     my ($action, $de_id) = @_;
     exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
@@ -57,7 +65,7 @@ sub write_to_file
     }
 
     print F $src;
-    close F;    
+    close F;
     1;
 }
 
@@ -71,7 +79,7 @@ sub recurse_dir
         log_msg("opendir $dir: $!\n");
         return 0;
     }
-      
+
     my @files = grep {! /^\.\.?$/} readdir DIR;
     closedir DIR;
 
@@ -113,22 +121,27 @@ sub expand
 sub my_remove
 {
     my @files = expand @_;
-    my $res = 1;    
-    for (@files) 
-    {             
+    my $res = 1;
+    for (@files)
+    {
         if (-f $_ || -l $_) {
-            unless (unlink $_) {
-                log_msg("rm $_: $!\n");
-                $res = 0;
+            for my $retry (0..9) {
+                -f $_ || -l $_ or last;
+                $retry and log_msg("rm: retry $retry: $_\n");
+                unless (unlink $_) {
+                    log_msg("rm $_: $!\n");
+                    $res = 0;
+                }
+                $retry and sleep 1;
             }
         }
-        elsif (-d $_) 
-        {           
+        elsif (-d $_)
+        {
             recurse_dir($_)
                 or $res = 0;
 
             unless (rmdir $_) {
-                log_msg("rm $_: $!\n"); 
+                log_msg("rm $_: $!\n");
                 $res = 0;
             }
         }
@@ -137,7 +150,7 @@ sub my_remove
 }
 
 
-sub my_chdir 
+sub my_chdir
 {
     my $path = shift;
 
@@ -150,10 +163,10 @@ sub my_chdir
 }
 
 
-sub my_mkdir 
+sub my_mkdir
 {
     my $path = shift;
-    
+
     my_remove($path)
         or return undef;
 
@@ -166,7 +179,7 @@ sub my_mkdir
 }
 
 
-sub my_copy 
+sub my_copy
 {
     my ($src, $dest) = @_;
     #return 1
@@ -305,7 +318,7 @@ sub input_output_redir {
 
 sub prepare_tests
 {
-    my ($pid, $input_fname, $output_fname, $tlimit, $mlimit) = @_;
+    my ($pid, $input_fname, $output_fname, $tlimit, $mlimit, $run_method) = @_;
     my $tests = $judge->get_problem_tests($pid);
 
     if (!@$tests) {
@@ -318,7 +331,7 @@ sub prepare_tests
         # создаем входной файл теста
         if (defined $t->{in_file})
         {
-            write_to_file("tests/$pid/$t->{rank}.tst", $t->{in_file}) 
+            write_to_file("tests/$pid/$t->{rank}.tst", $t->{in_file})
                 or return undef;
         }
         elsif (defined $t->{generator_id})
@@ -336,7 +349,7 @@ sub prepare_tests
                     or return undef;
             }
         }
-        else 
+        else
         {
             log_msg("no input file defined for test #$t->{rank}\n");
             return undef;
@@ -354,21 +367,22 @@ sub prepare_tests
 
             my_remove $cfg->rundir . '/*'
                 or return undef;
- 
+
             my_copy("tests/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
                 or return undef;
 
             my_copy("tests/$pid/$t->{rank}.tst", input_or_default($input_fname))
                 or return undef;
 
-            my $run_cmd = get_cmd('run', $ps->{de_id})
-                or return undef;
+            my $run_key = get_run_key($run_method);
+            my $run_cmd = get_cmd($run_key, $ps->{de_id})
+                or return log_msg("No '$run_key' action for DE: $ps->{code}\n");;
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
             my $sp_report = $spawner->execute($run_cmd, {
-                full_name => $fname, 
-                name => $name, 
+                full_name => $fname,
+                name => $name,
                 time_limit => $ps->{time_limit} || $tlimit,
                 memory_limit => $ps->{memory_limit} || $mlimit,
                 deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
@@ -383,7 +397,7 @@ sub prepare_tests
             my_copy(output_or_default($output_fname), "tests/$pid/$t->{rank}.ans")
                 or return undef;
         }
-        else 
+        else
         {
             log_msg("no output file defined for test #$t->{rank}\n");
             return undef;
@@ -405,7 +419,7 @@ sub prepare_modules
         write_to_file($cfg->rundir . "/$fname", $m->{src})
             or return undef;
 
-        # в данном случае ничего страшного, если compile_cmd нету, 
+        # в данном случае ничего страшного, если compile_cmd нету,
         # это значит, что модуль компилировать не надо (de_code=1)
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
@@ -425,10 +439,10 @@ sub initialize_problem
         or return undef;
 
     # компилируем вспомогательные программы (эталонные решения, генераторы тестов, программы проверки)
-    my_mkdir("tests/$pid") 
+    my_mkdir("tests/$pid")
         or return undef;
 
-    my_mkdir("tests/$pid/temp") 
+    my_mkdir("tests/$pid/temp")
         or return undef;
 
     my %main_source_types;
@@ -454,7 +468,7 @@ sub initialize_problem
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
-            }    
+            }
         }
 
         if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
@@ -468,7 +482,8 @@ sub initialize_problem
         my_copy($cfg->rundir . '/*', "tests/$pid/temp/$ps->{id}")
             or return undef;
     }
-    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit}, $p->{memory_limit})
+    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit},
+        $p->{memory_limit}, $p->{run_method})
         or return undef;
 
     save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
@@ -572,14 +587,19 @@ sub run_single_test
 
     my_remove $cfg->rundir . '/*'
         or return undef;
-    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $problem->{id})
+
+    my $pid = $problem->{id};
+
+    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $pid)
         or return undef;
     my_safe_copy(
         "tests/$problem->{id}/$p{rank}.tst",
-        input_or_default($problem->{input_file}), $problem->{id})
+        input_or_default($problem->{input_file}), $pid)
         or return undef;
-    my $run_cmd = get_cmd('run', $p{de_id})
-        or return undef;
+
+    my $run_key = get_run_key($problem->{run_method});
+    my $run_cmd = get_cmd($run_key, $p{de_id})
+        or return log_msg("No '$run_key' action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
@@ -663,7 +683,7 @@ sub test_solution {
     %inserted_details = ();
 
     (undef, undef, $problem->{full_name}, $problem->{name}, undef) = split_fname($r->{fname});
-        
+
     my $res = undef;
     my $failed_test = undef;
 
@@ -673,7 +693,7 @@ sub test_solution {
     {
     my_remove $cfg->rundir . '/*'
         or return undef;
-      
+
     prepare_modules($cats::solution_module) or return undef;
     write_to_file($cfg->rundir . "/$problem->{full_name}", $r->{src})
         or return undef;
@@ -721,7 +741,7 @@ sub test_solution {
             log_msg("no tests defined\n");
             return $cats::st_unhandled_error;
         }
-    
+
         # получаем случайный порядок тестов
         if ($pass == 1 && !$r->{run_all_tests}) {
             for (@tests) {
