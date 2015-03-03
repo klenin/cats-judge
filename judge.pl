@@ -29,11 +29,10 @@ my $problem_sources;
 sub log_msg { $log->msg(@_); }
 
 sub get_run_key {
-    my $run_method = shift;
     return {
         $cats::rm_default => 'run',
         $cats::rm_interactive => 'run_interactive',
-    }->{$run_method};
+    }->{$_[0] // $cats::rm_default};
 }
 
 sub get_cmd {
