@@ -14,7 +14,8 @@
 <define name='#spawner' value='..\spawner\sp'/>
 <define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
-<define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin server.exe --// %deadline -sr= "/>
+<define name="#default_interactor_name" value="Interact.exe" />
+<define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin %interactor_name --// %deadline -sr= "/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
 
@@ -228,6 +229,8 @@
     code="401"
     compile='#spawner %comspec% /C ..\javac.cmd "%full_name"'
     run='#run "#java\java.exe" -Xss64m "%name"'
+    interactor_name='"#java\java.exe" -Xss64m "Interact"'
+    run_interactive='#run_interactive "#java\java.exe" -Xss64m "%name"'
     runfile='%name.class'
     generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xmx256m -Xss64m "%name" %args'
     check='#spawner %limits "#java\java.exe" -Xss64m "%name" %checker_args'/>

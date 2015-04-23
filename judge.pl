@@ -323,6 +323,11 @@ sub input_output_redir {
     input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
 }
 
+sub interactor_name_or_default {
+    interactor_name => get_cmd("interactor_name", $_[0]) ||
+        get_cfg_define("#default_interactor_name"),
+}
+
 
 sub prepare_tests
 {
@@ -394,6 +399,7 @@ sub prepare_tests
                 time_limit => $ps->{time_limit} || $tlimit,
                 memory_limit => $ps->{memory_limit} || $mlimit,
                 deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
+                interactor_name_or_default($ps->{de_id}),
                 input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
@@ -612,6 +618,7 @@ sub run_single_test
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
         input_output_redir(@$problem{qw(input_file output_file)}),
+        interactor_name_or_default($p{de_id}),
         test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
