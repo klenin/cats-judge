@@ -41,6 +41,15 @@ sub get_cmd {
     $judge_de_idx{$de_id}->{$action};
 }
 
+sub get_cfg_define {
+    my $name = shift;
+    my $value = $cfg->defines->{$name};
+    if (!$value) {
+        log_msg("unknown define name: $name\n");
+    }
+    $value;
+}
+
 sub get_std_checker_cmd
 {
     my $std_checker_name = shift;
@@ -375,7 +384,7 @@ sub prepare_tests
 
             my $run_key = get_run_key($run_method);
             my $run_cmd = get_cmd($run_key, $ps->{de_id})
-                or return log_msg("No '$run_key' action for DE: $ps->{code}\n");;
+                or return log_msg("No '$run_key' action for DE: $ps->{code}\n");
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
@@ -879,7 +888,7 @@ sub process_request
 sub main_loop
 {
     log_msg("judge: %s\n", $judge->name);
-    log_msg("suppoted DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
+    log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
     my_chdir($cfg->workdir) or return;
     for (my $i = 0; ; $i++) {
