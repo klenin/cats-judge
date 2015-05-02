@@ -7,8 +7,8 @@ use XML::Parser::Expat;
 
 sub required_fields() { qw(name rundir workdir report_file stdout_file formal_input_fname) }
 sub optional_fields() { qw(show_child_stdout save_child_stdout) }
-sub special_fields() { qw(DEs checkers) }
-sub de_fields() { qw(compile run run_interactive generate check runfile) }
+sub special_fields() { qw(defines DEs checkers) }
+sub de_fields() { qw(compile run interactor_name run_interactive generate check runfile) }
 
 sub import {
     for (required_fields, optional_fields, special_fields) {
@@ -20,7 +20,7 @@ sub import {
 
 sub new {
     my ($class) = shift;
-    my $self = { DEs => {}, checkers => {} };
+    my $self = { defines => {}, DEs => {}, checkers => {} };
     bless $self, $class;
     $self;
 }
@@ -57,6 +57,8 @@ sub read_file {
         $h->();
     });
     $parser->parse($file);
+
+    $self->{defines} = $defines;
 
     $self->{$_} or die "config: undefined $_" for required_fields;
 }
