@@ -1,0 +1,5 @@
+package CATS::Config;
+
+our $db_dsn = 'dbi:Firebird:host=127.0.0.1/3052;db=cats;ib_dialect=3';
+our $db_user = '';
+our $db_password = '';
