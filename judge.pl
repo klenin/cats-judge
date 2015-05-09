@@ -328,6 +328,39 @@ sub interactor_name_or_default {
         get_cfg_define("#default_interactor_name"),
 }
 
+sub validate_test
+{
+    my ($pid, $test, $path_to_test) = @_;
+    my $in_v_id = $test->{input_validator_id};
+    if ($in_v_id) {
+        my_remove $cfg->rundir . '/*' or return undef;
+        
+        my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
+        my_copy($path_to_test, $cfg->rundir) and
+        my_copy("tests/$pid/temp/$in_v_id/*", $cfg->rundir)
+            or return undef;
+            
+        my $validate_cmd = get_cmd('validate', $validator->{de_id})
+            or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
+        my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
+        my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname($path_to_test);
+    
+        my $sp_report = $spawner->execute(
+            $validate_cmd, {
+            full_name => $fname, name => $name,
+            limits => get_special_limits($validator),
+            test_input => $t_fname
+            }
+        ) or return undef;
+    
+        if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+        {
+            return undef;
+        }
+    }
+        
+    1;
+}
 
 sub prepare_tests
 {
@@ -368,6 +401,8 @@ sub prepare_tests
             return undef;
         }
 
+        validate_test($pid, $t, "tests/$pid/$t->{rank}.tst") or
+            return log_msg("input validation failed: #$t->{rank}\n");
         # создаем выходной файл теста
         if (defined $t->{out_file})
         {
