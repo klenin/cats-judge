@@ -214,6 +214,11 @@ sub my_safe_copy
     die 'REINIT';
 }
 
+sub clear_rundir
+{
+    my_remove $cfg->rundir . '/*'
+}
+
 
 sub apply_params
 {
@@ -255,8 +260,7 @@ sub generate_test
 
     my ($ps) = grep $_->{id} == $test->{generator_id}, @$problem_sources or die;
 
-    my_remove $cfg->rundir . '/*'
-        or return undef;
+    clear_rundir or return undef;
 
     my_copy("tests/$pid/temp/$test->{generator_id}/*", $cfg->rundir)
         or return undef;
@@ -328,6 +332,39 @@ sub interactor_name_or_default {
         get_cfg_define("#default_interactor_name"),
 }
 
+sub validate_test
+{
+    my ($pid, $test, $path_to_test) = @_;
+    my $in_v_id = $test->{input_validator_id};
+    if ($in_v_id) {
+        clear_rundir or return undef;
+        
+        my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
+        my_copy($path_to_test, $cfg->rundir) and
+        my_copy("tests/$pid/temp/$in_v_id/*", $cfg->rundir)
+            or return undef;
+            
+        my $validate_cmd = get_cmd('validate', $validator->{de_id})
+            or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
+        my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
+        my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname($path_to_test);
+    
+        my $sp_report = $spawner->execute(
+            $validate_cmd, {
+            full_name => $fname, name => $name,
+            limits => get_special_limits($validator),
+            test_input => $t_fname
+            }
+        ) or return undef;
+    
+        if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+        {
+            return undef;
+        }
+    }
+        
+    1;
+}
 
 sub prepare_tests
 {
@@ -368,6 +405,8 @@ sub prepare_tests
             return undef;
         }
 
+        validate_test($pid, $t, "tests/$pid/$t->{rank}.tst") or
+            return log_msg("input validation failed: #$t->{rank}\n");
         # создаем выходной файл теста
         if (defined $t->{out_file})
         {
@@ -378,8 +417,7 @@ sub prepare_tests
         {
             my ($ps) = grep $_->{id} == $t->{std_solution_id}, @$problem_sources;
 
-            my_remove $cfg->rundir . '/*'
-                or return undef;
+            clear_rundir or return undef;
 
             my_copy("tests/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
                 or return undef;
@@ -464,8 +502,7 @@ sub initialize_problem
 
     for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources)
     {
-        my_remove $cfg->rundir . '/*'
-            or return undef;
+        clear_rundir or return undef;
 
         prepare_modules($cats::source_modules{$ps->{stype}} || 0)
             or return undef;
@@ -599,8 +636,7 @@ sub run_single_test
     $test_run_details{test_rank} = $p{rank};
     $test_run_details{checker_comment} = '';
 
-    my_remove $cfg->rundir . '/*'
-        or return undef;
+    clear_rundir or return undef;
 
     my $pid = $problem->{id};
 
@@ -706,8 +742,7 @@ sub test_solution {
     {
     my $r = eval
     {
-    my_remove $cfg->rundir . '/*'
-        or return undef;
+    clear_rundir or return undef;
 
     prepare_modules($cats::solution_module) or return undef;
     write_to_file($cfg->rundir . "/$problem->{full_name}", $r->{src})
