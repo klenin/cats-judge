@@ -8,6 +8,7 @@ use File::NCopy qw(copy);
 
 use lib 'lib';
 use CATS::Constants;
+use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::Log;
@@ -880,6 +881,7 @@ sub process_request
     }
 
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
+    CATS::SourceManager::save_all($problem_sources, $cfg->modulesdir);
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
         map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;

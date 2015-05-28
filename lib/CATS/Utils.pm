@@ -21,6 +21,7 @@ BEGIN {
 use strict;
 use warnings;
 
+use File::Spec;
 use Text::Balanced qw(extract_tagged extract_bracketed);
 use Digest::MD5;
 
