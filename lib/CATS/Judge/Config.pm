@@ -5,7 +5,7 @@ use warnings;
 
 use XML::Parser::Expat;
 
-sub required_fields() { qw(name rundir workdir report_file stdout_file formal_input_fname) }
+sub required_fields() { qw(name rundir workdir modulesdir report_file stdout_file formal_input_fname) }
 sub optional_fields() { qw(show_child_stdout save_child_stdout) }
 sub special_fields() { qw(defines DEs checkers) }
 sub de_fields() { qw(compile run interactor_name run_interactive generate check runfile validate) }
