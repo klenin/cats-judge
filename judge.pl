@@ -6,6 +6,7 @@ use File::Spec;
 use constant FS => 'File::Spec';
 use File::NCopy qw(copy);
 use Fcntl qw(:flock);
+use Getopt::Long qw(GetOptions);
 
 use lib 'lib';
 use lib 'lib/cats-problem';
@@ -15,6 +16,7 @@ use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
+use CATS::Judge::Local;
 
 use CATS::Spawner;
 
@@ -39,6 +41,15 @@ my $spawner;
 my %judge_de_idx;
 
 my $problem_sources;
+
+my %opts = (
+    de => undef,
+    db => undef,
+    help => undef,
+    problem => undef,
+    solution => undef,
+    testset => undef,
+);
 
 sub log_msg { $log->msg(@_); }
 
@@ -967,19 +978,42 @@ sub main_loop
     }
 }
 
+sub usage
+{
+    print "Unknown option: @_\n" if ( @_ );
+    print "usage: judge [--problem <zip_or_directory> --solution <file> --de <de_code> [--testset <description>] [--db]] [--help|-?]\n";
+    exit;
+}
+
+GetOptions(
+    'db' => \$opts{db},
+    'de=i' => \$opts{de},
+    'help|?' => \$opts{help},
+    'problem=s' => \$opts{problem},
+    'solution=s' => \$opts{solution},
+    'testset=s' => \$opts{testset},
+);
+usage if defined $opts{help};
+
 $log->init;
 {
     my $judge_cfg = 'config.xml';
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file);
 }
+
 CATS::DB::sql_connect;
-$judge = CATS::Judge::Server->new(name => $cfg->name);
+
+my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
+$judge = $local ? CATS::Judge::Local->new(name => $cfg->name, %opts) : CATS::Judge::Server->new(name => $cfg->name);
+
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
-main_loop;
+
+$local ? process_request($judge->select_request) : main_loop;
+
 CATS::DB::sql_disconnect;
 
 1;
