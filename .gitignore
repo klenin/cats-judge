@@ -1,6 +1,7 @@
 solutions
 run
 tests
+modules
 *.log
 *.rar
 config.xml

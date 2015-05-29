@@ -8,6 +8,7 @@ use File::NCopy qw(copy);
 
 use lib 'lib';
 use CATS::Constants;
+use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::Log;
@@ -338,17 +339,17 @@ sub validate_test
     my $in_v_id = $test->{input_validator_id};
     if ($in_v_id) {
         clear_rundir or return undef;
-        
+
         my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
         my_copy($path_to_test, $cfg->rundir) and
         my_copy("tests/$pid/temp/$in_v_id/*", $cfg->rundir)
             or return undef;
-            
+
         my $validate_cmd = get_cmd('validate', $validator->{de_id})
             or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
         my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
         my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname($path_to_test);
-    
+
         my $sp_report = $spawner->execute(
             $validate_cmd, {
             full_name => $fname, name => $name,
@@ -356,13 +357,13 @@ sub validate_test
             test_input => $t_fname
             }
         ) or return undef;
-    
+
         if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
         {
             return undef;
         }
     }
-        
+
     1;
 }
 
@@ -880,6 +881,7 @@ sub process_request
     }
 
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
+    CATS::SourceManager::save_all($problem_sources, $cfg->modulesdir);
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
         map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
