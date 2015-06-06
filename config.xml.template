@@ -5,6 +5,7 @@
     stdout_file="stdout.txt"
     workdir="D:\ask\CATS\judge\"
     rundir="D:\ask\CATS\judge\run"
+    modulesdir="D:\ask\CATS\judge\modules"
     formal_input_fname="formal.input"
     show_child_stdout="0"
     save_child_stdout="1"

@@ -8,6 +8,7 @@ use File::NCopy qw(copy);
 
 use lib 'lib';
 use CATS::Constants;
+use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::Log;
@@ -338,17 +339,17 @@ sub validate_test
     my $in_v_id = $test->{input_validator_id};
     if ($in_v_id) {
         clear_rundir or return undef;
-        
+
         my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
         my_copy($path_to_test, $cfg->rundir) and
         my_copy("tests/$pid/temp/$in_v_id/*", $cfg->rundir)
             or return undef;
-            
+
         my $validate_cmd = get_cmd('validate', $validator->{de_id})
             or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
         my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
         my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname($path_to_test);
-    
+
         my $sp_report = $spawner->execute(
             $validate_cmd, {
             full_name => $fname, name => $name,
@@ -356,13 +357,13 @@ sub validate_test
             test_input => $t_fname
             }
         ) or return undef;
-    
+
         if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
         {
             return undef;
         }
     }
-        
+
     1;
 }
 
@@ -527,11 +528,21 @@ sub initialize_problem
               or return undef;
         }
 
-        my_mkdir("tests/$pid/temp/$ps->{id}")
+        my $tmp = "tests/$pid/temp/$ps->{id}";
+        my_mkdir($tmp)
             or return undef;
 
-        my_copy($cfg->rundir . '/*', "tests/$pid/temp/$ps->{id}")
+        my_copy($cfg->rundir . '/*', $tmp)
             or return undef;
+
+        for my $guided_source (@$problem_sources) {
+            next if !$guided_source->{guid} || $guided_source->{guid} eq '';
+            my $path = File::Spec->catfile(File::Spec->rel2abs($tmp), $guided_source->{fname});
+            if (-e $path) {
+                CATS::SourceManager::save($guided_source, $cfg->modulesdir, $path);
+                log_msg("save source $guided_source->{guid}\n");
+            }
+        }
     }
     prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit},
         $p->{memory_limit}, $p->{run_method})
