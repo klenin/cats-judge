@@ -47,11 +47,12 @@ sub on_end_tag
 sub save
 {
     my ($source, $dir, $path) = @_;
-    -d $dir || mkdir $dir || die "Unable to create $dir";
+    -d $dir or mkdir $dir or die "Unable to create $dir";
     $source->{guid} && $source->{guid} ne '' or return;
     my $fname = File::Spec->catfile($dir, "$source->{guid}.xml");
     {
         open my $fh, '>', $fname or die "Unable to open $fname for writing";
+        print $fh qq~<?xml version="1.0"?>\n~;
         print $fh "<description>\n";
         for (keys %{get_tags()}) {
             print $fh "<$_>" . escape_xml($source->{$_}) . "</$_>\n" if defined $source->{$_};
