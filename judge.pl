@@ -14,6 +14,7 @@ use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
 
+use CATS::SpawnerJson;
 use CATS::Spawner;
 
 use open IN => ':crlf', OUT => ':raw';
@@ -276,7 +277,7 @@ sub generate_test
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
-        $redir = " -so:$out -ho:1";
+        $redir = " --out=nul --out=$out";
     }
     my $sp_report = $spawner->execute(
         $generate_cmd, {
@@ -673,8 +674,8 @@ sub run_single_test
         my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
 
         $test_run_details{time_used} = $sp_report->{UserTime};
-        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
-        $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
+        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed});
+        $test_run_details{disk_used} = int($sp_report->{Written});
 
         for ($sp_report->{TerminateReason})
         {
@@ -964,7 +965,7 @@ $judge = CATS::Judge::Server->new(name => $cfg->name);
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
+$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 main_loop;
 CATS::DB::sql_disconnect;
 
