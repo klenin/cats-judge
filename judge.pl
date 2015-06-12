@@ -5,6 +5,7 @@ use strict;
 use File::Spec;
 use constant FS => 'File::Spec';
 use File::NCopy qw(copy);
+use Fcntl qw(:flock);
 
 use lib 'lib';
 use CATS::Constants;
@@ -18,6 +19,17 @@ use CATS::Spawner;
 
 use open IN => ':crlf', OUT => ':raw';
 
+my $lh;
+my $lock_file;
+
+BEGIN {
+    $lock_file = 'judge.lock';
+    open $lh, '>', $lock_file or die "Can't open $lock_file: $!";
+    flock $lh, LOCK_EX | LOCK_NB or die "Cannot lock $lock_file: $!\n";
+}
+END {
+    flock $lh, LOCK_UN or die "Cannot unlock $lock_file: $!\n";
+}
 
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
