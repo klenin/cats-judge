@@ -5,7 +5,7 @@ use warnings;
 
 use CATS::Utils qw(escape_xml);
 use CATS::Constants;
-use CATS::Problem::BinaryFile;
+use CATS::BinaryFile;
 
 use File::Spec;
 use XML::Parser::Expat;
@@ -34,7 +34,7 @@ sub on_end_tag
 
     if ($el eq 'path') {
         $source->{src} = '';
-        CATS::Problem::BinaryFile::load($content, \$source->{src});
+        CATS::BinaryFile::load($content, \$source->{src});
         return;
     }
 
@@ -73,7 +73,7 @@ sub load {
         End => sub { on_end_tag($source, \$text, @_) },
         Char => sub { $text .= $_[1] },
     );
-    CATS::Problem::BinaryFile::load($fname, \my $data);
+    CATS::BinaryFile::load($fname, \my $data);
     $parser->parse($data);
     return $source;
 }
