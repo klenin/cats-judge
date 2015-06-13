@@ -139,7 +139,11 @@ sub get_problem_sources {
         );
     }
 
-    # TODO: $problem->{imports}
+    for my $source ($self->{parser}{import_source}->get_sources_info($problem->{imports})) {
+        $source->{problem_id} = $self->get_problem_id;
+        $source->{de_id} = $self->{supported_DEs}{$source->{code}}{id};
+        push @$problem_sources, $source;
+    }
 
     [ @$problem_sources ];
 }
