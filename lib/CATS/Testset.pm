@@ -5,12 +5,13 @@ use warnings;
 
 use CATS::DB qw($dbh);
 
+
 sub parse_test_rank
 {
-    my ($testsets, $rank_spec, $on_error) = @_;
-    my (@result, %used, $rec);
+    my ($all_testsets, $rank_spec, $on_error) = @_;
+    my (%result, %used, $rec);
     $rec = sub {
-        my ($r) = @_;
+        my ($r, $scoring_group) = @_;
         $r =~ s/\s+//g;
         # Rank specifier is a comma-separated list, each element being one of:
         # * test number,
@@ -18,24 +19,46 @@ sub parse_test_rank
         # * testset name.
         for (split ',', $r) {
             if (/^[a-zA-Z][a-zA-Z0-9_]*$/) {
-                my $testset = $testsets->{$_} or die \"Unknown testset '$_'";
+                my $testset = $all_testsets->{$_} or die \"Unknown testset '$_'";
                 $used{$_}++ and die \"Recursive usage of testset '$_'";
-                $rec->($testset->{tests});
+                my $sg = $scoring_group;
+                if ($testset->{points} || $testset->{hide_details}) {
+                    die \"Nested scoring group '$_'" if $sg;
+                    $sg = $testset;
+                    $sg->{test_count} = 0;
+                }
+                $rec->($testset->{tests}, $sg);
             }
             elsif (/^(\d+)(?:-(\d+))?$/) {
                 my ($from, $to) = ($1, $2 || $1);
                 $from <= $to or die \"from > to";
-                push @result, $from..$to;
+                for my $t ($from..$to) {
+                    die \"Ambiguous scoring group for test $t"
+                        if $scoring_group && $result{$t} && $result{$t} ne $scoring_group;
+                    $result{$t} = $scoring_group;
+                    ++$scoring_group->{test_count} if $scoring_group;
+                }
             }
             else {
                 die \"Bad element '$_'";
             }
         }
     };
-    eval { $rec->($rank_spec); 1 }
+    eval { $rec->($rank_spec); %result or die \'Empty rank specifier'; }
         or $on_error && $on_error->(ref $@ ? "${$@} in rank spec '$rank_spec'" : $@);
-    @result;
+    \%result;
 }
+
+
+sub get_all_testsets
+{
+    $dbh->selectall_hashref(qq~
+        SELECT id, name, tests, points, comment, hide_details
+        FROM testsets WHERE problem_id = ?~,
+        'name', undef,
+        $_[0]) || {};
+}
+
 
 sub get_testset
 {
@@ -47,11 +70,11 @@ sub get_testset
             CP.contest_id = R.contest_id AND CP.problem_id = R.problem_id
         WHERE R.id = ?~, undef,
         $rid);
-    my @tests = @{$dbh->selectcol_arrayref(qq~
+    my @all_tests = @{$dbh->selectcol_arrayref(qq~
         SELECT rank FROM tests WHERE problem_id = ? ORDER BY rank~, undef,
         $pid
     )};
-    $testsets or return @tests;
+    $testsets or return map { $_ => undef } @all_tests;
 
     if ($update && ($orig_testsets || '') ne $testsets) {
         $dbh->do(q~
@@ -60,12 +83,8 @@ sub get_testset
         $dbh->commit;
     }
 
-    my $all_testsets = $dbh->selectall_hashref(q~
-        SELECT name, tests FROM testsets WHERE problem_id = ?~, 'name', undef,
-        $pid);
-    my %tests_by_testset;
-    @tests_by_testset{parse_test_rank($all_testsets, $testsets)} = undef;
-    return grep exists $tests_by_testset{$_}, @tests;
+    my %tests = %{parse_test_rank(get_all_testsets($pid), $testsets)};
+    map { exists $tests{$_} ? ($_ => $tests{$_}) : () } @all_tests;
 }
 
 
