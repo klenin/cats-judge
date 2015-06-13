@@ -807,7 +807,8 @@ sub test_solution {
     # если найдена ошибка -- подряд до первого ошибочного теста
     for my $pass (1..2)
     {
-        my @tests = $judge->get_testset($sid, 1);
+        my %tests = $judge->get_testset($sid, 1);
+        my @tests = sort { $a <=> $b } keys %tests;
 
         if (!@tests)
         {
