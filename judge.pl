@@ -8,6 +8,7 @@ use File::NCopy qw(copy);
 use Fcntl qw(:flock);
 
 use lib 'lib';
+use lib 'lib/cats-problem';
 use CATS::Constants;
 use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
