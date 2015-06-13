@@ -1,4 +1,4 @@
-package CATS::Problem::BinaryFile;
+package CATS::BinaryFile;
 
 use strict;
 use warnings;
