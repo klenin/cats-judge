@@ -39,7 +39,9 @@ sub select_request {
         CATS::Problem::Source::Zip->new($self->{problem}) :
         CATS::Problem::Source::PlainFiles->new(dir => $self->{problem});
 
-    my $import_source = $self->{db} ? CATS::Problem::ImportSource::DB->new : CATS::Problem::ImportSource::Local->new;
+    my $import_source = $self->{db} ?
+        CATS::Problem::ImportSource::DB->new :
+        CATS::Problem::ImportSource::Local->new(modulesdir => $self->{modulesdir});
 
     $self->{parser} = CATS::Problem::Parser->new(
         id_gen => \&CATS::DB::new_id,

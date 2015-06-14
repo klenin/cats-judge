@@ -1005,7 +1005,9 @@ $log->init;
 CATS::DB::sql_connect;
 
 my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
-$judge = $local ? CATS::Judge::Local->new(name => $cfg->name, %opts) : CATS::Judge::Server->new(name => $cfg->name);
+$judge = $local ?
+    CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, %opts) :
+    CATS::Judge::Server->new(name => $cfg->name);
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
