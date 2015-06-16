@@ -36,8 +36,8 @@ sub select_request {
     -f $self->{problem} or -d $self->{problem} or die 'Bad problem';
 
     my $source = -f $self->{problem} ?
-        CATS::Problem::Source::Zip->new($self->{problem}) :
-        CATS::Problem::Source::PlainFiles->new(dir => $self->{problem});
+        CATS::Problem::Source::Zip->new($self->{problem}, $self->{logger}) :
+        CATS::Problem::Source::PlainFiles->new(dir => $self->{problem}, logger => $self->{logger});
 
     my $import_source = $self->{db} ?
         CATS::Problem::ImportSource::DB->new :
