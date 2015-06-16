@@ -5,3 +5,4 @@ modules
 *.log
 *.rar
 config.xml
+judge.lock
