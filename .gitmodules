@@ -1,0 +1,3 @@
+[submodule "lib/cats-problem"]
+	path = lib/cats-problem
+	url = https://github.com/klenin/cats-problem.git

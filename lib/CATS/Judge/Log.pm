@@ -31,6 +31,22 @@ sub msg {
     undef;
 }
 
+sub error {
+    my $self = shift;
+    $self->msg("Error: $_[0]\n");
+    die "Unrecoverable error";
+}
+
+sub note {
+    my $self = shift;
+    $self->msg("$_[0]\n");
+}
+
+sub warning {
+    my $self = shift;
+    $self->msg("Warning: $_[0]\n");
+}
+
 sub dump_write {
     my ($self, $data) = @_;
     syswrite $self->{file}, $data;

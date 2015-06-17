@@ -5,19 +5,34 @@ use strict;
 use File::Spec;
 use constant FS => 'File::Spec';
 use File::NCopy qw(copy);
+use Fcntl qw(:flock);
+use Getopt::Long qw(GetOptions);
 
 use lib 'lib';
+use lib 'lib/cats-problem';
 use CATS::Constants;
 use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
+use CATS::Judge::Local;
 
 use CATS::Spawner;
 
 use open IN => ':crlf', OUT => ':raw';
 
+my $lh;
+my $lock_file;
+
+BEGIN {
+    $lock_file = 'judge.lock';
+    open $lh, '>', $lock_file or die "Can't open $lock_file: $!";
+    flock $lh, LOCK_EX | LOCK_NB or die "Cannot lock $lock_file: $!\n";
+}
+END {
+    flock $lh, LOCK_UN or die "Cannot unlock $lock_file: $!\n";
+}
 
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
@@ -26,6 +41,15 @@ my $spawner;
 my %judge_de_idx;
 
 my $problem_sources;
+
+my %opts = (
+    de => undef,
+    db => undef,
+    help => undef,
+    problem => undef,
+    solution => undef,
+    testset => undef,
+);
 
 sub log_msg { $log->msg(@_); }
 
@@ -237,7 +261,7 @@ sub save_problem_description
     open my $desc, '>', $fn
         or return log_msg("open failed: '$fn' ($!)\n");
 
-    print $desc join "\n", "title:$title", "date:$date", "state:$state";
+    print $desc join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state";
     close $desc;
     1;
 }
@@ -795,7 +819,8 @@ sub test_solution {
     # если найдена ошибка -- подряд до первого ошибочного теста
     for my $pass (1..2)
     {
-        my @tests = $judge->get_testset($sid, 1);
+        my %tests = $judge->get_testset($sid, 1);
+        my @tests = sort { $a <=> $b } keys %tests;
 
         if (!@tests)
         {
@@ -953,19 +978,48 @@ sub main_loop
     }
 }
 
+sub usage
+{
+    print "Unknown option: @_\n" if ( @_ );
+    print "usage: judge [--problem <zip_or_directory> --solution <file> --de <de_code> [--testset <description>] [--db]] [--help|-?]\n";
+    exit;
+}
+
+GetOptions(
+    'db' => \$opts{db},
+    'de=i' => \$opts{de},
+    'help|?' => \$opts{help},
+    'problem=s' => \$opts{problem},
+    'solution=s' => \$opts{solution},
+    'testset=s' => \$opts{testset},
+);
+usage if defined $opts{help};
+
 $log->init;
 {
     my $judge_cfg = 'config.xml';
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file);
 }
-CATS::DB::sql_connect;
-$judge = CATS::Judge::Server->new(name => $cfg->name);
+
+CATS::DB::sql_connect({
+    ib_timestampformat => '%d-%m-%Y %H:%M:%S',
+    ib_dateformat => '%d-%m-%Y',
+    ib_timeformat => '%H:%M',
+});
+
+my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
+$judge = $local ?
+    CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, logger => $log, %opts) :
+    CATS::Judge::Server->new(name => $cfg->name);
+
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
-main_loop;
+
+$local ? process_request($judge->select_request) : main_loop;
+
 CATS::DB::sql_disconnect;
 
 1;
