@@ -1,3 +1,4 @@
+@echo off
 SET TEMP=..\tmp\
 SET TMP=..\tmp\
 SET PATH=%PATH%;%CD%/spawner;%CD%/check
@@ -16,6 +17,8 @@ SET SP_SECURITY_LEVEL=1
 SET CATS_JUDGE=1
 
 :1
-perl judge.pl
-timeout 2
-GOTO 1
+perl judge.pl %*
+if #%1#==## (
+  timeout 2
+  GOTO 1
+)
