@@ -261,7 +261,7 @@ sub save_problem_description
     open my $desc, '>', $fn
         or return log_msg("open failed: '$fn' ($!)\n");
 
-    print $desc join "\n", "title:$title", "date:$date", "state:$state";
+    print $desc join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state";
     close $desc;
     1;
 }
