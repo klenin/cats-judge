@@ -1002,7 +1002,11 @@ $log->init;
     $cfg->read_file($cfg_file);
 }
 
-CATS::DB::sql_connect;
+CATS::DB::sql_connect({
+    ib_timestampformat => '%d-%m-%Y %H:%M:%S',
+    ib_dateformat => '%d-%m-%Y',
+    ib_timeformat => '%H:%M',
+});
 
 my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
 $judge = $local ?
