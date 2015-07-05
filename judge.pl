@@ -4,7 +4,7 @@ use strict;
 
 use File::Spec;
 use constant FS => 'File::Spec';
-use File::NCopy qw(copy);
+use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
 
@@ -218,7 +218,7 @@ sub my_copy
     #return 1
     $src = File::Spec->canonpath($src);
     $dest = File::Spec->canonpath($dest);
-    if (copy \1, $src, $dest) { return 1; }
+    return 1 if rcopy $src, $dest;
     use Carp;
     log_msg "copy failed: 'cp $src $dest' '$!' " . Carp::longmess('') . "\n";
     return undef;
@@ -230,7 +230,7 @@ sub my_safe_copy
     my ($src, $dest, $pid) = @_;
     $src = File::Spec->canonpath($src);
     $dest = File::Spec->canonpath($dest);
-    return 1 if copy \1, $src, $dest;
+    return 1 if rcopy $src, $dest;
     log_msg "copy failed: 'cp $src $dest' $!, trying to reinitialize\n";
     # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
     # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
