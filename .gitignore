@@ -2,6 +2,7 @@ solutions
 run
 tests
 modules
+spawner
 *.log
 *.rar
 config.xml
