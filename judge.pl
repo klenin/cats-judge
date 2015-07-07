@@ -980,19 +980,25 @@ sub main_loop
 
 sub usage
 {
-    print "Unknown option: @_\n" if ( @_ );
-    print "usage: judge [--problem <zip_or_directory> --solution <file> --de <de_code> [--testset <description>] [--db]] [--help|-?]\n";
+    my (undef, undef, $cmd) = File::Spec->splitpath($0);
+    print <<"USAGE";
+Usage:
+    $cmd
+    $cmd --problem <zip_or_directory> --solution <file> --de <de_code> [--testset <testset>] [--db]
+    $cmd --help|-?
+USAGE
     exit;
 }
 
 GetOptions(
-    'db' => \$opts{db},
-    'de=i' => \$opts{de},
-    'help|?' => \$opts{help},
-    'problem=s' => \$opts{problem},
-    'solution=s' => \$opts{solution},
-    'testset=s' => \$opts{testset},
-);
+    \%opts,
+    'help|?',
+    'problem=s',
+    'solution=s',
+    'de=i',
+    'db',
+    'testset=s',
+) or usage;
 usage if defined $opts{help};
 
 $log->init;
