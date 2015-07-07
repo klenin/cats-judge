@@ -1002,13 +1002,14 @@ $log->init;
     $cfg->read_file($cfg_file);
 }
 
+my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
+
 CATS::DB::sql_connect({
     ib_timestampformat => '%d-%m-%Y %H:%M:%S',
     ib_dateformat => '%d-%m-%Y',
     ib_timeformat => '%H:%M',
-});
+}) if !$local || defined $opts{db};
 
-my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
 $judge = $local ?
     CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, logger => $log, %opts) :
     CATS::Judge::Server->new(name => $cfg->name);
