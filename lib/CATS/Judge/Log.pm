@@ -3,6 +3,7 @@ package CATS::Judge::Log;
 use strict;
 use warnings;
 
+use Encode;
 use POSIX qw(strftime);
 
 sub new {
@@ -22,9 +23,9 @@ sub msg {
     my $self = shift;
     my $fmt = shift;
     my $s = sprintf $fmt, @_;
-    syswrite STDOUT, $s;
+    syswrite STDOUT, Encode::encode_utf8($s);
     if ($self->{last_line} ne $s) {
-        syswrite $self->{file}, strftime('%d.%m %H:%M:%S', localtime) . " $s";
+        syswrite $self->{file}, Encode::encode_utf8(strftime('%d.%m %H:%M:%S', localtime) . " $s");
         $self->{last_line} = $s;
     }
     $self->{dump} .= $s;
@@ -49,7 +50,7 @@ sub warning {
 
 sub dump_write {
     my ($self, $data) = @_;
-    syswrite $self->{file}, $data;
+    syswrite $self->{file}, Encode::encode_utf8($data);
     $self->{dump} .= $data if length $self->{dump} < 50000;
 }
 
