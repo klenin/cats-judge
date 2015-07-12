@@ -5,6 +5,7 @@ use warnings;
 
 use Encode;
 use POSIX qw(strftime);
+use File::Spec;
 
 sub new {
     my ($class) = shift;
@@ -14,9 +15,11 @@ sub new {
 }
 
 sub init {
-    my ($self) = @_;
+    my ($self, $path) = @_;
     my (undef, undef, undef, undef, $month, $year) = localtime;
-    open $self->{file}, '>>', sprintf 'judge-%04d-%02d.log', $year + 1900, $month + 1;
+    $self->{path} = $path;
+    $self->{name} = sprintf 'judge-%04d-%02d.log', $year + 1900, $month + 1;
+    open $self->{file}, '>>', File::Spec->catfile($self->{path}, $self->{name});
 }
 
 sub msg {

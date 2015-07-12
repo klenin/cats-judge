@@ -28,7 +28,7 @@ my $lh;
 my $lock_file;
 
 BEGIN {
-    $lock_file = 'judge.lock';
+    $lock_file = FS->catfile(cats_dir, 'judge.lock');
     open $lh, '>', $lock_file or die "Can't open $lock_file: $!";
     flock $lh, LOCK_EX | LOCK_NB or die "Cannot lock $lock_file: $!\n";
 }
@@ -1005,7 +1005,6 @@ GetOptions(
 ) or usage;
 usage if defined $opts{help};
 
-$log->init;
 {
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
@@ -1016,6 +1015,7 @@ if (defined(my $regexp = $opts{'print-config'})) {
     $cfg->print_params($regexp);
     exit;
 }
+$log->init($cfg->logdir || $cfg->workdir);
 
 my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
 
