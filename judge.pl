@@ -1002,13 +1002,14 @@ GetOptions(
     'db',
     'testset=s',
     'print-config:s',
+    'set-config=s%',
 ) or usage;
 usage if defined $opts{help};
 
 {
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
-    $cfg->read_file($cfg_file);
+    $cfg->read_file($cfg_file, $opts{'set-config'});
 }
 
 if (defined(my $regexp = $opts{'print-config'})) {

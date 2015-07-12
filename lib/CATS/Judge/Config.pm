@@ -28,7 +28,7 @@ sub new {
 }
 
 sub read_file {
-    my ($self, $file) = @_;
+    my ($self, $file, $overrides) = @_;
 
     my $defines = {};
     my $apply_defines = sub {
@@ -62,6 +62,7 @@ sub read_file {
 
     $self->{defines} = $defines;
 
+    $self->{$_} = $overrides->{$_} for keys %$overrides;
     defined $self->{$_} or die "config: undefined $_" for required_fields;
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
 }
