@@ -4,8 +4,10 @@ use strict;
 use warnings;
 
 use XML::Parser::Expat;
+use CATS::Config;
 
-sub required_fields() { qw(name rundir workdir modulesdir report_file stdout_file formal_input_fname) }
+sub dir_fields() { qw(rundir workdir modulesdir) }
+sub required_fields() { dir_fields(), qw(name report_file stdout_file formal_input_fname) }
 sub optional_fields() { qw(show_child_stdout save_child_stdout) }
 sub special_fields() { qw(defines DEs checkers) }
 sub de_fields() { qw(compile run interactor_name run_interactive generate check runfile validate) }
@@ -60,6 +62,7 @@ sub read_file {
 
     $self->{defines} = $defines;
 
+    $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
     $self->{$_} or die "config: undefined $_" for required_fields;
 }
 

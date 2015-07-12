@@ -8,8 +8,10 @@ use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
 
-use lib 'lib';
-use lib 'lib/cats-problem';
+use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
+use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
+
+use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
 use CATS::Utils qw(split_fname);
@@ -1003,7 +1005,7 @@ usage if defined $opts{help};
 
 $log->init;
 {
-    my $judge_cfg = 'config.xml';
+    my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file);
 }
