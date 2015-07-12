@@ -66,4 +66,16 @@ sub read_file {
     $self->{$_} or die "config: undefined $_" for required_fields;
 }
 
+sub print_params {
+    my ($self, $regexp) = @_;
+    my $r = qr/$regexp/;
+    for my $k (sort grep /$r/, keys %$self) {
+        print "$k =";
+        my $v = $self->{$k};
+        ref $v or print(" $v\n"), next;
+        print "\n";
+        print "    $_ = $v->{$_}\n" for sort keys %$v;
+    }
+}
+
 1;

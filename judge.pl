@@ -987,6 +987,7 @@ sub usage
 Usage:
     $cmd
     $cmd --problem <zip_or_directory> --solution <file> --de <de_code> [--testset <testset>] [--db]
+    $cmd --print-config <regexp>
     $cmd --help|-?
 USAGE
     exit;
@@ -1000,6 +1001,7 @@ GetOptions(
     'de=i',
     'db',
     'testset=s',
+    'print-config:s',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1008,6 +1010,11 @@ $log->init;
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file);
+}
+
+if (defined(my $regexp = $opts{'print-config'})) {
+    $cfg->print_params($regexp);
+    exit;
 }
 
 my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
