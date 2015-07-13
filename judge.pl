@@ -1036,6 +1036,11 @@ $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
+sub ensure_dir { -d $_[1] or mkdir $_[1] or die "Can not create $_[0] '$_[1]': $!"; }
+
+ensure_dir('rundir', $cfg->rundir);
+ensure_dir('tests', 'tests');
+
 $local ? process_request($judge->select_request) : main_loop;
 
 CATS::DB::sql_disconnect;
