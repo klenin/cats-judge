@@ -34,6 +34,16 @@ step 'Verifying git', sub {
     $x =~ /^git version/ or die "Git not found: $x";
 };
 
+step 'Verifying required modules', sub {
+    my @bad = grep !eval "require $_; 1;", qw(DBI JSON::XS XML::Parser::Expat);
+    die join "\n", 'Some required modules not found:', @bad, '' if @bad;
+};
+
+step 'Verifying optional modules', sub {
+    my @bad = grep !eval "require $_; 1;", qw(FormalInput);
+    warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
+};
+
 step 'Cloning sumbodules', sub {
     `git submodule update --init` or die $!;
 };
