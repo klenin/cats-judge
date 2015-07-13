@@ -259,7 +259,7 @@ sub save_problem_description
 {
     my ($pid, $title, $date, $state) = @_;
 
-    my $fn = "tests/$pid.des";
+    my $fn = $cfg->cachedir . "/$pid.des";
     open my $desc, '>', $fn
         or return log_msg("open failed: '$fn' ($!)\n");
 
@@ -289,7 +289,7 @@ sub generate_test
 
     clear_rundir or return undef;
 
-    my_copy("tests/$pid/temp/$test->{generator_id}/*", $cfg->rundir)
+    my_copy($cfg->cachedir . "/$pid/temp/$test->{generator_id}/*", $cfg->rundir)
         or return undef;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
@@ -337,7 +337,7 @@ sub generate_test_group
     {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
-        my_copy($cfg->rundir . sprintf("/$out", $_->{rank}), "tests/$pid/$_->{rank}.tst")
+        my_copy($cfg->rundir . sprintf("/$out", $_->{rank}), $cfg->cachedir . "/$pid/$_->{rank}.tst")
             or return undef;
     }
     1;
@@ -368,7 +368,7 @@ sub validate_test
 
         my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
         my_copy($path_to_test, $cfg->rundir) and
-        my_copy("tests/$pid/temp/$in_v_id/*", $cfg->rundir)
+        my_copy($cfg->cachedir . "/$pid/temp/$in_v_id/*", $cfg->rundir)
             or return undef;
 
         my $validate_cmd = get_cmd('validate', $validator->{de_id})
@@ -408,7 +408,7 @@ sub prepare_tests
         # создаем входной файл теста
         if (defined $t->{in_file})
         {
-            write_to_file("tests/$pid/$t->{rank}.tst", $t->{in_file})
+            write_to_file($cfg->cachedir . "/$pid/$t->{rank}.tst", $t->{in_file})
                 or return undef;
         }
         elsif (defined $t->{generator_id})
@@ -422,7 +422,7 @@ sub prepare_tests
             {
                 my $out = generate_test($pid, $t, $input_fname)
                     or return undef;
-                my_copy($cfg->rundir . "/$out", "tests/$pid/$t->{rank}.tst")
+                my_copy($cfg->rundir . "/$out", $cfg->cachedir . "/$pid/$t->{rank}.tst")
                     or return undef;
             }
         }
@@ -432,12 +432,12 @@ sub prepare_tests
             return undef;
         }
 
-        validate_test($pid, $t, "tests/$pid/$t->{rank}.tst") or
+        validate_test($pid, $t, $cfg->cachedir . "/$pid/$t->{rank}.tst") or
             return log_msg("input validation failed: #$t->{rank}\n");
         # создаем выходной файл теста
         if (defined $t->{out_file})
         {
-            write_to_file("tests/$pid/$t->{rank}.ans", $t->{out_file})
+            write_to_file($cfg->cachedir . "/$pid/$t->{rank}.ans", $t->{out_file})
                 or return undef;
         }
         elsif (defined $t->{std_solution_id})
@@ -446,10 +446,10 @@ sub prepare_tests
 
             clear_rundir or return undef;
 
-            my_copy("tests/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
+            my_copy($cfg->cachedir . "/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
                 or return undef;
 
-            my_copy("tests/$pid/$t->{rank}.tst", input_or_default($input_fname))
+            my_copy($cfg->cachedir . "/$pid/$t->{rank}.tst", input_or_default($input_fname))
                 or return undef;
 
             my $run_key = get_run_key($run_method);
@@ -473,7 +473,7 @@ sub prepare_tests
                 return undef;
             }
 
-            my_copy(output_or_default($output_fname), "tests/$pid/$t->{rank}.ans")
+            my_copy(output_or_default($output_fname), $cfg->cachedir . "/$pid/$t->{rank}.ans")
                 or return undef;
         }
         else
@@ -518,10 +518,10 @@ sub initialize_problem
         or return undef;
 
     # компилируем вспомогательные программы (эталонные решения, генераторы тестов, программы проверки)
-    my_mkdir("tests/$pid")
+    my_mkdir($cfg->cachedir . "/$pid")
         or return undef;
 
-    my_mkdir("tests/$pid/temp")
+    my_mkdir($cfg->cachedir . "/$pid/temp")
         or return undef;
 
     my %main_source_types;
@@ -554,7 +554,7 @@ sub initialize_problem
               or return undef;
         }
 
-        my $tmp = "tests/$pid/temp/$ps->{id}";
+        my $tmp = $cfg->cachedir . "/$pid/temp/$ps->{id}";
         my_mkdir($tmp)
             or return undef;
 
@@ -623,7 +623,7 @@ sub run_checker
     {
         my ($ps) = grep $_->{id} == $problem->{checker_id}, @$problem_sources;
 
-        my_safe_copy("tests/$problem->{id}/temp/$problem->{checker_id}/*", $cfg->rundir, $problem->{id})
+        my_safe_copy($cfg->cachedir . "/$problem->{id}/temp/$problem->{checker_id}/*", $cfg->rundir, $problem->{id})
             or return undef;
 
         (undef, undef, undef, $checker_params->{name}, undef) =
@@ -680,7 +680,7 @@ sub run_single_test
     my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $pid)
         or return undef;
     my_safe_copy(
-        "tests/$problem->{id}/$p{rank}.tst",
+        $cfg->cachedir . "/$problem->{id}/$p{rank}.tst",
         input_or_default($problem->{input_file}), $pid)
         or return undef;
 
@@ -726,10 +726,10 @@ sub run_single_test
         }
     }
     my_safe_copy(
-        "tests/$problem->{id}/$p{rank}.tst",
+        $cfg->cachedir . "/$problem->{id}/$p{rank}.tst",
         input_or_default($problem->{input_file}), $problem->{id})
         or return undef;
-    my_safe_copy("tests/$problem->{id}/$p{rank}.ans", $cfg->rundir . "/$p{rank}.ans", $problem->{id})
+    my_safe_copy($cfg->cachedir . "/$problem->{id}/$p{rank}.ans", $cfg->rundir . "/$p{rank}.ans", $problem->{id})
         or return undef;
     {
         my $sp_report = run_checker(problem => $problem, rank => $p{rank})
@@ -888,7 +888,7 @@ sub problem_ready
 {
     my ($pid) = @_;
 
-    open my $pdesc, '<', "tests/$pid.des" or return 0;
+    open my $pdesc, '<', $cfg->cachedir . "/$pid.des" or return 0;
 
     my $title = <$pdesc>;
     my $date = <$pdesc>;
@@ -1039,7 +1039,7 @@ $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 sub ensure_dir { -d $_[1] or mkdir $_[1] or die "Can not create $_[0] '$_[1]': $!"; }
 
 ensure_dir('rundir', $cfg->rundir);
-ensure_dir('tests', 'tests');
+ensure_dir('cachedir', $cfg->cachedir);
 
 $local ? process_request($judge->select_request) : main_loop;
 

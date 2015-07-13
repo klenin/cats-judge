@@ -1,6 +1,7 @@
 solutions
 run
 tests
+cache
 modules
 *.log
 *.rar
