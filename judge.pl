@@ -988,6 +988,7 @@ Usage:
     $cmd
     $cmd --problem <zip_or_directory> --solution <file> --de <de_code> [--testset <testset>] [--db]
     $cmd --print-config <regexp>
+    $cmd --set-config <name>=<value> ...
     $cmd --help|-?
 USAGE
     exit;

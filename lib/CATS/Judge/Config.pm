@@ -67,16 +67,25 @@ sub read_file {
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
 }
 
+sub print_helper {
+    my ($val, $keys, $depth) = @_;
+    for my $k (sort @$keys) {
+        print "$depth$k =";
+        my $v = $val->{$k};
+        if (ref $v) {
+            print "\n";
+            print_helper($v, [ keys %$v ], "$depth    ");
+        }
+        else {
+            print " $v\n";
+        }
+    }
+}
+
 sub print_params {
     my ($self, $regexp) = @_;
     my $r = qr/$regexp/;
-    for my $k (sort grep /$r/, keys %$self) {
-        print "$k =";
-        my $v = $self->{$k};
-        ref $v or print(" $v\n"), next;
-        print "\n";
-        print "    $_ = $v->{$_}\n" for sort keys %$v;
-    }
+    print_helper($self, [ grep /$r/, keys %$self ], '');
 }
 
 1;
