@@ -7,10 +7,11 @@ use XML::Parser::Expat;
 use CATS::Config;
 
 sub dir_fields() { qw(rundir workdir logdir modulesdir) }
-sub required_fields() { dir_fields(), qw(name report_file stdout_file formal_input_fname) }
+sub required_fields() { dir_fields, qw(name report_file stdout_file formal_input_fname) }
 sub optional_fields() { qw(show_child_stdout save_child_stdout) }
 sub special_fields() { qw(defines DEs checkers) }
 sub de_fields() { qw(compile run interactor_name run_interactive generate check runfile validate) }
+sub param_fields() { required_fields, optional_fields, special_fields }
 
 sub import {
     for (required_fields, optional_fields, special_fields) {

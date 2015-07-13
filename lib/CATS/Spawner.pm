@@ -116,8 +116,7 @@ sub execute_inplace
     my $log = $self->{log};
 
     $exec_str = apply_params($exec_str, $params);
-    $exec_str =~ s/%report_file/$self->{cfg}{report_file}/eg;
-    $exec_str =~ s/%stdout_file/$self->{cfg}{stdout_file}/eg;
+    $exec_str =~ s/[%]$_/$self->{cfg}->{$_}/eg for $self->{cfg}->param_fields();
     $exec_str =~ s/%deadline//g;
 
     # очистим stdout_file
