@@ -46,8 +46,7 @@ sub check_report
         $log->msg("-> Process: $report_item->{Application}\n");
         if (@{$report_item->{SpawnerError}})
         {
-            $log->msg("\tspawner error: " + join(" ", $report_item->{SpawnerError}) + "\n");
-            # error met
+            $log->msg("\tspawner error: " . join(' ', $report_item->{SpawnerError}) . "\n");
             return undef;
         }
 
