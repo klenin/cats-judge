@@ -213,9 +213,8 @@ sub execute_inplace
     $exec_str =~ s/[%]$_/$self->{cfg}->{$_}/eg for $self->{cfg}->param_fields();
     $exec_str =~ s/%deadline//g;
 
-    # очистим stdout_file
-    open(FSTDOUT, '>', $self->{cfg}->stdout_file) or return undef;
-    close(FSTDOUT);
+    # Clear stdout_file.
+    { open my $fstdout, '>', $self->{cfg}->stdout_file or return undef; }
 
     $log->msg("> %s\n", $exec_str);
     my $rc = system($exec_str) >> 8;
@@ -228,23 +227,13 @@ sub execute_inplace
         return undef;
     }
 
-    unless (open(FREPORT, '<', $self->{cfg}->report_file))
-    {
+    open my $freport, '<', $self->{cfg}->report_file or do {
         $log->msg("open failed: '%s' ($!)\n", $self->{cfg}->report_file);
         return undef;
-    }
+    };
 
-    my $sp_report = $self->parse_report(*FREPORT);
-
-    close FREPORT;
-
-    unless ($sp_report) {
-        return undef;
-    }
-
+    my $sp_report = $self->parse_report($freport) or return undef;
     $self->check_report($sp_report) or return undef;
-
-
     $sp_report;
 }
 
