@@ -7,6 +7,7 @@ use constant FS => 'File::Spec';
 use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
+use sigtrap qw(die INT);
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
@@ -30,11 +31,14 @@ my $lock_file;
 
 BEGIN {
     $lock_file = FS->catfile(cats_dir, 'judge.lock');
-    open $lh, '>', $lock_file or die "Can't open $lock_file: $!";
-    flock $lh, LOCK_EX | LOCK_NB or die "Cannot lock $lock_file: $!\n";
+    open $lh, '>', $lock_file or die "Can not open $lock_file: $!";
+    flock $lh, LOCK_EX | LOCK_NB or die "Can not lock $lock_file: $!\n";
 }
+
 END {
-    flock $lh, LOCK_UN or die "Cannot unlock $lock_file: $!\n";
+    flock $lh, LOCK_UN or die "Can not unlock $lock_file: $!\n";
+    close $lh;
+    unlink $lock_file or die $!;
 }
 
 my $cfg = CATS::Judge::Config->new;
