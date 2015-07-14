@@ -3,6 +3,8 @@ package CATS::Judge::Local;
 use strict;
 use warnings;
 
+use POSIX qw(strftime);
+
 use CATS::Constants;
 use CATS::Problem::Parser;
 use CATS::Problem::ImportSource;
@@ -187,7 +189,8 @@ sub get_problem {
     {
         id => $self->get_problem_id,
         title => $p->{title},
-        upload_date => 0,
+        upload_date => strftime(
+            $CATS::Judge::Base::timestamp_format, localtime $self->{parser}->{source}->last_modified),
         time_limit => $p->{time_limit},
         memory_limit => $p->{memory_limit},
         input_file => $p->{input_file},
@@ -197,7 +200,7 @@ sub get_problem {
     };
 }
 
-sub is_problem_uptodate { 1 }
+sub is_problem_uptodate { 0 }
 
 sub get_testset {
     my ($self, $rid, $update) = @_;

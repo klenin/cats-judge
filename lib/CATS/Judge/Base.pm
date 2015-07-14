@@ -3,6 +3,8 @@ package CATS::Judge::Base;
 use strict;
 use warnings;
 
+our $timestamp_format = '%d-%m-%Y %H:%M:%S';
+
 sub new {
     my ($class) = shift;
     my $self = { @_ };
