@@ -20,6 +20,7 @@ use CATS::Judge::Log;
 use CATS::Judge::Server;
 use CATS::Judge::Local;
 
+use CATS::SpawnerJson;
 use CATS::Spawner;
 
 use open IN => ':crlf', OUT => ':raw';
