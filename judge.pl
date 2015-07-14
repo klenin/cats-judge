@@ -964,6 +964,11 @@ sub process_request
 
     $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
+
+    my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};
+    $state_text =~ s/_/ /g;
+    $state_text .= " on test $r->{failed_test}" if $r->{failed_test};
+    log_msg("==> $state_text\n");
 }
 
 sub main_loop
