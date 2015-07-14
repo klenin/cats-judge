@@ -22,7 +22,8 @@ sub make_name {
 sub set_name {
     my ($self, $name) = @_;
     $self->{name} = $name;
-    open $self->{file}, '>>', File::Spec->catfile($self->{path}, $self->{name});
+    my $fn = File::Spec->catfile($self->{path}, $self->{name});
+    open $self->{file}, '>>', $fn or die "Unable to open log file '$fn': $!";
 }
 
 sub init {
