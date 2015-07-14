@@ -102,22 +102,18 @@ sub pack_problem_source
 
 sub ensure_de {
     my ($self, $source) = @_;
-    $source->{de_code}
-        or die "Mandatory de_code is omitted for source '$source->{path}'";
-    exists $self->{supported_DEs}{$source->{de_code}}
-        or die "Unsupported de: $_->{de_code} for source '$source->{path}'";
+    $source->{code}
+        or die "Mandatory de_code is omitted for source '$source->{fname}'";
+    exists $self->{supported_DEs}{$source->{code}}
+        or die "Unsupported de: $_->{code} for source '$source->{fname}'";
 }
 
 sub get_problem_sources {
     my ($self, $pid) = @_;
 
     my $problem = $self->{parser}->{problem};
-    for my $source_type (qw(validators generators solutions modules)) {
-        $self->ensure_de($_) for @{$problem->{$source_type}};
-    }
-    $self->ensure_de($problem->{checker});
-
     my $problem_sources = [];
+
     if (my $c = $problem->{checker}) {
         push @$problem_sources, $self->pack_problem_source(
             source_object => $c, source_type => CATS::Problem::checker_type_names->{$c->{style}},
@@ -153,6 +149,8 @@ sub get_problem_sources {
         $source->{de_id} = $self->{supported_DEs}{$source->{code}}{id};
         push @$problem_sources, $source;
     }
+
+    $self->ensure_de($_) for @$problem_sources;
 
     [ @$problem_sources ];
 }
