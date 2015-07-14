@@ -17,23 +17,20 @@ sub parse_report
 {
     my ($self, $file) = @_;
     my $log = $self->{log};
-    my $json = decode_json(join("", <$file>));
-    my $sp_report = {report => $json};
+    my $json = decode_json(join '', <$file>);
+    my $sp_report = { report => $json };
 
-    my $report_item = @$json[0];
+    my $report_item = $json->[0];
 
-    foreach my $item (@required_fields) {
-        $sp_report->{$item} = $report_item->{$item};
+    for my $item (@required_fields) {
+        defined($sp_report->{$item} = $report_item->{$item})
+            or return $log->msg("Required report field $item not found\n");
     }
 
-    $sp_report->{SpawnerError} = join(" ", @{$report_item->{SpawnerError}});
+    $sp_report->{SpawnerError} = join(' ', @{$report_item->{SpawnerError}}) || '<none>';
     $sp_report->{UserTime} = $report_item->{Result}->{Time};
     $sp_report->{PeakMemoryUsed} = $report_item->{Result}->{Memory};
     $sp_report->{Written} = $report_item->{Result}->{BytesWritten};
-
-    unless (@{$report_item->{SpawnerError}}) {
-        $sp_report->{SpawnerError} = "<none>";
-    }
     $sp_report;
 }
 
