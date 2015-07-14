@@ -5,7 +5,7 @@
     stdout_file="stdout.txt"
     workdir=""
     cachedir="cache"
-    logdir=""
+    logdir="log"
     rundir="run"
     modulesdir="modules"
     formal_input_fname="formal.input"
