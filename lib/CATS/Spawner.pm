@@ -110,36 +110,10 @@ sub execute
     $result;
 }
 
-sub execute_inplace
+sub parse_report
 {
-    my ($self, $exec_str, $params, %rest) = @_;
+	my ($self, $file) = @_;
     my $log = $self->{log};
-
-    $exec_str = apply_params($exec_str, $params);
-    $exec_str =~ s/[%]$_/$self->{cfg}->{$_}/eg for $self->{cfg}->param_fields();
-    $exec_str =~ s/%deadline//g;
-
-    # очистим stdout_file
-    open(FSTDOUT, '>', $self->{cfg}->stdout_file) or return undef;
-    close(FSTDOUT);
-
-    $log->msg("> %s\n", $exec_str);
-    my $rc = system($exec_str) >> 8;
-
-    $self->dump_child_stdout($rest{duplicate_output});
-
-    if ($rc)
-    {
-        $log->msg("exit code: $rc\n $!\n");
-        return undef;
-    }
-
-    unless (open(FREPORT, '<', $self->{cfg}->report_file))
-    {
-        $log->msg("open failed: '%s' ($!)\n", $self->{cfg}->report_file);
-        return undef;
-    }
-
     # Пример файла отчета:
     #
     #--------------- Spawner report ---------------
@@ -161,8 +135,8 @@ sub execute_inplace
     #----------------------------------------------
     #SpawnerError:          <none>
 
-    my $skip = <FREPORT>;
-    my $signature = <FREPORT>;
+    my $skip = <$file>;
+    my $signature = <$file>;
     if ($signature ne "--------------- Spawner report ---------------\n")
     {
         $log->msg("malformed spawner report: $signature\n");
@@ -171,7 +145,7 @@ sub execute_inplace
 
     my $checking = 0;
     my $sp_report = {};
-    while (my $line = <FREPORT>) {
+    while (my $line = <$file>) {
         if ($line =~ /^([a-zA-Z]+):\s+(.+)$/) {
             my $p = $1;
             my $v = $2;
@@ -188,8 +162,13 @@ sub execute_inplace
         }
     }
     $sp_report->{$_} = int($sp_report->{$_} * 1024 * 1024 + 0.5) for qw(PeakMemoryUsed Written);
-    close FREPORT;
+    $sp_report;
+}
 
+sub check_report
+{
+    my ($self, $sp_report) = @_;
+    my $log = $self->{log};
     if ($sp_report->{SpawnerError} ne '<none>')
     {
         $log->msg("\tspawner error: $sp_report->{SpawnerError}\n");
@@ -222,6 +201,49 @@ sub execute_inplace
     }
     $log->msg(
         "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} bytes | Written: $sp_report->{Written} bytes\n");
+    1;
+}
+
+sub execute_inplace
+{
+    my ($self, $exec_str, $params, %rest) = @_;
+    my $log = $self->{log};
+
+    $exec_str = apply_params($exec_str, $params);
+    $exec_str =~ s/[%]$_/$self->{cfg}->{$_}/eg for $self->{cfg}->param_fields();
+    $exec_str =~ s/%deadline//g;
+
+    # очистим stdout_file
+    open(FSTDOUT, '>', $self->{cfg}->stdout_file) or return undef;
+    close(FSTDOUT);
+
+    $log->msg("> %s\n", $exec_str);
+    my $rc = system($exec_str) >> 8;
+
+    $self->dump_child_stdout($rest{duplicate_output});
+
+    if ($rc)
+    {
+        $log->msg("exit code: $rc\n $!\n");
+        return undef;
+    }
+
+    unless (open(FREPORT, '<', $self->{cfg}->report_file))
+    {
+        $log->msg("open failed: '%s' ($!)\n", $self->{cfg}->report_file);
+        return undef;
+    }
+
+    my $sp_report = $self->parse_report(*FREPORT);
+
+    close FREPORT;
+
+    unless ($sp_report) {
+        return undef;
+    }
+
+    $self->check_report($sp_report) or return undef;
+
 
     $sp_report;
 }
