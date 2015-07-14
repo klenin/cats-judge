@@ -974,6 +974,7 @@ sub main_loop
     my_chdir($cfg->workdir) or return;
     for (my $i = 0; ; $i++) {
         sleep 2;
+        $log->rollover;
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;

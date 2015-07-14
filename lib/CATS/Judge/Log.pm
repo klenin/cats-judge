@@ -14,12 +14,29 @@ sub new {
     $self;
 }
 
+sub make_name {
+    my (undef, undef, undef, undef, $month, $year) = localtime;
+    sprintf 'judge-%04d-%02d.log', $year + 1900, $month + 1;
+}
+
+sub set_name {
+    my ($self, $name) = @_;
+    $self->{name} = $name;
+    open $self->{file}, '>>', File::Spec->catfile($self->{path}, $self->{name});
+}
+
 sub init {
     my ($self, $path) = @_;
-    my (undef, undef, undef, undef, $month, $year) = localtime;
     $self->{path} = $path;
-    $self->{name} = sprintf 'judge-%04d-%02d.log', $year + 1900, $month + 1;
-    open $self->{file}, '>>', File::Spec->catfile($self->{path}, $self->{name});
+    $self->set_name(make_name());
+}
+
+sub rollover {
+    my ($self) = @_;
+    my $new_name = make_name();
+    $new_name ne $self->{name} or return;
+    close $self->{file};
+    $self->set_name($new_name);
 }
 
 sub msg {
