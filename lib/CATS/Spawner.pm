@@ -187,6 +187,7 @@ sub execute_inplace
             $sp_report->{$p} = $v;
         }
     }
+    $sp_report->{$_} = int($sp_report->{$_} * 1024 * 1024 + 0.5) for qw(PeakMemoryUsed Written);
     close FREPORT;
 
     if ($sp_report->{SpawnerError} ne '<none>')
@@ -220,7 +221,7 @@ sub execute_inplace
         $log->msg("abnormal process termination. Process exit status: $sp_report->{ExitStatus}\n");
     }
     $log->msg(
-        "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} Mb | Written: $sp_report->{Written} Mb\n");
+        "-> UserTime: $sp_report->{UserTime} s | MemoryUsed: $sp_report->{PeakMemoryUsed} bytes | Written: $sp_report->{Written} bytes\n");
 
     $sp_report;
 }

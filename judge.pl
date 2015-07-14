@@ -699,8 +699,8 @@ sub run_single_test
         my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
 
         $test_run_details{time_used} = $sp_report->{UserTime};
-        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed} * 1024 * 1024);
-        $test_run_details{disk_used} = int($sp_report->{Written} * 1024 * 1024);
+        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed});
+        $test_run_details{disk_used} = int($sp_report->{Written});
 
         for ($sp_report->{TerminateReason})
         {
