@@ -4,6 +4,7 @@ use warnings;
 use File::Copy qw(copy);
 use File::Spec;
 
+$| = 1;
 print "Installing cats-judge\n";
 
 my $step_count = 0;
@@ -11,7 +12,6 @@ my $step_count = 0;
 sub step($&) {
     my ($msg, $action) = @_;
     print ++$step_count, ". $msg ...";
-    flush STDOUT;
     $action->();
     print " ok\n";
 }
