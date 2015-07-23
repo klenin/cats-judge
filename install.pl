@@ -35,7 +35,7 @@ step 'Verifying git', sub {
 };
 
 step 'Verifying required modules', sub {
-    my @bad = grep !eval "require $_; 1;", qw(DBI JSON::XS XML::Parser::Expat);
+    my @bad = grep !eval "require $_; 1;", qw(DBI JSON::XS XML::Parser::Expat File::Copy::Recursive);
     die join "\n", 'Some required modules not found:', @bad, '' if @bad;
 };
 
