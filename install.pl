@@ -3,17 +3,50 @@ use warnings;
 
 use File::Copy qw(copy);
 use File::Spec;
+use Getopt::Long;
 
 $| = 1;
+
+sub usage
+{
+    my (undef, undef, $cmd) = File::Spec->splitpath($0);
+    print <<"USAGE";
+Usage:
+    $cmd
+    $cmd --step <num> ...
+    $cmd --help|-?
+USAGE
+    exit;
+}
+
+GetOptions(
+    \my %opts,
+    'step=i@',
+    'help|?',
+) or usage;
+usage if defined $opts{help};
+
 print "Installing cats-judge\n";
+
+my %filter_steps;
+if ($opts{step}) {
+    my @steps = @{$opts{step}};
+    undef @filter_steps{@steps};
+    printf "Will only run steps: %s\n", join ' ', sort { $a <=> $b } @steps;
+}
 
 my $step_count = 0;
 
 sub step($&) {
     my ($msg, $action) = @_;
     print ++$step_count, ". $msg ...";
-    $action->();
-    print " ok\n";
+    if (!%filter_steps || exists $filter_steps{$step_count}) {
+        $action->();
+        print " ok\n";
+    }
+    else {
+        print " skipped\n";
+    }
 }
 
 sub step_copy {
