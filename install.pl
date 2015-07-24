@@ -78,7 +78,8 @@ step 'Verifying optional modules', sub {
 };
 
 step 'Cloning sumbodules', sub {
-    `git submodule update --init` or die $!;
+    system('git submodule update --init');
+    $? and die "Failed: $?, $!";
 };
 
 my @p = qw(lib cats-problem CATS);
