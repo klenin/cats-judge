@@ -3,6 +3,7 @@ package CATS::Judge::Server;
 use strict;
 use warnings;
 
+use CATS::Config;
 use CATS::Constants;
 use CATS::DB qw(new_id $dbh);
 use CATS::Testset;
@@ -32,15 +33,17 @@ sub auth {
 sub update_state {
     my ($self) = @_;
 
-    (my $is_alive, $self->{lock_counter}, my $current_sid) = $dbh->selectrow_array(q~
-        SELECT is_alive, lock_counter, jsid FROM judges WHERE id = ?~, {}, $self->{id});
+    (my $is_alive, $self->{lock_counter}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
+        SELECT is_alive, lock_counter, jsid, CURRENT_TIMESTAMP - alive_date
+        FROM judges WHERE id = ?~, undef,
+        $self->{id});
 
     $current_sid eq $self->{sid}
         or die "killed: $current_sid != $self->{sid}";
 
     $dbh->do(q~
-        UPDATE judges SET is_alive = 1, alive_date = CURRENT_DATE
-        WHERE id = ? AND is_alive = 0~, {}, $self->{id}) if !$is_alive;
+        UPDATE judges SET is_alive = 1, alive_date = CURRENT_TIMESTAMP WHERE id = ?~, undef,
+        $self->{id}) if !$is_alive || $time_since_alive > $CATS::Config::judge_alive_interval;
     $dbh->commit;
     !$is_alive;
 }
