@@ -3,7 +3,7 @@ run
 tests
 cache
 modules
-*.log
+log/*
 *.rar
 config.xml
 judge.lock
