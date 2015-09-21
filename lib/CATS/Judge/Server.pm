@@ -43,7 +43,7 @@ sub update_state {
 
     $dbh->do(q~
         UPDATE judges SET is_alive = 1, alive_date = CURRENT_TIMESTAMP WHERE id = ?~, undef,
-        $self->{id}) if !$is_alive || $time_since_alive > $CATS::Config::judge_alive_interval;
+        $self->{id}) if !$is_alive || $time_since_alive > $CATS::Config::judge_alive_interval / 24;
     $dbh->commit;
     !$is_alive;
 }
