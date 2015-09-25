@@ -65,7 +65,8 @@ sub select_request {
         status => 0,
         fname => $self->{solution},
         src => (join '', <FILE>),
-        de_id => $self->{de}
+        de_id => $self->{de},
+        manual_verification => 0,
     };
 }
 

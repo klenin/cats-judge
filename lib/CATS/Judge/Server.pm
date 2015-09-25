@@ -70,7 +70,7 @@ sub select_request {
     my $sth = $dbh->prepare_cached(qq~
         SELECT
             R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, C.run_all_tests,
-            CP.status, S.fname, S.src, S.de_id
+            CP.status, S.fname, S.src, S.de_id, C.manual_verification
         FROM reqs R
         INNER JOIN contest_accounts CA ON CA.account_id = R.account_id AND CA.contest_id = R.contest_id
         INNER JOIN contests C ON C.id = R.contest_id

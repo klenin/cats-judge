@@ -967,6 +967,9 @@ sub process_request
         or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
 
     $judge->save_log_dump($r, $log->{dump});
+    if ($r->{manual_verification} && $state == $cats::st_accepted) {
+        $state = $cats::st_awaiting_verification;
+    }
     $judge->set_request_state($r, $state, %$r);
 
     my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};

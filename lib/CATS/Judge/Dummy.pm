@@ -45,7 +45,8 @@ sub select_request {
         status => 0,
         fname => $file_name,
         src => $source,
-        de_id => $de
+        de_id => $de,
+        manual_verification => 0,
     };
 }
 
