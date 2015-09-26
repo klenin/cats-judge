@@ -62,11 +62,10 @@ sub select_request {
         state => 1,
         is_jury => 0,
         run_all_tests => 1,
-        status => 0,
+        status => $cats::problem_st_ready,
         fname => $self->{solution},
         src => (join '', <FILE>),
         de_id => $self->{de},
-        manual_verification => 0,
     };
 }
 
