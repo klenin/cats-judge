@@ -1,15 +1,14 @@
 package CATS::DevEnv::Detector::PHP;
 
+use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
-sub detect {
+sub _detect {
     my ($self) = @_;
-    $self->{result} = {};
-    CATS::DevEnv::Detector::Utils::env_path($self, 'php');
-    CATS::DevEnv::Detector::Utils::which($self, 'php');
-    CATS::DevEnv::Detector::Utils::drives($self, 'php', 'php');
-    CATS::DevEnv::Detector::Utils::folder($self, '/usr/bin/', 'php');
-    return $self->{result};
+    env_path($self, 'php');
+    which($self, 'php');
+    drives($self, 'php', 'php');
+    folder($self, '/usr/bin/', 'php');
 }
 
 sub validate {

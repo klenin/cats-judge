@@ -9,7 +9,14 @@ sub new {
 }
 
 sub detect {
-    die "abstract method called CATS::DevEnv::DetectorBase::detect";
+    my ($self) = @_;
+    $self->{result} = {};
+    $self->_detect();
+    return $self->{result};
+}
+
+sub _detect {
+    die "abstract method called ", (caller(0))[3], "\n";
 }
 
 sub validate {

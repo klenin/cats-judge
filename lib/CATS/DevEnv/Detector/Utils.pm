@@ -8,6 +8,12 @@ use File::Spec;
 use constant FS => 'File::Spec';
 use constant DIRS_IN_PATH => FS->path();
 
+use parent qw(Exporter);
+use vars qw(@EXPORT);
+@EXPORT = qw(write_file hello_world versioncmp
+    which env_path folder registry registry_loop program_files drives
+);
+
 sub clear {
     my ($ret) = @_;
     unlink "tmp/*";

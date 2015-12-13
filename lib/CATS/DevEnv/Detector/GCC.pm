@@ -1,17 +1,16 @@
 package CATS::DevEnv::Detector::GCC;
 
+use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
-sub detect {
+sub _detect {
     my ($self) = @_;
-    $self->{result} = {};
-    CATS::DevEnv::Detector::Utils::env_path($self, 'gcc');
-    CATS::DevEnv::Detector::Utils::which($self, 'gcc');
-    CATS::DevEnv::Detector::Utils::drives($self, 'MinGW/bin/', 'gcc');
-    CATS::DevEnv::Detector::Utils::drives($self, 'cygwin/bin/', 'gcc');
-    CATS::DevEnv::Detector::Utils::program_files($self, 'MinGW/bin/', 'gcc');
-    CATS::DevEnv::Detector::Utils::program_files($self, 'cygwin/bin/', 'gcc');
-    return $self->{result};
+    env_path($self, 'gcc');
+    which($self, 'gcc');
+    drives($self, 'MinGW/bin/', 'gcc');
+    drives($self, 'cygwin/bin/', 'gcc');
+    program_files($self, 'MinGW/bin/', 'gcc');
+    program_files($self, 'cygwin/bin/', 'gcc');
 }
 
 sub validate {
@@ -27,9 +26,9 @@ int main() {
 }
 END
 ;
-    CATS::DevEnv::Detector::Utils::write_file('hello_world.c', $hello_world);
+    write_file('hello_world.c', $hello_world);
     my $compile = "\"$gcc\" -o hello_world.exe hello_world.c";
-    CATS::DevEnv::Detector::Utils::hello_world($compile);
+    hello_world($compile);
 }
 
 sub get_version {
