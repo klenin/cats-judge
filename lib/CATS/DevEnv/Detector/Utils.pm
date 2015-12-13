@@ -10,7 +10,7 @@ use constant DIRS_IN_PATH => FS->path();
 
 use parent qw(Exporter);
 use vars qw(@EXPORT);
-@EXPORT = qw(write_file hello_world versioncmp
+@EXPORT = qw(write_file version_cmp
     which env_path folder registry registry_loop program_files drives
 );
 
@@ -131,7 +131,7 @@ sub drives {
     return $res;
 }
 
-sub versioncmp {
+sub version_cmp {
     my ($a, $b) = @_;
     my @A = ($a =~ /([-.]|\d+|[^-.\d]+)/g);
     my @B = ($b =~ /([-.]|\d+|[^-.\d]+)/g);
