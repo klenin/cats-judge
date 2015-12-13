@@ -26,18 +26,18 @@ int main() {
 }
 END
 ;
-    my $source = write_file('hello_world.cpp', $hello_world);
+    my $source = File::Spec->rel2abs(write_file('hello_world.cpp', $hello_world));
     my $exe = File::Spec->rel2abs("tmp/hello_world.exe");
     my $vcvarsall = $self->get_init($cl);
     my $compile =<<END
 \@echo off
 $vcvarsall
-"$cl" /Ox /EHsc /nologo $source /Fe"$exe"
+"$cl" /Ox /EHsc /nologo "$source" /Fe"$exe"
 END
 ;
     my $compile_bat = write_fie('compile.bat', $compile);
     system $compile_bat;
-    return $? >> 8 || `$exe` ne "Hello World";
+    $? >> 8 == 0 && `"$exe"` eq "Hello World";
 }
 
 sub get_init {

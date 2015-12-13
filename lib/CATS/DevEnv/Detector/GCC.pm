@@ -22,11 +22,11 @@ int main() {
 }
 END
 ;
-    my $source = write_file('hello_world.c', $hello_world);
+    my $source = File::Spec->rel2abs(write_file('hello_world.c', $hello_world));
     my $exe = File::Spec->rel2abs("tmp/hello_world.exe");
-    my $compile = "\"$gcc\" -o $exe $source";
+    my $compile = "\"$gcc\" -o \"$exe\" \"$source\"";
     system $compile;
-    return $? >> 8 || `$exe` ne "Hello World";
+    $? >> 8 == 0 && `"$exe"` eq "Hello World";
 }
 
 sub get_version {
