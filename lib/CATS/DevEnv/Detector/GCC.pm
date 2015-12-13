@@ -22,10 +22,11 @@ int main() {
 }
 END
 ;
-    write_file('hello_world.c', $hello_world);
-    my $compile = "\"$gcc\" -o hello_world.exe hello_world.c";
+    my $source = write_file('hello_world.c', $hello_world);
+    my $exe = File::Spec->rel2abs("tmp/hello_world.exe");
+    my $compile = "\"$gcc\" -o $exe $source";
     system $compile;
-    return $? >> 8 || `hello_world.exe` ne "Hello World";
+    return $? >> 8 || `$exe` ne "Hello World";
 }
 
 sub get_version {
@@ -33,7 +34,7 @@ sub get_version {
     if (`"$path" --version` =~ /.*?\) (\d{1,2}\.\d{1,2}\.\d{1,2})/) {
         return $1;
     }
-    return "";
+    return 0;
 }
 
 

@@ -2,6 +2,7 @@ package CATS::DevEnv::Detector::Base;
 use strict;
 use warnings;
 use File::Spec;
+use CATS::DevEnv::Detector::Utils;
 
 sub new {
     my $class = shift;
@@ -48,10 +49,7 @@ sub add {
 sub validate_and_add {
     my ($self, $path) = @_;
     my $p = File::Spec->canonpath($path);
-    my $res = $self->validate($p);
-    clear();
-    $res && $self->add($p);
-    return $res;
+    clear($self->validate($p)) && $self->add($p);
 }
 
 1;

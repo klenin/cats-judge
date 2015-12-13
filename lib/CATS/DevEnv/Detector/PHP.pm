@@ -21,7 +21,7 @@ sub get_version {
     if (`"$path" -v` =~ /PHP (\d{1,2}\.\d{1,2}\.\d{1,2}).*/) {
         return $1;
     }
-    return "";
+    return 0;
 }
 
 1;

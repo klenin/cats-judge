@@ -10,7 +10,7 @@ use constant DIRS_IN_PATH => FS->path();
 
 use parent qw(Exporter);
 use vars qw(@EXPORT);
-@EXPORT = qw(write_file version_cmp
+@EXPORT = qw(write_file version_cmp clear
     which env_path folder registry registry_loop program_files drives
 );
 
@@ -22,7 +22,10 @@ sub clear {
 
 sub write_file {
     my ($name, $text) = @_;
-    my $file = "tmp/" . $name;
+    if ( !-d "tmp" ) {
+        mkdir "tmp";
+    }
+    my $file = FS->catfile("tmp", $name);
     open(my $fh, '>', $file);
     print $fh $text;
     close $fh;
@@ -36,44 +39,50 @@ sub which {
         return 0;
     }
     my $output =`which $file`;
-    my $res = 0;
     for my $line (split /\n/, $output) {
-        $res += $detector->validate_and_add($line);
+        $detector->validate_and_add($line);
     }
-    return $res;
 }
 
 sub env_path {
     my ($detector, $file) = @_;
-    my $res = 0;
     for my $dir (DIRS_IN_PATH) {
-        $res = folder($detector, $dir, $file);
+        folder($detector, $dir, $file);
     }
-    return $res;
 }
 
 sub extension {
     my ($detector, $path) = @_;
     my @exts = ('', '.exe', '.bat', '.com');
-    my $res = 0;
     for my $e (@exts) {
-        $res += $detector->validate_and_add($path . $e);
+        $detector->validate_and_add($path . $e);
     }
-    return $res;
 }
 
 sub folder {
     my ($detector, $folder, $file) = @_;
     my $path = FS->catfile($folder, $file);
-    return extension($detector, $path);
+    extension($detector, $path);
+}
+
+use constant REGISTRY_SUFFIX => qw(
+    HKEY_LOCAL_MACHINE/SOFTWARE/
+    HKEY_LOCAL_MACHINE/SOFTWARE/Wow6432Node/
+);
+
+sub _registry {
+    my ($detector, $reg, $key, $local_path, $file) = @_;
+    my $registry = get_registry_obj($detector, $reg) or return 0;
+    my $folder = $registry->GetValue($key) or return 0;
+    folder($detector, FS->catdir($folder,$local_path) , $file);
 }
 
 sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= "";
-    my $registry = get_registry_obj($detector, $reg) or return 0;
-    my $folder = $registry->GetValue($key) or return 0;
-    return folder($detector, FS->catdir($folder,$local_path) , $file);
+    for my $reg_suffix (REGISTRY_SUFFIX) {
+        _registry($detector, $reg_suffix . $reg, $key, $local_path, $file);    
+    }
 }
 
 sub get_registry_obj {
@@ -87,36 +96,28 @@ sub get_registry_obj {
 sub registry_loop {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= "";
-    my $registry = get_registry_obj($detector, $reg) or return 0;
-    my $res = 0;
-    foreach my $subkey ($registry->SubKeyNames()) {
-        my $subreg = $registry->Open($subkey, {
-            Access => Win32::TieRegistry::KEY_READ(),
-            Delimiter => '/'
-        });
-        my $folder = $subreg->GetValue($key) or next;
-        $res += folder($detector, FS->catdir($folder, $local_path), $file);
+    for my $reg_suffix (REGISTRY_SUFFIX) {
+        my $registry = get_registry_obj($detector, $reg_suffix . $reg) or return 0;
+        for my $subkey ($registry->SubKeyNames()) {
+            my $subreg = $registry->Open($subkey, {
+                Access => Win32::TieRegistry::KEY_READ(),
+                Delimiter => '/'
+            });
+            my $folder = $subreg->GetValue($key) or next;
+            folder($detector, FS->catdir($folder, $local_path), $file);
+        }
     }
-    return $res;
 }
 
 sub program_files {
     my ($detector, $local_path, $file) = @_;
-    my @paths = (
-        'HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion',
-        'HKEY_LOCAL_MACHINE/SOFTWARE/Wow6432Node/Microsoft/Windows/CurrentVersion'
-    );
     my @keys = (
         'ProgramFilesDir',
         'ProgramFilesDir (x86)'
     );
-    my $res = 0;
-    foreach my $path (@paths) {
-        foreach my $key (@keys) {
-            $res += registry($detector, $path, $key, $file, $local_path);
-        }
+    foreach my $key (@keys) {
+        registry($detector, "Microsoft/Windows/CurrentVersion", $key, $file, $local_path);
     }
-    return $res;
 }
 
 
@@ -124,11 +125,9 @@ sub drives {
     my ($detector, $folder, $file) = @_;
     $folder ||= "";
     my @drives = getLogicalDrives();
-    my $res = 0;
     foreach my $drive (@drives) {
-        $res += folder($detector, FS->catdir($drive, $folder), $file);
+        folder($detector, FS->catdir($drive, $folder), $file);
     }
-    return $res;
 }
 
 sub version_cmp {

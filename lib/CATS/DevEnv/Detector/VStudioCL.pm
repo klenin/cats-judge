@@ -9,7 +9,7 @@ sub _detect {
     env_path($self, 'cl');
     which($self, 'cl');
     registry_loop($self,
-        'HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/VisualStudio',
+        'Microsoft/VisualStudio',
         'ShellFolder',
         'VC/bin/',
         'cl'
@@ -26,17 +26,18 @@ int main() {
 }
 END
 ;
-    my $hello_world_cpp = write_file('hello_world.cpp', $hello_world);
+    my $source = write_file('hello_world.cpp', $hello_world);
+    my $exe = File::Spec->rel2abs("tmp/hello_world.exe");
     my $vcvarsall = $self->get_init($cl);
     my $compile =<<END
 \@echo off
 $vcvarsall
-"$cl" /Ox /EHsc /nologo $hello_world_cpp /Fe"tmp\\hello_world.exe"
+"$cl" /Ox /EHsc /nologo $source /Fe"$exe"
 END
 ;
     my $compile_bat = write_fie('compile.bat', $compile);
     system $compile_bat;
-    return $? >> 8 || `hello_world.exe` ne "Hello World";
+    return $? >> 8 || `$exe` ne "Hello World";
 }
 
 sub get_init {

@@ -22,7 +22,7 @@ sub get_version {
     if (`"$path" -v` =~ /This is perl \d+, version \d+, subversion 3 \(v([\d.?]+)\)/) {
         return $1;
     }
-    return "";
+    return 0;
 }
 
 1;
