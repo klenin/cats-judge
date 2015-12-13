@@ -5,6 +5,7 @@ use if $^O eq 'MSWin32', "Win32::TieRegistry";
 use if $^O eq 'MSWin32', "Win32API::File" => qw(getLogicalDrives);
 
 use File::Spec;
+use File::Path qw(remove_tree);
 use constant FS => 'File::Spec';
 use constant DIRS_IN_PATH => FS->path();
 
@@ -16,7 +17,7 @@ use vars qw(@EXPORT);
 
 sub clear {
     my ($ret) = @_;
-    unlink "tmp/*";
+    remove_tree("tmp");
     return $ret;
 }
 
@@ -103,7 +104,8 @@ sub registry_loop {
                 Access => Win32::TieRegistry::KEY_READ(),
                 Delimiter => '/'
             });
-            my $folder = $subreg->GetValue($key) or next;
+            my $r = $subreg->Open($key);
+            my $folder = $subreg->GetValue($key) or ($r && $r->GetValue("")) or next; 
             folder($detector, FS->catdir($folder, $local_path), $file);
         }
     }
