@@ -273,6 +273,7 @@
     code="501"
     compile=''
     run='#run "#perl" %full_name'
+    run_interactive='#run_interactive "#perl" %full_name'
     generate='#spawner%redir %limits "#perl" %full_name %args'
     validate='#spawner %limits "#perl" %full_name "%test_input"'
     check='#spawner %limits "#perl" %full_name %checker_args'/>
@@ -282,6 +283,7 @@
     code="502"
     compile='#spawner %comspec% /c ..\pycompile.cmd "%full_name"'
     run='#run "#python" %full_name'
+    run_interactive='#run_interactive "#python" %full_name'
     generate='#spawner%redir %limits "#python" %full_name %args'
     validate='#spawner %limits "#python" %full_name "%test_input"'
     check='#spawner %limits "#python" %full_name %checker_args'/>
@@ -301,6 +303,7 @@
     code="504"
     compile=''
     run='#run "#ruby" %full_name'
+    run_interactive='#run_interactive "#ruby" %full_name'
     generate='#spawner%redir %limits #ruby %full_name %args'
     validate='#spawner %limits "#ruby" %full_name "%test_input"'
     check='#spawner %limits "#ruby" %full_name %checker_args'/>
@@ -310,6 +313,7 @@
     code="505"
     compile=''
     run='#run "#php" %full_name'
+    run_interactive='#run_interactive "#php" %full_name'
     generate='#spawner%redir %limits #php %full_name %args'
     validate='#spawner %limits "#php" %full_name "%test_input"'
     check='#spawner %limits "#php" %full_name %checker_args'/>
