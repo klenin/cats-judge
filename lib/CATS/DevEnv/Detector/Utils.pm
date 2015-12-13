@@ -17,7 +17,7 @@ use vars qw(@EXPORT);
 
 sub clear {
     my ($ret) = @_;
-    remove_tree("tmp");
+    remove_tree("tmp", {error => \my $err});
     return $ret;
 }
 
