@@ -1,1 +1,1 @@
-@C:\Lang\GCC\4.6.2\bin\gcc.exe %* 2>&1
+@C:\Lang\GCC\5.1.0\bin\gcc.exe -m32 %* 2>&1

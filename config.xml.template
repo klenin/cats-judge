@@ -113,7 +113,7 @@
     validate='#spawner %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
-<!-- G++ 4.4.0 -->
+<!-- G++ -->
 <de
     code="102"
     compile='#spawner #gnu_cpp -Wl,--stack=268435456 -O3 "%full_name" -o "%name.exe"'
@@ -145,7 +145,7 @@
     validate='#spawner %limits %comspec% /C "%name.exe" "%test_input"'
     check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
 
-<!-- GCC 4.4.0 C only -->
+<!-- GCC C only -->
 <de
     code="105"
     compile='#spawner #gnu_c -x c -O2 "%full_name" -o "%name.exe"'
