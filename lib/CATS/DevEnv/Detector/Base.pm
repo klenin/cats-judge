@@ -21,7 +21,7 @@ sub _detect {
 
 sub validate {
     my ($self, $file) = @_;
-    return -e $file;
+    return -e $file && $self->get_version($file) && $self->hello_world($file);
 }
 
 sub get_init {
@@ -30,6 +30,10 @@ sub get_init {
 
 sub get_version {
     return "";
+}
+
+sub hello_world {
+    return 0;
 }
 
 sub add {
@@ -45,6 +49,7 @@ sub validate_and_add {
     my ($self, $path) = @_;
     my $p = File::Spec->canonpath($path);
     my $res = $self->validate($p);
+    clear();
     $res && $self->add($p);
     return $res;
 }

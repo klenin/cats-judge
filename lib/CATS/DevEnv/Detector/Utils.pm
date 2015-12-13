@@ -22,19 +22,13 @@ sub clear {
 
 sub write_file {
     my ($name, $text) = @_;
-    open(my $fh, '>', $name);
+    my $file = "tmp/" . $name;
+    open(my $fh, '>', $file);
     print $fh $text;
     close $fh;
+    return $file;
 }
 
-sub hello_world {
-    my ($compile) = @_;
-    system $compile;
-    $? >> 8 && return clear(0);
-    my $out = `hello_world.exe`;
-    $out ne "Hello World" && return clear(0);
-    return clear(1);
-}
 
 sub which {
     my ($detector, $file) = @_;
@@ -146,13 +140,7 @@ sub versioncmp {
     while (@A and @B) {
 	$A = shift @A;
 	$B = shift @B;
-	if ($A eq '-' and $B eq '-') {
-	    next;
-	} elsif ( $A eq '-' ) {
-	    return -1;
-	} elsif ( $B eq '-') {
-	    return 1;
-	} elsif ($A eq '.' and $B eq '.') {
+	if ($A eq '.' and $B eq '.') {
 	    next;
 	} elsif ( $A eq '.' ) {
 	    return -1;

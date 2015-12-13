@@ -11,14 +11,9 @@ sub _detect {
     folder($self, '/usr/bin/', 'php');
 }
 
-sub validate {
+sub hello_world {
     my ($self, $php) = @_;
-    $self->SUPER::validate($php)
-        && $self->get_version($php)
-        && `"$php" -r "print 'Hello world';"` eq "Hello world"
-        or return 0;
-    ;
-    return 1;
+    return `"$php" -r "print 'Hello world';"` eq "Hello world";
 }
 
 sub get_version {

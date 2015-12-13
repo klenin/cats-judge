@@ -16,9 +16,8 @@ sub _detect {
     );
 }
 
-sub validate {
+sub hello_world {
     my ($self, $cl) = @_;
-    $self->SUPER::validate($cl) or return 0;
     my $hello_world =<<"END"
 #include <iostream>
 using namespace std;
@@ -27,16 +26,17 @@ int main() {
 }
 END
 ;
-    write_file('hello_world.cpp', $hello_world);
+    my $hello_world_cpp = write_file('hello_world.cpp', $hello_world);
     my $vcvarsall = $self->get_init($cl);
     my $compile =<<END
 \@echo off
 $vcvarsall
-"$cl" /Ox /EHsc /nologo hello_world.cpp /Fe"hello_world.exe"
+"$cl" /Ox /EHsc /nologo $hello_world_cpp /Fe"tmp\\hello_world.exe"
 END
 ;
-    write_file('compile.bat', $compile);
-    hello_world('compile.bat');
+    my $compile_bat = write_fie('compile.bat', $compile);
+    system $compile_bat;
+    return $? >> 8 || `hello_world.exe` ne "Hello World";
 }
 
 sub get_init {

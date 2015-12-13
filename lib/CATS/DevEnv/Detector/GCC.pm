@@ -13,12 +13,8 @@ sub _detect {
     program_files($self, 'cygwin/bin/', 'gcc');
 }
 
-sub validate {
+sub hello_world {
     my ($self, $gcc) = @_;
-    $self->SUPER::validate($gcc)
-        && $self->get_version($gcc)
-        or return 0;
-    ;
     my $hello_world =<<"END"
 #include <stdio.h>
 int main() {
@@ -28,7 +24,8 @@ END
 ;
     write_file('hello_world.c', $hello_world);
     my $compile = "\"$gcc\" -o hello_world.exe hello_world.c";
-    hello_world($compile);
+    system $compile;
+    return $? >> 8 || `hello_world.exe` ne "Hello World";
 }
 
 sub get_version {
