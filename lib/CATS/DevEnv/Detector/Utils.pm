@@ -12,7 +12,7 @@ use constant DIRS_IN_PATH => FS->path();
 use parent qw(Exporter);
 use vars qw(@EXPORT);
 @EXPORT = qw(write_file version_cmp clear
-    which env_path folder registry registry_loop program_files drives
+    which env_path folder registry registry_loop program_files drives pattern
 );
 
 sub clear {
@@ -121,6 +121,24 @@ sub program_files {
         registry($detector, "Microsoft/Windows/CurrentVersion", $key, $file, $local_path);
     }
 }
+
+sub pattern {
+    my ($detector, $pattern) = @_;
+    my @drives = ('');
+    if ($^O eq "MSWin32") {
+        for my $d (getLogicalDrives()) {
+            $d =~ s/\\/\//;
+            push @drives, $d;
+        }
+    }
+    for my $drive (@drives) {
+        my $p = $drive . $pattern;
+        while (glob $p) {
+            $detector->validate_and_add($_);
+        }
+    }
+}
+
 
 
 sub drives {
