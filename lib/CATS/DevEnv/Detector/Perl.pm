@@ -19,7 +19,7 @@ sub hello_world {
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" -v` =~ /This is perl \d+, version \d+, subversion 3 \(v([\d.?]+)\)/) {
+    if (`"$path" -v` =~ /This is perl \d+, version \d+, subversion \d+ \(v([\d.?]+)\)/) {
         return $1;
     }
     return 0;
