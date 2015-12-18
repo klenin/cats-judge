@@ -13,7 +13,6 @@ sub _detect {
 sub hello_world {
     my ($self, $fpc) = @_;
     my $hello_world =<<"END"
-program Hello;
 begin
   writeln ('Hello World')
 end.
@@ -21,7 +20,7 @@ END
 ;
     my $source = File::Spec->rel2abs(write_file('hello_world.pp', $hello_world));
     my $exe = File::Spec->rel2abs("tmp/hello_world.exe");
-    my $compile = "\"$fpc\" \"$source\" -o\"$exe\"";
+    my $compile = qq~"$fpc" "$source" -o"$exe"~;
     system $compile;
     $? >> 8 == 0 && `"$exe"` eq "Hello World\n";
 }
@@ -33,7 +32,5 @@ sub get_version {
     }
     return 0;
 }
-
-
 
 1;

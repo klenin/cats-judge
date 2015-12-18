@@ -1,8 +1,8 @@
 package CATS::DevEnv::Detector::Utils;
 use strict;
 use warnings;
-use if $^O eq 'MSWin32', "Win32::TieRegistry";
-use if $^O eq 'MSWin32', "Win32API::File" => qw(getLogicalDrives);
+use if $^O eq 'MSWin32', 'Win32::TieRegistry';
+use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives);
 
 use File::Spec;
 use File::Path qw(remove_tree);
@@ -10,35 +10,30 @@ use constant FS => 'File::Spec';
 use constant DIRS_IN_PATH => FS->path();
 
 use parent qw(Exporter);
-use vars qw(@EXPORT);
-@EXPORT = qw(write_file version_cmp clear
+our @EXPORT = qw(
+    write_file version_cmp clear
     which env_path folder registry registry_loop program_files drives pattern
 );
 
 sub clear {
     my ($ret) = @_;
-    remove_tree("tmp", {error => \my $err});
+    remove_tree('tmp', { error => \my $err });
     return $ret;
 }
 
 sub write_file {
     my ($name, $text) = @_;
-    if ( !-d "tmp" ) {
-        mkdir "tmp";
-    }
-    my $file = FS->catfile("tmp", $name);
-    open(my $fh, '>', $file);
+    -d 'tmp' or mkdir 'tmp';
+    my $file = FS->catfile('tmp', $name);
+    open my $fh, '>', $file;
     print $fh $text;
     close $fh;
     return $file;
 }
 
-
 sub which {
     my ($detector, $file) = @_;
-    if ($^O eq "MSWin32") {
-        return 0;
-    }
+    return 0 if $^O eq 'MSWin32';
     my $output =`which $file`;
     for my $line (split /\n/, $output) {
         $detector->validate_and_add($line);
@@ -80,9 +75,9 @@ sub _registry {
 
 sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
-    $local_path ||= "";
+    $local_path ||= '';
     for my $reg_suffix (REGISTRY_SUFFIX) {
-        _registry($detector, $reg_suffix . $reg, $key, $local_path, $file);    
+        _registry($detector, $reg_suffix . $reg, $key, $local_path, $file);
     }
 }
 
@@ -96,7 +91,7 @@ sub get_registry_obj {
 
 sub registry_loop {
     my ($detector, $reg, $key, $local_path, $file) = @_;
-    $local_path ||= "";
+    $local_path ||= '';
     for my $reg_suffix (REGISTRY_SUFFIX) {
         my $registry = get_registry_obj($detector, $reg_suffix . $reg) or return 0;
         for my $subkey ($registry->SubKeyNames()) {
@@ -105,7 +100,7 @@ sub registry_loop {
                 Delimiter => '/'
             });
             my $r = $subreg->Open($key);
-            my $folder = $subreg->GetValue($key) or ($r && $r->GetValue("")) or next; 
+            my $folder = $subreg->GetValue($key) or ($r && $r->GetValue("")) or next;
             folder($detector, FS->catdir($folder, $local_path), $file);
         }
     }
@@ -118,14 +113,14 @@ sub program_files {
         'ProgramFilesDir (x86)'
     );
     foreach my $key (@keys) {
-        registry($detector, "Microsoft/Windows/CurrentVersion", $key, $file, $local_path);
+        registry($detector, 'Microsoft/Windows/CurrentVersion', $key, $file, $local_path);
     }
 }
 
 sub pattern {
     my ($detector, $pattern) = @_;
     my @drives = ('');
-    if ($^O eq "MSWin32") {
+    if ($^O eq 'MSWin32') {
         for my $d (getLogicalDrives()) {
             $d =~ s/\\/\//;
             push @drives, $d;
@@ -138,8 +133,6 @@ sub pattern {
         }
     }
 }
-
-
 
 sub drives {
     my ($detector, $folder, $file) = @_;
@@ -157,25 +150,25 @@ sub version_cmp {
 
     my ($A, $B);
     while (@A and @B) {
-	$A = shift @A;
-	$B = shift @B;
-	if ($A eq '.' and $B eq '.') {
-	    next;
-	} elsif ( $A eq '.' ) {
-	    return -1;
-	} elsif ( $B eq '.' ) {
-	    return 1;
-	} elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
-	    if ($A =~ /^0/ || $B =~ /^0/) {
-		return $A cmp $B if $A cmp $B;
-	    } else {
-		return $A <=> $B if $A <=> $B;
-	    }
-	} else {
-	    $A = uc $A;
-	    $B = uc $B;
-	    return $A cmp $B if $A cmp $B;
-	}
+        $A = shift @A;
+        $B = shift @B;
+        if ($A eq '.' and $B eq '.') {
+            next;
+        } elsif ( $A eq '.' ) {
+            return -1;
+        } elsif ( $B eq '.' ) {
+            return 1;
+        } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
+            if ($A =~ /^0/ || $B =~ /^0/) {
+                return $A cmp $B if $A cmp $B;
+            } else {
+                return $A <=> $B if $A <=> $B;
+            }
+        } else {
+            $A = uc $A;
+            $B = uc $B;
+            return $A cmp $B if $A cmp $B;
+        }
     }
     @A <=> @B;
 }

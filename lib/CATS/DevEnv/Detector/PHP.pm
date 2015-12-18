@@ -13,7 +13,7 @@ sub _detect {
 
 sub hello_world {
     my ($self, $php) = @_;
-    return `"$php" -r "print 'Hello world';"` eq "Hello world";
+    return `"$php" -r "print 'Hello world';"` eq 'Hello world';
 }
 
 sub get_version {

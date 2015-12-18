@@ -14,7 +14,7 @@ sub _detect {
 
 sub hello_world {
     my ($self, $perl) = @_;
-    return `"$perl" -e "print 'Hello world'"` eq "Hello world";
+    return `"$perl" -e "print 'Hello world'"` eq 'Hello world';
 }
 
 sub get_version {
