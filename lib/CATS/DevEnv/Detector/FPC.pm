@@ -1,6 +1,6 @@
 package CATS::DevEnv::Detector::FPC;
 
-use IPC::Run;
+use IPC::Cmd qw(can_run run);
 
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
@@ -16,19 +16,23 @@ sub hello_world {
     my ($self, $fpc) = @_;
     my $hello_world =<<'END'
 begin
-  writeln ('Hello World')
+  write('Hello World')
 end.
 END
 ;
     my $source = File::Spec->rel2abs(write_file('hello_world.pp', $hello_world));
     my $exe = File::Spec->rel2abs('tmp/hello_world.exe');
-    IPC::Run::run [ $fpc, $source, qq~-o"$exe"~ ], \my $in, \my $out, \my $err;
-    $? >> 8 == 0 && `"$exe"` eq "Hello World\n";
+    my ($ok, $err, $buf) = run command => [ $fpc, $source ];
+    $ok or die $err;
+    ($ok, $err, $buf) = run command => [ $exe ];
+    $ok && $buf->[0] eq 'Hello World';
 }
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" -h` =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2}) .*/) {
+    my ($ok, $err, $buf) = run command => [ $path, '-i' ];
+    $ok or die $err;
+    if ($buf->[0] =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2})/) {
         return $1;
     }
     return 0;

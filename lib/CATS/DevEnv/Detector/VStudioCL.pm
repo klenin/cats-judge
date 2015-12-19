@@ -1,7 +1,7 @@
 package CATS::DevEnv::Detector::VStudioCL;
 
 use File::Spec;
-use IPC::Run;
+use IPC::Cmd qw(can_run run);
 
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
@@ -39,15 +39,13 @@ cd ..
 END
 ;
     my $compile_bat = write_file('compile.bat', $compile);
-    system $compile_bat;
-    $? >> 8 == 0 && `"$exe"` eq 'Hello World';
+    run(command => $compile_bat) && `"$exe"` eq 'Hello World';
 }
 
 sub get_version {
     my ($self, $path) = @_;
-    my ($in, $out, $err);
-    IPC::Run::run [ $path ], \$in, \$out, \$err;
-    if ($err =~ /Optimizing Compiler Version (\d+\.\d+\.\d+) for x86/) {
+    my ($ok, $err, $buf) = run command => [ $path ];
+    if ($buf->[0] =~ /Optimizing Compiler Version (\d+\.\d+\.\d+) for x86/) {
         return $1;
     }
     return 0;
