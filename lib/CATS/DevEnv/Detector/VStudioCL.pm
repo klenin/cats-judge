@@ -1,8 +1,10 @@
 package CATS::DevEnv::Detector::VStudioCL;
 
+use File::Spec;
+use IPC::Run;
+
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
-use File::Spec;
 
 sub _detect {
     my ($self) = @_;
@@ -31,12 +33,24 @@ END
     my $compile =<<END
 \@echo off
 $vcvarsall
-"$cl" /Ox /EHsc /nologo "$source" /Fe"$exe"
+cd tmp
+"$cl" /Ox /EHsc /nologo "$source" /Fe"$exe" 1>nul
+cd ..
 END
 ;
-    my $compile_bat = write_fie('compile.bat', $compile);
+    my $compile_bat = write_file('compile.bat', $compile);
     system $compile_bat;
     $? >> 8 == 0 && `"$exe"` eq 'Hello World';
+}
+
+sub get_version {
+    my ($self, $path) = @_;
+    my ($in, $out, $err);
+    IPC::Run::run [ $path ], \$in, \$out, \$err;
+    if ($err =~ /Optimizing Compiler Version (\d+\.\d+\.\d+) for x86/) {
+        return $1;
+    }
+    return 0;
 }
 
 sub get_init {
