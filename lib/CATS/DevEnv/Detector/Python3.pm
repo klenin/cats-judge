@@ -17,4 +17,12 @@ sub hello_world {
     return `"$python" -c "print ('Hello world')"` eq "Hello world\n";
 }
 
+sub get_version {
+    my ($self, $path) = @_;
+    if (`"$path" --version` =~ /Python (3\.\d{1,2}\.\d{1,2})/) {
+        return $1;
+    }
+    return 0;
+}
+
 1;

@@ -24,7 +24,7 @@ sub hello_world {
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" --version` =~ /Python (\d{1,2}\.\d{1,2}\.\d{1,2})/) {
+    if (`"$path" --version` =~ /Python (2\.\d{1,2}\.\d{1,2})/) {
         return $1;
     }
     return 0;
