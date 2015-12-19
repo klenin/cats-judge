@@ -5,6 +5,8 @@ use File::Copy qw(copy);
 use File::Spec;
 use Getopt::Long;
 
+use lib 'lib';
+
 $| = 1;
 
 sub usage
@@ -80,6 +82,22 @@ step 'Verifying optional modules', sub {
 step 'Cloning sumbodules', sub {
     system('git submodule update --init');
     $? and die "Failed: $?, $!";
+};
+
+step 'Detecting development environments', sub {
+    print "\n";
+    for (glob File::Spec->catfile('lib', 'CATS', 'DevEnv', 'Detector', '*.pm')) {
+        my ($name) = /(\w+)\.pm$/;
+        next if $name =~ /^(Utils|Base)$/;
+        eval { require $_; 1; } or next;
+        use Data::Dumper;
+        print "    Detecting $name:\n";
+        my $r = "CATS::DevEnv::Detector::$name"->new->detect or
+            do { print 'not found'; next; };
+        for (values %$r) {
+            printf "        %-12s %s\n", $_->{version}, $_->{path};
+        }
+    }
 };
 
 my @p = qw(lib cats-problem CATS);
