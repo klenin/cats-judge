@@ -1,28 +1,28 @@
-package CATS::DevEnv::Detector::GCC;
+package CATS::DevEnv::Detector::GPP;
 
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub _detect {
     my ($self) = @_;
-    env_path($self, 'gcc');
-    which($self, 'gcc');
-    drives($self, 'MinGW/bin/', 'gcc');
-    drives($self, 'cygwin/bin/', 'gcc');
-    program_files($self, 'MinGW/bin/', 'gcc');
-    program_files($self, 'cygwin/bin/', 'gcc');
+    env_path($self, 'g++');
+    which($self, 'g++');
+    drives($self, 'MinGW/bin/', 'g++');
+    drives($self, 'cygwin/bin/', 'g++');
+    program_files($self, 'MinGW/bin/', 'g++');
+    program_files($self, 'cygwin/bin/', 'g++');
 }
 
 sub hello_world {
     my ($self, $gcc) = @_;
     my $hello_world =<<"END"
-#include <stdio.h>
+#include <iostream>
 int main() {
-    printf("Hello World");
+    std::cout<<"Hello World";
 }
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('hello_world.c', $hello_world));
+    my $source = File::Spec->rel2abs(write_file('hello_world.cpp', $hello_world));
     my $exe = File::Spec->rel2abs('tmp/hello_world.exe');
     my $compile = qq~"$gcc" -o "$exe" "$source"~;
     system $compile;
@@ -32,7 +32,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my $v = `"$path" --version`;
-    if ($v =~ /(?:gcc|GCC).+\s((?:\d+\.)+\d+)/) {
+    if ($v =~ /[gG]\+\+.+\s((?:\d+\.)+\d+)/) {
         return $1;
     }
     return 0;
