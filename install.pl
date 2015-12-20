@@ -89,13 +89,10 @@ step 'Detecting development environments', sub {
     for (glob File::Spec->catfile('lib', 'CATS', 'DevEnv', 'Detector', '*.pm')) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/;
-        do { require $_; 1; } or next;
+        require $_;
         print "    Detecting $name:\n";
-        my $r = "CATS::DevEnv::Detector::$name"->new->detect or
-            do { print 'not found'; next; };
-        for (values %$r) {
-            printf "        %-12s %s\n", $_->{version}, $_->{path};
-        }
+        my $r = "CATS::DevEnv::Detector::$name"->new->detect;
+        printf "        %-12s %s\n", $_->{version}, $_->{path} for values %$r;
     }
 };
 
