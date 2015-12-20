@@ -10,7 +10,7 @@ use constant FS => 'File::Spec';
 
 use parent qw(Exporter);
 our @EXPORT = qw(
-    write_file version_cmp clear
+    write_file version_cmp clear normalize_path
     which env_path folder registry registry_loop program_files drives pattern
 );
 
@@ -141,6 +141,8 @@ sub drives {
         folder($detector, FS->catdir($drive, $folder), $file);
     }
 }
+
+sub normalize_path { FS->case_tolerant ? uc $_[0] : $_[0] }
 
 sub version_cmp {
     my ($a, $b) = @_;
