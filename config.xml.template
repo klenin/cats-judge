@@ -24,7 +24,7 @@
 <define name="#java" value="C:\Program Files\Java\jdk1.7.0_03\bin" />
 <define name="#ms_csc" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#ruby" value="C:\Lang\Ruby\1.9.3\bin\ruby.exe" />
-<define name="#perl" value="C:\Lang\Perl\5.12.3\perl\bin\perl.exe" />
+<define name="#perl" value="C:\Lang\Perl\5.14.2\perl\bin\perl.exe" />
 <define name="#python" value="C:\Lang\Python\3.3.3\python.exe" />
 <define name="#haskell" value="C:\Lang\Haskell\2011.2.0.1\bin\ghc.exe" />
 <define name="#php" value="C:\Lang\PHP\5.4.0\php.exe" />
