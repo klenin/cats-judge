@@ -86,6 +86,10 @@ step 'Cloning sumbodules', sub {
     $? and die "Failed: $?, $!";
 };
 
+step 'Disabling Windows Error Reporting UI', sub {
+    CATS::DevEnv::Detector::Utils::disable_windows_error_reporting_ui;
+};
+
 step 'Detecting development environments', sub {
     IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";

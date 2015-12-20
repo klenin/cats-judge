@@ -70,30 +70,37 @@ sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= '';
     for my $reg_suffix (REGISTRY_SUFFIX) {
-        my $registry = get_registry_obj($detector, "$reg_suffix$reg") or next;
+        my $registry = get_registry_obj("$reg_suffix$reg") or next;
         my $folder = $registry->GetValue($key) or next;
         folder($detector, FS->catdir($folder, $local_path), $file);
     }
 }
 
+use constant REG_READONLY => {
+    Delimiter => '/',
+    Access =>
+        Win32::TieRegistry::KEY_READ
+};
+
+use constant REG_READ_WRITE => {
+    Delimiter => '/',
+    Access =>
+        Win32::TieRegistry::KEY_READ |
+        Win32::TieRegistry::KEY_WRITE
+};
+
 sub get_registry_obj {
-    my ($detector, $reg) = @_;
-    return Win32::TieRegistry->new($reg, {
-        Access => Win32::TieRegistry::KEY_READ(),
-        Delimiter => '/'
-    });
+    my ($reg) = @_;
+    Win32::TieRegistry->new($reg, REG_READONLY);
 }
 
 sub registry_loop {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= '';
     for my $reg_suffix (REGISTRY_SUFFIX) {
-        my $registry = get_registry_obj($detector, $reg_suffix . $reg) or return 0;
+        my $registry = get_registry_obj("$reg_suffix$reg") or return 0;
         for my $subkey ($registry->SubKeyNames()) {
-            my $subreg = $registry->Open($subkey, {
-                Access => Win32::TieRegistry::KEY_READ(),
-                Delimiter => '/'
-            });
+            my $subreg = $registry->Open($subkey, REG_READONLY);
             my $r = $subreg->Open($key);
             my $folder = $subreg->GetValue($key) or ($r && $r->GetValue('')) or next;
             folder($detector, FS->catdir($folder, $local_path), $file);
@@ -175,6 +182,38 @@ sub disable_error_dialogs {
     # https://msdn.microsoft.com/en-us/library/windows/desktop/ms680621%28v=vs.85%29.aspx
     # SEM_FAILCRITICALERRORS
     SetErrorMode(1 | SetErrorMode(0));
+}
+
+use constant POLICY_KEYS => qw(
+    HKEY_LOCAL_MACHINE/Software/Policies
+    HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersion/Policies
+    HKEY_CURRENT_USER/Software/Policies
+    HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Policies
+);
+
+sub disable_windows_error_reporting_ui {
+    $^O eq 'MSWin32' or return;
+    my $wre = 'Microsoft/Windows/Windows Error Reporting';
+    for my $key (POLICY_KEYS) {
+        my $obj = get_registry_obj("$key/$wre") or next;
+        my $old_value = $obj->GetValue('DontShowUI') // next;
+        if (hex($old_value) > 0) {
+            print ' (already disabled) ';
+        }
+        else {
+            print ' (was enabled) ';
+            $obj = Win32::TieRegistry->new("$key/$wre", REG_READ_WRITE) or die $^E;
+            $obj->SetValue('DontShowUI', 1);
+        }
+        return;
+    }
+    print ' (was undefined) ';
+    for my $key (POLICY_KEYS) {
+        my $parent = Win32::TieRegistry->new($key, REG_READ_WRITE) or next;
+        my $obj = $parent->CreateKey($wre, REG_READ_WRITE) or warn($^E), next;
+        $obj->SetValue('DontShowUI', 1);
+        return;
+    }
 }
 
 1;
