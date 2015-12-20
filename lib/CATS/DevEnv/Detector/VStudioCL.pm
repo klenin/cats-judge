@@ -50,7 +50,7 @@ sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path ];
     $ok or return;
-    $buf->[0] =~ /Optimizing Compiler Version ((?:\d+\.)+\d+) for/ ? $1 : 0;
+    $buf->[0] =~ m/C\/C\+\+.+\s((?:\d+\.)+\d+)\s.+86/ ? $1 : 0;
 }
 
 sub get_init {
