@@ -46,10 +46,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path ];
-    if ($buf->[0] =~ /Optimizing Compiler Version (\d+\.\d+\.\d+) for x86/) {
-        return $1;
-    }
-    return 0;
+    $buf->[0] =~ /Optimizing Compiler Version ((?:\d+\.)+\d+) for/ ? $1 : 0;
 }
 
 sub get_init {
