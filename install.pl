@@ -7,6 +7,7 @@ use Getopt::Long;
 use IPC::Cmd;
 
 use lib 'lib';
+use CATS::DevEnv::Detector::Utils;
 
 $| = 1;
 
@@ -88,6 +89,7 @@ step 'Cloning sumbodules', sub {
 step 'Detecting development environments', sub {
     IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";
+    CATS::DevEnv::Detector::Utils::disable_error_dialogs;
     for (glob File::Spec->catfile('lib', 'CATS', 'DevEnv', 'Detector', '*.pm')) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/;

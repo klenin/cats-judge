@@ -2,7 +2,7 @@ package CATS::DevEnv::Detector::Utils;
 use strict;
 use warnings;
 use if $^O eq 'MSWin32', 'Win32::TieRegistry';
-use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives);
+use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives SetErrorMode);
 
 use File::Spec;
 use File::Path qw(remove_tree);
@@ -168,6 +168,13 @@ sub version_cmp {
         }
     }
     @A <=> @B;
+}
+
+sub disable_error_dialogs {
+    $^O eq 'MSWin32' or return;
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms680621%28v=vs.85%29.aspx
+    # SEM_FAILCRITICALERRORS
+    SetErrorMode(1 | SetErrorMode(0));
 }
 
 1;
