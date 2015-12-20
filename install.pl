@@ -4,6 +4,7 @@ use warnings;
 use File::Copy qw(copy);
 use File::Spec;
 use Getopt::Long;
+use IPC::Cmd;
 
 use lib 'lib';
 
@@ -75,7 +76,7 @@ step 'Verifying required modules', sub {
 };
 
 step 'Verifying optional modules', sub {
-    my @bad = grep !eval "require $_; 1;", qw(FormalInput);
+    my @bad = grep !eval "require $_; 1;", qw(FormalInput IPC::Run);
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
@@ -85,6 +86,7 @@ step 'Cloning sumbodules', sub {
 };
 
 step 'Detecting development environments', sub {
+    IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";
     for (glob File::Spec->catfile('lib', 'CATS', 'DevEnv', 'Detector', '*.pm')) {
         my ($name) = /(\w+)\.pm$/;
