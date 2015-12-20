@@ -4,6 +4,7 @@ use warnings;
 use if $^O eq 'MSWin32', 'Win32::TieRegistry';
 use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives SetErrorMode);
 
+use File::Glob 'bsd_glob';
 use File::Spec;
 use File::Path qw(remove_tree);
 use constant FS => 'File::Spec';
@@ -12,9 +13,15 @@ use constant TEMP_SUBDIR => 'tmp';
 
 use parent qw(Exporter);
 our @EXPORT = qw(
-    TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path
+    TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
     which env_path folder registry registry_loop program_files drives pattern
 );
+
+sub globq {
+    my ($pattern) = @_;
+    $pattern =~ s/\\/\\\\/g;
+    bsd_glob $pattern;
+}
 
 sub clear { remove_tree(TEMP_SUBDIR, { error => \my $err }) }
 
@@ -56,7 +63,7 @@ sub extension {
 
 sub folder {
     my ($detector, $folder, $file) = @_;
-    while (glob qq~"$folder"~) {
+    for (globq $folder) {
         extension($detector, FS->catfile($_, $file));
     }
 }
@@ -129,8 +136,7 @@ sub pattern {
         }
     }
     for my $drive (@drives) {
-        my $p = $drive . $pattern;
-        while (glob $p) {
+        for (globq $drive . $pattern) {
             $detector->validate_and_add($_);
         }
     }

@@ -7,7 +7,7 @@ use Getopt::Long;
 use IPC::Cmd;
 
 use lib 'lib';
-use CATS::DevEnv::Detector::Utils;
+use CATS::DevEnv::Detector::Utils qw(globq);
 
 $| = 1;
 
@@ -94,7 +94,7 @@ step 'Detecting development environments', sub {
     IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs;
-    for (glob File::Spec->catfile('lib', 'CATS', 'DevEnv', 'Detector', '*.pm')) {
+    for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/;
         require $_;
