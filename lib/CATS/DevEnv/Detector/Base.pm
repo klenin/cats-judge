@@ -23,8 +23,6 @@ sub _detect {
 
 sub validate {
     my ($self, $file) = @_;
-    my $v = $self->get_version($file) or return;
-    $self->hello_world($file) ? $v : undef;
 }
 
 sub get_init { '' }
@@ -33,22 +31,18 @@ sub get_version { '' }
 
 sub hello_world { 0 }
 
-sub add {
-    my ($self, $path, $version) = @_;
-    $self->{result}->{normalize_path($path)} ||= {
-        path => $path,
-        version => $version,
-        init => $self->get_init($path),
-    };
-}
-
 sub validate_and_add {
     my ($self, $path) = @_;
     my $p = File::Spec->canonpath($path);
-    -f $path && !exists $self->{result}->{normalize_path($p)} or return;
-    my $version = $self->validate($p) or return;
+    my $np = normalize_path($p);
+    -f $path && !exists $self->{result}->{$np} or return;
+
+    my $version = $self->get_version($p) or return;
+    my $r = $self->{result}->{$np} = { path => $p, version => $version };
+    $self->hello_world($p) or return;
+    $r->{init} = $self->get_init($p);
+    $r->{valid} = 1;
     clear;
-    $self->add($p, $version);
 }
 
 1;

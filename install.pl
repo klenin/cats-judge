@@ -100,7 +100,8 @@ step 'Detecting development environments', sub {
         require $_;
         print "    Detecting $name:\n";
         my $r = "CATS::DevEnv::Detector::$name"->new->detect;
-        printf "        %-12s %s\n", $_->{version}, $_->{path} for values %$r;
+        printf "      %s %-12s %s\n",
+            ($_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %$r;
     }
 };
 
