@@ -17,7 +17,7 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --step <num> ...
+    $cmd --step <num> ... [--devenv <devenv-filter>]
     $cmd --help|-?
 USAGE
     exit;
@@ -26,6 +26,7 @@ USAGE
 GetOptions(
     \my %opts,
     'step=i@',
+    'devenv=s',
     'help|?',
 ) or usage;
 usage if defined $opts{help};
@@ -96,7 +97,7 @@ step 'Detecting development environments', sub {
     CATS::DevEnv::Detector::Utils::disable_error_dialogs;
     for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
-        next if $name =~ /^(Utils|Base)$/;
+        next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ $opts{devenv};
         require $_;
         print "    Detecting $name:\n";
         my $r = "CATS::DevEnv::Detector::$name"->new->detect;
