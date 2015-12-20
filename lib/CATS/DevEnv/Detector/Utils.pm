@@ -118,7 +118,7 @@ sub _registry_rec {
 sub registry_glob {
     my ($detector, $reg_path, $local_path, $file) = @_;
     $local_path ||= '';
-    my @r = split '/', $reg_path;
+    my @r = split '/', $reg_path, -1;
     for (REGISTRY_PREFIX) {
         my $reg = get_registry_obj($_) or return;
         _registry_rec($detector, $reg, $local_path, $file, @r);

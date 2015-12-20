@@ -1,5 +1,7 @@
 package CATS::DevEnv::Detector::Python3;
 
+use IPC::Cmd qw(run);
+
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Python2);
 
@@ -19,10 +21,8 @@ sub hello_world {
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" --version` =~ /Python (3\.\d{1,2}\.\d{1,2})/) {
-        return $1;
-    }
-    return 0;
+    my ($ok, $err, $buf) = run command => [ $path, '--version' ];
+    $ok && $buf->[0] =~/Python (3(?:\.\d+)+)/ ? $1 : 0;
 }
 
 1;

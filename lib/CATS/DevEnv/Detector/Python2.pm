@@ -1,5 +1,7 @@
 package CATS::DevEnv::Detector::Python2;
 
+use IPC::Cmd qw(run);
+
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
@@ -10,7 +12,7 @@ sub _detect {
     drives($self, 'python', 'python');
     folder($self, '/usr/bin/', 'python');
     registry_glob($self,
-        'Python/PythonCore/*/InstallPath', '', 'python');
+        'Python/PythonCore/*/InstallPath/', '', 'python');
 }
 
 sub hello_world {
@@ -20,10 +22,8 @@ sub hello_world {
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" --version` =~ /Python (2\.\d{1,2}\.\d{1,2})/) {
-        return $1;
-    }
-    return 0;
+    my ($ok, $err, $buf) = run command => [ $path, '--version' ];
+    $ok && $buf->[0] =~/Python (2(?:\.\d+)+)/ ? $1 : 0;
 }
 
 1;
