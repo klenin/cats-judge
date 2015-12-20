@@ -14,6 +14,8 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'javac');
     which($self, 'javac');
+    registry_glob($self,
+        'JavaSoft/Java Development Kit/*/JavaHome', 'bin', 'javac');
     program_files($self, 'Java/jdk*/bin', 'javac');
 }
 
