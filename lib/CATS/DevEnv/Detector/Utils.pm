@@ -1,6 +1,8 @@
 package CATS::DevEnv::Detector::Utils;
+
 use strict;
 use warnings;
+
 use if $^O eq 'MSWin32', 'Win32::TieRegistry';
 use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives SetErrorMode);
 

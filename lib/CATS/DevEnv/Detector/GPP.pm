@@ -1,5 +1,8 @@
 package CATS::DevEnv::Detector::GPP;
 
+use strict;
+use warnings;
+
 use IPC::Cmd qw(run);
 
 use CATS::DevEnv::Detector::Utils;

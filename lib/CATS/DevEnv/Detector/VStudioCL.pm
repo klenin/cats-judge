@@ -1,5 +1,8 @@
 package CATS::DevEnv::Detector::VStudioCL;
 
+use strict;
+use warnings;
+
 use File::Spec;
 use IPC::Cmd qw(can_run run);
 
@@ -44,6 +47,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path ];
+    $ok or return;
     $buf->[0] =~ /Optimizing Compiler Version ((?:\d+\.)+\d+) for/ ? $1 : 0;
 }
 

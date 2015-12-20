@@ -1,5 +1,8 @@
 package CATS::DevEnv::Detector::FPC;
 
+use strict;
+use warnings;
+
 use IPC::Cmd qw(can_run run);
 
 use CATS::DevEnv::Detector::Utils;

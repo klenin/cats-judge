@@ -1,5 +1,9 @@
 package CATS::DevEnv::Detector::Python2;
 
+use strict;
+use warnings;
+no warnings 'redefine';
+
 use IPC::Cmd qw(run);
 
 use CATS::DevEnv::Detector::Utils;

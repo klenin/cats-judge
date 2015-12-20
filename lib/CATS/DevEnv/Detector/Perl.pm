@@ -1,5 +1,8 @@
 package CATS::DevEnv::Detector::Perl;
 
+use strict;
+use warnings;
+
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 

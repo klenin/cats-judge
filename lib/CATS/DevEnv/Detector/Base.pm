@@ -1,4 +1,5 @@
 package CATS::DevEnv::Detector::Base;
+
 use strict;
 use warnings;
 
