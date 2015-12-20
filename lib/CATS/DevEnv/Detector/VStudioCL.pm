@@ -11,7 +11,9 @@ sub _detect {
     env_path($self, 'cl');
     which($self, 'cl');
     registry_glob($self,
-        'Microsoft/VisualStudio/*/ShellFolder', 'VC/bin/', 'cl');
+        'Microsoft/VisualStudio/*/ShellFolder', 'VC/bin', 'cl');
+    registry_glob($self,
+        'Microsoft/VisualStudio/*/Setup/VC/ProductDir', 'bin', 'cl');
 }
 
 sub hello_world {
