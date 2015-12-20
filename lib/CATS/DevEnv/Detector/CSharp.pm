@@ -25,8 +25,8 @@ public class HelloWorld {
 }
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('hello_world.cs', $hello_world));
-    my $exe = File::Spec->rel2abs(File::Spec->catfile('tmp', 'hello_world.exe'));
+    my $source = write_temp_file('hello_world.cs', $hello_world);
+    my $exe = temp_file('hello_world.exe');
     run command => [ $csc, "/out:$exe", $source ] or return;
     my ($ok, undef, undef, $out, $err) = run command => [ $exe ];
     $ok && $out->[0] eq 'Hello World';

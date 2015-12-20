@@ -22,8 +22,8 @@ int main() {
 }
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('hello_world.c', $hello_world));
-    my $exe = File::Spec->rel2abs('tmp/hello_world.exe');
+    my $source = write_temp_file('hello_world.c', $hello_world);
+    my $exe = temp_file('hello_world.exe');
     my $compile = qq~"$gcc" -o "$exe" "$source"~;
     system $compile;
     $? >> 8 == 0 && `"$exe"` eq 'Hello World';

@@ -20,8 +20,8 @@ begin
 end.
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('hello_world.pp', $hello_world));
-    my $exe = File::Spec->rel2abs('tmp/hello_world.exe');
+    my $source = write_temp_file('hello_world.pp', $hello_world);
+    my $exe = temp_file('hello_world.exe');
     my ($ok, $err, $buf) = run command => [ $fpc, $source ];
     $ok or die $err;
     ($ok, $err, $buf) = run command => [ $exe ];

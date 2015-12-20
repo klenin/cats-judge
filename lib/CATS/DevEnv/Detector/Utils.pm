@@ -8,18 +8,22 @@ use File::Spec;
 use File::Path qw(remove_tree);
 use constant FS => 'File::Spec';
 
+use constant TEMP_SUBDIR => 'tmp';
+
 use parent qw(Exporter);
 our @EXPORT = qw(
-    write_file version_cmp clear normalize_path
+    TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path
     which env_path folder registry registry_loop program_files drives pattern
 );
 
-sub clear { remove_tree('tmp', { error => \my $err }) }
+sub clear { remove_tree(TEMP_SUBDIR, { error => \my $err }) }
 
-sub write_file {
+sub temp_file { FS->rel2abs(FS->catfile(TEMP_SUBDIR, $_[0])) }
+
+sub write_temp_file {
     my ($name, $text) = @_;
-    -d 'tmp' or mkdir 'tmp';
-    my $file = FS->catfile('tmp', $name);
+    -d TEMP_SUBDIR or mkdir TEMP_SUBDIR;
+    my $file = temp_file($name);
     open my $fh, '>', $file;
     print $fh $text;
     close $fh;

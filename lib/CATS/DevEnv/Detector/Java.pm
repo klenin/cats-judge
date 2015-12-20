@@ -25,11 +25,12 @@ class HelloWorld {
 }
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('HelloWorld.java', $hello_world));
+    my $source = write_temp_file('HelloWorld.java', $hello_world);
     run command => [ $javac, $source ] or return;
     my $java = $javac;
     $java =~ s/javac/java/;
-    my ($ok, undef, undef, $out, $err) = run command => [ $java, '-cp', 'tmp', 'HelloWorld' ];
+    my ($ok, undef, undef, $out, $err) =
+        run command => [ $java, '-cp', TEMP_SUBDIR, 'HelloWorld' ];
     $ok && $out->[0] eq 'Hello World';
 }
 

@@ -27,18 +27,19 @@ int main() {
 }
 END
 ;
-    my $source = File::Spec->rel2abs(write_file('hello_world.cpp', $hello_world));
-    my $exe = File::Spec->rel2abs('tmp/hello_world.exe');
+    my $source = write_temp_file('hello_world.cpp', $hello_world);
+    my $exe = temp_file('hello_world.exe');
     my $vcvarsall = $self->get_init($cl);
+    my $tmp = TEMP_SUBDIR;
     my $compile =<<END
 \@echo off
 $vcvarsall
-cd tmp
+cd $tmp
 "$cl" /Ox /EHsc /nologo "$source" /Fe"$exe" 1>nul
 cd ..
 END
 ;
-    my $compile_bat = write_file('compile.bat', $compile);
+    my $compile_bat = write_temp_file('compile.bat', $compile);
     run(command => $compile_bat) && `"$exe"` eq 'Hello World';
 }
 
