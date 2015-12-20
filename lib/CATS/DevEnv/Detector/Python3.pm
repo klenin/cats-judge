@@ -8,6 +8,8 @@ use IPC::Cmd qw(run);
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Python2);
 
+sub name { 'Python 3' }
+
 sub _detect {
     my ($self) = @_;
     $self->SUPER::_detect();

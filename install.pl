@@ -99,10 +99,10 @@ step 'Detecting development environments', sub {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ $opts{devenv};
         require $_;
-        print "    Detecting $name:\n";
-        my $r = "CATS::DevEnv::Detector::$name"->new->detect;
+        my $d = "CATS::DevEnv::Detector::$name"->new;
+        printf "    Detecting %s:\n", $d->name;
         printf "      %s %-12s %s\n",
-            ($_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %$r;
+            ($_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %{$d->detect};
     }
 };
 

@@ -8,6 +8,8 @@ use IPC::Cmd qw(run);
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
+sub name { 'Ruby' }
+
 sub _detect {
     my ($self) = @_;
     env_path($self, 'ruby');

@@ -8,6 +8,8 @@ use IPC::Cmd qw(can_run run);
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
+sub name { 'Free Pascal' }
+
 sub _detect {
     my ($self) = @_;
     env_path($self, 'fpc');

@@ -11,6 +11,8 @@ sub new {
     bless { @_ }, $class;
 }
 
+sub name { ref $_[0] }
+
 sub detect {
     my ($self) = @_;
     $self->{result} = {};

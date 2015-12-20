@@ -6,6 +6,8 @@ use warnings;
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
+sub name { 'PHP' }
+
 sub _detect {
     my ($self) = @_;
     env_path($self, 'php');
