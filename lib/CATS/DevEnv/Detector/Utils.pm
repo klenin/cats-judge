@@ -14,11 +14,7 @@ our @EXPORT = qw(
     which env_path folder registry registry_loop program_files drives pattern
 );
 
-sub clear {
-    my ($ret) = @_;
-    remove_tree('tmp', { error => \my $err });
-    return $ret;
-}
+sub clear { remove_tree('tmp', { error => \my $err }) }
 
 sub write_file {
     my ($name, $text) = @_;
