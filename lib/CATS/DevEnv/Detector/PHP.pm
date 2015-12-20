@@ -8,6 +8,8 @@ sub _detect {
     env_path($self, 'php');
     which($self, 'php');
     drives($self, 'php', 'php');
+    drives($self, 'php5', 'php');
+    drives($self, 'lang/php/*', 'php');
     folder($self, '/usr/bin/', 'php');
 }
 
