@@ -52,8 +52,9 @@ sub extension {
 
 sub folder {
     my ($detector, $folder, $file) = @_;
-    my $path = FS->catfile($folder, $file);
-    extension($detector, $path);
+    while (glob qq~"$folder"~) {
+        extension($detector, FS->catfile($_, $file));
+    }
 }
 
 use constant REGISTRY_SUFFIX => qw(
@@ -61,18 +62,13 @@ use constant REGISTRY_SUFFIX => qw(
     HKEY_LOCAL_MACHINE/SOFTWARE/Wow6432Node/
 );
 
-sub _registry {
-    my ($detector, $reg, $key, $local_path, $file) = @_;
-    my $registry = get_registry_obj($detector, $reg) or return 0;
-    my $folder = $registry->GetValue($key) or return 0;
-    folder($detector, FS->catdir($folder,$local_path) , $file);
-}
-
 sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= '';
     for my $reg_suffix (REGISTRY_SUFFIX) {
-        _registry($detector, $reg_suffix . $reg, $key, $local_path, $file);
+        my $registry = get_registry_obj($detector, "$reg_suffix$reg") or next;
+        my $folder = $registry->GetValue($key) or next;
+        folder($detector, FS->catdir($folder, $local_path), $file);
     }
 }
 
