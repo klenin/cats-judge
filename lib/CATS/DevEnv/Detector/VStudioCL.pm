@@ -10,12 +10,8 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'cl');
     which($self, 'cl');
-    registry_loop($self,
-        'Microsoft/VisualStudio',
-        'ShellFolder',
-        'VC/bin/',
-        'cl'
-    );
+    registry_glob($self,
+        'Microsoft/VisualStudio/*/ShellFolder', 'VC/bin/', 'cl');
 }
 
 sub hello_world {

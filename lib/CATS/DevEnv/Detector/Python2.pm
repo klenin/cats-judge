@@ -9,12 +9,8 @@ sub _detect {
     which($self, 'python');
     drives($self, 'python', 'python');
     folder($self, '/usr/bin/', 'python');
-    registry_loop($self,
-        'Python/PythonCore',
-        'InstallPath',
-        '',
-        'python'
-    );
+    registry_glob($self,
+        'Python/PythonCore/*/InstallPath', '', 'python');
 }
 
 sub hello_world {

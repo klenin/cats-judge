@@ -13,6 +13,10 @@ sub _detect {
     env_path($self, 'csc');
     which($self, 'csc');
     program_files($self, 'MSBuild/*/Bin', 'csc');
+    registry($self,
+        'Microsoft/NET Framework Setup/NDP/v4/Full', 'InstallPath', '', 'csc');
+    registry_glob($self,
+        'Microsoft/NET Framework Setup/NDP/*/InstallPath', '', 'csc');
 }
 
 sub hello_world {
@@ -36,7 +40,7 @@ sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path,  '/help' ];
     $ok or return 0;
-    $buf->[0] =~ /Visual C# Compiler version\s((?:\d+\.)+\d+)/ ? $1 : 0;
+    $buf->[0] =~ /Visual C#.+\s((?:\d+\.)+\d+)/ ? $1 : 0;
 }
 
 1;

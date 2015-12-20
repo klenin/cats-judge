@@ -14,7 +14,7 @@ use constant TEMP_SUBDIR => 'tmp';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder registry registry_loop program_files drives pattern
+    which env_path folder registry registry_glob program_files drives pattern
 );
 
 sub globq {
@@ -68,7 +68,7 @@ sub folder {
     }
 }
 
-use constant REGISTRY_SUFFIX => qw(
+use constant REGISTRY_PREFIX => qw(
     HKEY_LOCAL_MACHINE/SOFTWARE/
     HKEY_LOCAL_MACHINE/SOFTWARE/Wow6432Node/
 );
@@ -76,8 +76,8 @@ use constant REGISTRY_SUFFIX => qw(
 sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
     $local_path ||= '';
-    for my $reg_suffix (REGISTRY_SUFFIX) {
-        my $registry = get_registry_obj("$reg_suffix$reg") or next;
+    for my $reg_prefix (REGISTRY_PREFIX) {
+        my $registry = get_registry_obj("$reg_prefix$reg") or next;
         my $folder = $registry->GetValue($key) or next;
         folder($detector, FS->catdir($folder, $local_path), $file);
     }
@@ -101,17 +101,27 @@ sub get_registry_obj {
     Win32::TieRegistry->new($reg, REG_READONLY);
 }
 
-sub registry_loop {
-    my ($detector, $reg, $key, $local_path, $file) = @_;
+sub _registry_rec {
+    my ($detector, $parent, $local_path, $file, $key, @rest) = @_;
+    if (!@rest) {
+        my $folder = $parent->GetValue($key) or return;
+        folder($detector, FS->catdir($folder, $local_path), $file);
+        return;
+    }
+    my @names = $key eq '*' ? $parent->SubKeyNames : $key;
+    for my $subkey (@names) {
+        my $subreg = $parent->Open($subkey, REG_READONLY) or next;
+        _registry_rec($detector, $subreg, $local_path, $file, @rest)
+    }
+}
+
+sub registry_glob {
+    my ($detector, $reg_path, $local_path, $file) = @_;
     $local_path ||= '';
-    for my $reg_suffix (REGISTRY_SUFFIX) {
-        my $registry = get_registry_obj("$reg_suffix$reg") or return 0;
-        for my $subkey ($registry->SubKeyNames()) {
-            my $subreg = $registry->Open($subkey, REG_READONLY);
-            my $r = $subreg->Open($key);
-            my $folder = $subreg->GetValue($key) or ($r && $r->GetValue('')) or next;
-            folder($detector, FS->catdir($folder, $local_path), $file);
-        }
+    my @r = split '/', $reg_path;
+    for (REGISTRY_PREFIX) {
+        my $reg = get_registry_obj($_) or return;
+        _registry_rec($detector, $reg, $local_path, $file, @r);
     }
 }
 
