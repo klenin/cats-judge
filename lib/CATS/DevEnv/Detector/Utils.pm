@@ -16,7 +16,7 @@ use constant TEMP_SUBDIR => 'tmp';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder registry registry_glob program_files drives pattern
+    which env_path folder registry registry_assoc registry_glob program_files drives pattern
 );
 
 sub globq {
@@ -101,6 +101,15 @@ use constant REG_READ_WRITE => {
 sub get_registry_obj {
     my ($reg) = @_;
     Win32::TieRegistry->new($reg, REG_READONLY);
+}
+
+sub registry_assoc {
+    my ($detector, $assoc, $local_path, $file) = @_;
+    my $cmd_line = get_registry_obj(
+        "HKEY_CLASSES_ROOT/$assoc/Shell/Open/Command")->GetValue('') or return;
+    my ($folder) = ($cmd_line =~ /^\"([^"]+)\\[^\\]+\"/) or return;
+    warn $folder;
+    folder($detector, FS->catdir($folder, $local_path), $file);
 }
 
 sub _registry_rec {

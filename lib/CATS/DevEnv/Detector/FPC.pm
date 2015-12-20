@@ -14,6 +14,7 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'fpc');
     which($self, 'fpc');
+    registry_assoc($self, 'Lazarus.AssocFile.lpr', '/fpc/*/bin/i386-win32', 'fpc');
     drives($self, 'lazarus/fpc/*/bin/i386-win32', 'fpc');
     pattern($self, 'FPC/*/bin/*/{fpc,fpc.*,ppc*}');
 }
