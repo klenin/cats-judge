@@ -108,7 +108,7 @@ sub program_files {
         'ProgramFilesDir (x86)'
     );
     foreach my $key (@keys) {
-        registry($detector, 'Microsoft/Windows/CurrentVersion', $key, $file, $local_path);
+        registry($detector, 'Microsoft/Windows/CurrentVersion', $key, $local_path, $file);
     }
 }
 
