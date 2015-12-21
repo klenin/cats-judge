@@ -3,7 +3,7 @@ package CATS::DevEnv::Detector::FPC;
 use strict;
 use warnings;
 
-use IPC::Cmd qw(can_run run);
+use IPC::Cmd qw(run);
 
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
