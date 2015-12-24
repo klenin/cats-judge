@@ -105,8 +105,8 @@ sub get_registry_obj {
 
 sub registry_assoc {
     my ($detector, $assoc, $local_path, $file) = @_;
-    my $cmd_line = get_registry_obj(
-        "HKEY_CLASSES_ROOT/$assoc/Shell/Open/Command")->GetValue('') or return;
+    my $cmd_key = get_registry_obj("HKEY_CLASSES_ROOT/$assoc/Shell/Open/Command") or return;
+    my $cmd_line = $cmd_key->GetValue('') or return;
     my ($folder) = ($cmd_line =~ /^\"([^"]+)\\[^\\]+\"/) or return;
     folder($detector, FS->catdir($folder, $local_path), $file);
 }
