@@ -12,8 +12,12 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'perl');
     which($self, 'perl');
+    registry_assoc($self, assoc => 'Perl_program_file', command => 'Execute Perl Program', file => 'perl');
     drives($self, 'perl/bin', 'perl');
+    drives($self, 'perl/perl/bin', 'perl');
     drives($self, 'strawberry/perl/bin', 'perl');
+    drives($self, 'lang/perl/perl/bin', 'perl');
+    drives($self, 'langs/perl/perl/bin', 'perl');
     folder($self, '/usr/bin/', 'perl');
 }
 
