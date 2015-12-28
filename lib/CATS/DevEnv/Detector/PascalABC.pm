@@ -37,9 +37,18 @@ END
 
 sub get_version {
     my ($self, $path) = @_;
+    if ($^O eq 'MSWin32' && eval { require Win32::Exe; 1 }) {
+        my $path_dll = $path;
+        $path_dll =~ s/pabcnetcclear.*$/Compiler.dll/;
+        my $exe = Win32::Exe->new($path_dll) or return 0;
+        return $exe->get_version_info->{ProductVersion};
+    }
     my ($ok, $err, $buf) = run command => [ $path ];
     # PascalABC does not provide version info AND returns non-zero.
-    $buf->[0] =~ /Command line is absent/ ? '1.0' : 0;
+    use Encode;
+    my $msg = 'Отсутствует командная строка';
+    Encode::from_to($msg, 'UTF-8', 'CP866');
+    return $buf->[0] =~ /(Command line is absent|$msg)/ ? '1.0' : 0;
 }
 
 1;
