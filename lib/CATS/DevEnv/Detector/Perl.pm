@@ -16,8 +16,7 @@ sub _detect {
     drives($self, 'perl/bin', 'perl');
     drives($self, 'perl/perl/bin', 'perl');
     drives($self, 'strawberry/perl/bin', 'perl');
-    drives($self, 'lang/perl/perl/bin', 'perl');
-    drives($self, 'langs/perl/perl/bin', 'perl');
+    lang_dirs($self, 'perl', 'perl/bin', 'perl');
     folder($self, '/usr/bin/', 'perl');
 }
 

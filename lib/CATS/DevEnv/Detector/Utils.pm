@@ -18,7 +18,7 @@ use constant TEMP_SUBDIR => 'tmp';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder registry registry_assoc registry_glob program_files drives
+    which env_path folder registry registry_assoc registry_glob program_files drives lang_dirs
 );
 
 sub globq {
@@ -154,11 +154,21 @@ sub program_files {
 
 sub drives {
     my ($detector, $folder, $file) = @_;
-    $folder ||= "";
+    $^O eq 'MSWin32' or return;
+    $folder or die;
     my @drives = getLogicalDrives();
     foreach my $drive (@drives) {
         folder($detector, FS->catdir($drive, $folder), $file);
     }
+}
+
+sub lang_dirs {
+    my ($detector, $folder, $subfolder, $file) = @_;
+    drives($detector, FS->catfile(@$_), $file) for
+        [ 'lang', $folder, $subfolder ],
+        [ 'langs', $folder, $subfolder ],
+        [ 'lang', $folder, '*', $subfolder ],
+        [ 'langs', $folder, '*', $subfolder ];
 }
 
 sub normalize_path { FS->case_tolerant ? uc $_[0] : $_[0] }

@@ -15,6 +15,7 @@ sub _detect {
     env_path($self, 'ruby');
     which($self, 'ruby');
     drives($self, 'ruby', 'ruby');
+    lang_dirs($self, 'ruby', 'bin', 'ruby');
     folder($self, '/usr/bin/', 'ruby');
     registry_glob($self,
         'RubyInstaller/MRI/*/InstallLocation/', 'bin', 'ruby');

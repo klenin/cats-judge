@@ -17,8 +17,7 @@ sub _detect {
     registry_assoc($self, assoc => 'Lazarus.AssocFile.lpr', local_path => '/fpc/*/bin/i386-win32', file => 'fpc');
     drives($self, 'lazarus/fpc/*/bin/i386-win32', 'fpc');
     drives($self, 'FPC/*/bin/*', 'fpc');
-    drives($self, 'lang/FPC/*/bin/*', 'fpc');
-    drives($self, 'langs/FPC/*/bin/*', 'fpc');
+    lang_dirs($self, 'fpc', '/bin/i386-win32', 'fpc');
 }
 
 sub hello_world {
