@@ -102,7 +102,7 @@ step 'Detecting development environments', sub {
         my $d = "CATS::DevEnv::Detector::$name"->new;
         printf "    Detecting %s:\n", $d->name;
         printf "      %s %-12s %s\n",
-            ($_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %{$d->detect};
+            ($_->{preferred} ? '*' : $_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %{$d->detect};
     }
 };
 

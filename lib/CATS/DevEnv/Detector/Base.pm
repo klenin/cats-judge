@@ -13,10 +13,27 @@ sub new {
 
 sub name { ref $_[0] }
 
+sub mark_preferred_versions {
+    my ($self) = @_;
+    my $max_version = version->parse('v0');
+    my $max_key;
+    while (my ($k, $v) = each %{$self->{result}}) {
+        $v->{valid} or next;
+        my $sanitized_version = $v->{version};
+        $sanitized_version =~ tr/0-9\./_/c;
+        if (version->parse($sanitized_version) > $max_version) {
+            $max_version = $sanitized_version;
+            $max_key = $k;
+        }
+    }
+    $self->{result}->{$max_key}->{preferred} = 1 if $max_key;
+}
+
 sub detect {
     my ($self) = @_;
     $self->{result} = {};
     $self->_detect;
+    $self->mark_preferred_versions;
     return $self->{result};
 }
 
