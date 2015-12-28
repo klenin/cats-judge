@@ -15,6 +15,9 @@ sub _detect {
     drives($self, 'php', 'php');
     drives($self, 'php5', 'php');
     drives($self, 'lang/php/*', 'php');
+    drives($self, 'lang/php', 'php');
+    drives($self, 'langs/php/*', 'php');
+    drives($self, 'langs/php', 'php');
     folder($self, '/usr/bin/', 'php');
 }
 
