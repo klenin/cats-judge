@@ -97,7 +97,7 @@ step 'Detecting development environments', sub {
     CATS::DevEnv::Detector::Utils::disable_error_dialogs;
     for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
-        next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ $opts{devenv};
+        next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ qr/$opts{devenv}/i;
         require $_;
         my $d = "CATS::DevEnv::Detector::$name"->new;
         printf "    Detecting %s:\n", $d->name;
