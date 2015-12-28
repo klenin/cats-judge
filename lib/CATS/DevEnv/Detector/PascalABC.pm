@@ -14,7 +14,7 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'pabcnetcclear');
     which($self, 'pabcnetcclear');
-    registry_assoc($self, 'PascalABCNET.PascalABCNETProject', '', 'pabcnetcclear');
+    registry_assoc($self, assoc => 'PascalABCNET.PascalABCNETProject', file => 'pabcnetcclear');
     drives($self, 'PascalABC.NET', 'pabcnetcclear');
     program_files($self, 'PascalABC.NET', 'pabcnetcclear');
 }
