@@ -18,7 +18,7 @@ use constant TEMP_SUBDIR => 'tmp';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder registry registry_assoc registry_glob program_files drives pattern
+    which env_path folder registry registry_assoc registry_glob program_files drives
 );
 
 sub globq {
@@ -149,22 +149,6 @@ sub program_files {
     );
     foreach my $key (@keys) {
         registry($detector, 'Microsoft/Windows/CurrentVersion', $key, $local_path, $file);
-    }
-}
-
-sub pattern {
-    my ($detector, $pattern) = @_;
-    my @drives = ('');
-    if ($^O eq 'MSWin32') {
-        for my $d (getLogicalDrives()) {
-            $d =~ s/\\/\//;
-            push @drives, $d;
-        }
-    }
-    for my $drive (@drives) {
-        for (globq $drive . $pattern) {
-            $detector->validate_and_add($_);
-        }
     }
 }
 
