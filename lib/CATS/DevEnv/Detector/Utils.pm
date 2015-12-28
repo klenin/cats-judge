@@ -4,8 +4,10 @@ use strict;
 use warnings;
 
 use if $^O eq 'MSWin32', 'Win32::TieRegistry';
+use if $^O eq 'MSWin32', 'Win32::API';
 use if $^O eq 'MSWin32', 'Win32API::File' => qw(getLogicalDrives SetErrorMode);
 
+use Encode;
 use File::Glob 'bsd_glob';
 use File::Spec;
 use File::Path qw(remove_tree);
@@ -217,6 +219,14 @@ use constant POLICY_KEYS => qw(
     HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Policies
 );
 
+sub windows_encode_console_message {
+    my ($msg) = @_;
+    my $acp = Win32::API::More->new('kernel32', 'int GetACP()')->Call;
+    my $cocp = Win32::API::More->new('kernel32', 'int GetConsoleOutputCP()')->Call;
+    Encode::from_to($msg, "CP$acp", "CP$cocp") if $acp != $cocp;
+    $msg;
+}
+
 sub disable_windows_error_reporting_ui {
     $^O eq 'MSWin32' or return;
     my $wre = 'Microsoft/Windows/Windows Error Reporting';
@@ -236,10 +246,11 @@ sub disable_windows_error_reporting_ui {
     print ' (was undefined) ';
     for my $key (POLICY_KEYS) {
         my $parent = Win32::TieRegistry->new($key, REG_READ_WRITE) or next;
-        my $obj = $parent->CreateKey($wre, REG_READ_WRITE) or warn($^E), next;
-        $obj->SetValue('DontShowUI', 1);
+        my $obj = $parent->CreateKey($wre, REG_READ_WRITE) or next;
+        $obj->SetValue('DontShowUI', 1) or next;
         return;
     }
+    print 'failed to set: ', windows_encode_console_message($^E);
 }
 
 1;
