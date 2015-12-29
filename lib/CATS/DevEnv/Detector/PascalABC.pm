@@ -16,6 +16,7 @@ sub _detect {
     which($self, 'pabcnetcclear');
     registry_assoc($self, assoc => 'PascalABCNET.PascalABCNETProject', file => 'pabcnetcclear');
     drives($self, 'PascalABC.NET', 'pabcnetcclear');
+    lang_dirs($self, 'PascalABC.NET', '', 'pabcnetcclear');
     program_files($self, 'PascalABC.NET', 'pabcnetcclear');
 }
 
