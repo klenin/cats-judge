@@ -116,7 +116,7 @@
 <!-- G++ -->
 <de
     code="102"
-    compile='#spawner #gnu_cpp -Wl,--stack=268435456 -O3 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp -std=c++0x -Wl,--stack=268435456 -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
