@@ -312,7 +312,8 @@ sub generate_test
     my $sp_report = $spawner->execute(
         $generate_cmd, {
         full_name => $fname, name => $name,
-        limits => get_special_limits($ps),
+        # 'Almost unlimited' write limit for test generator.
+        limits => join(' ', '-wl:999', get_special_limits($ps)),
         args => $test->{param} // '', redir => $redir }
     ) or return undef;
 
