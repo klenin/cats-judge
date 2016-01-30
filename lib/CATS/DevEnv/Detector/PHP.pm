@@ -12,9 +12,8 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'php');
     which($self, 'php');
-    drives($self, 'php', 'php');
-    drives($self, 'php5', 'php');
-    lang_dirs($self, 'php', '', 'php');
+    drives($self, 'php*', 'php');
+    lang_dirs($self, 'php*', '', 'php');
     folder($self, '/usr/bin/', 'php');
 }
 
