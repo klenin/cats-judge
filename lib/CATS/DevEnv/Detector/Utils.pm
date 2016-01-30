@@ -117,6 +117,22 @@ sub registry_assoc {
     folder($detector, FS->catdir($folder, $local_path), $file);
 }
 
+sub SubKeyNames_fixup {
+    my ($reg) = @_;
+    $reg = tied(%$reg) if tied(%$reg);
+    # Workaround for https://rt.cpan.org/Public/Bug/Display.html?id=97127, fixed in Win32::TieRegistry 0.27
+    use version ();
+    return $reg->SubKeyNames if version->parse($Win32::TieRegistry::VERSION) >= version->parse('0.27');
+    my @subkeys;
+    my ($nameSize, $classSize) = $reg->Information(qw(MaxSubKeyLen MaxSubClassLen));
+    while ($reg->RegEnumKeyEx(
+        scalar @subkeys, my $subkey, (my $ns = $nameSize + 1), [], my $class, (my $cl = $classSize + 1), my $time)
+    ) {
+        push @subkeys, $subkey;
+    }
+    @subkeys;
+}
+
 sub _registry_rec {
     my ($detector, $parent, $local_path, $file, $key, @rest) = @_;
     if (!@rest) {
@@ -124,7 +140,7 @@ sub _registry_rec {
         folder($detector, FS->catdir($folder, $local_path), $file);
         return;
     }
-    my @names = $key eq '*' ? $parent->SubKeyNames : $key;
+    my @names = $key eq '*' ? SubKeyNames_fixup($parent) : $key;
     for my $subkey (@names) {
         my $subreg = $parent->Open($subkey, REG_READONLY) or next;
         _registry_rec($detector, $subreg, $local_path, $file, @rest)
