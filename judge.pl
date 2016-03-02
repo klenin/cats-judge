@@ -995,13 +995,19 @@ sub main_loop
     }
 }
 
+sub auto_detect_de{
+    my (undef, undef, undef, undef, $ext) = split_fname($opts{solution});
+    defined $cfg->def_DEs->{$ext} or die "Can not auto-detect DE for file $opts{solution}";
+    $opts{de} = $cfg->def_DEs->{$ext};
+}
+
 sub usage
 {
     my (undef, undef, $cmd) = File::Spec->splitpath($0);
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --problem <zip_or_directory> --solution <file> --de <de_code> [--testset <testset>] [--db]
+    $cmd --problem <zip_or_directory> --solution <file> [--de <de_code>] [--testset <testset>] [--db]
     $cmd --print-config <regexp>
     $cmd --set-config <name>=<value> ...
     $cmd --help|-?
@@ -1027,6 +1033,8 @@ usage if defined $opts{help};
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file, $opts{'set-config'});
 }
+
+auto_detect_de() if defined $opts{solution} && !defined $opts{de};
 
 if (defined(my $regexp = $opts{'print-config'})) {
     $cfg->print_params($regexp);
