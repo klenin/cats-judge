@@ -84,7 +84,8 @@
     compile=''
     run='#spawner -so:%output_file -ho:1 "#arch_7z" x -so "%full_name" %test_rank.out'
     generate=''
-    check=''/>
+    check=''
+    extension='zip'/>
 
 <!-- Special: copy text as an answer -->
 <de
@@ -243,7 +244,8 @@
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
     validate='#spawner %limits "%name.exe" "%test_input"'
-    check='#spawner %limits "%name.exe" %checker_args'/>
+    check='#spawner %limits "%name.exe" %checker_args'
+    extension='bas'/>
 
 <!-- Java -->
 <de
