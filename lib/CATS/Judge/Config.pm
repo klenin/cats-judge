@@ -46,8 +46,12 @@ sub read_file {
             judge => sub {
                 $self->{$_} = $atts{$_} for required_fields, optional_fields;
             },
-            de => sub {      
-                $self->def_DEs->{$_} = $atts{'code'} for split / /, $atts{'extension'} // '';
+            de => sub {
+                my $dd = $self->def_DEs;
+                for (split / /, $atts{'extension'} // '') {
+                    die "Duplicate default extension $_ for DEs $dd->{$_} and $atts{code}" if $dd->{$_};
+                    $dd->{$_} = $atts{code};
+                }
                 $self->DEs->{$atts{'code'}} =
                     { map { $_ => $apply_defines->($atts{$_}) } de_fields };
             },
