@@ -19,7 +19,12 @@ use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
     which env_path folder registry registry_assoc registry_glob program_files drives lang_dirs
+    debug_log
 );
+
+our ($log, $debug);
+
+sub debug_log { print $log @_, "\n" if $debug; }
 
 sub globq {
     my ($pattern) = @_;
@@ -67,6 +72,7 @@ sub extension {
 
 sub folder {
     my ($detector, $folder, $file) = @_;
+    debug_log("folder: $folder / $file");
     for (globq $folder) {
         extension($detector, FS->catfile($_, $file));
     }
@@ -102,6 +108,7 @@ use constant REG_READ_WRITE => {
 
 sub get_registry_obj {
     my ($reg) = @_;
+    debug_log("get_registry_obj: $reg");
     Win32::TieRegistry->new($reg, REG_READONLY);
 }
 
@@ -143,6 +150,7 @@ sub _registry_rec {
     my @names = $key eq '*' ? SubKeyNames_fixup($parent) : $key;
     for my $subkey (@names) {
         my $subreg = $parent->Open($subkey, REG_READONLY) or next;
+        debug_log('_registry_rec: ', $parent->Path(), $subkey);
         _registry_rec($detector, $subreg, $local_path, $file, @rest)
     }
 }

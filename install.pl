@@ -18,7 +18,7 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --step <num> ... [--devenv <devenv-filter>]
+    $cmd --step <num> ... [--devenv <devenv-filter>] [--verbose]
     $cmd --help|-?
 USAGE
     exit;
@@ -28,11 +28,17 @@ GetOptions(
     \my %opts,
     'step=i@',
     'devenv=s',
+    'verbose',
     'help|?',
 ) or usage;
 usage if defined $opts{help};
 
 print "Installing cats-judge\n";
+
+if ($opts{verbose}) {
+    $CATS::DevEnv::Detector::Utils::log = *STDERR;
+    $CATS::DevEnv::Detector::Utils::debug = 1;
+}
 
 my %filter_steps;
 if ($opts{step}) {
