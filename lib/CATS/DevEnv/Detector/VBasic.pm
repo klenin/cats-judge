@@ -9,6 +9,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Visual Basic' }
+sub code { '303' }
 
 sub _detect {
     my ($self) = @_;

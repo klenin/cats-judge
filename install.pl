@@ -92,6 +92,7 @@ step 'Disabling Windows Error Reporting UI', sub {
     CATS::DevEnv::Detector::Utils::disable_windows_error_reporting_ui;
 };
 
+my @detected_DEs;
 step 'Detecting development environments', sub {
     IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";
@@ -102,8 +103,11 @@ step 'Detecting development environments', sub {
         require $_;
         my $d = "CATS::DevEnv::Detector::$name"->new;
         printf "    Detecting %s:\n", $d->name;
-        printf "      %s %-12s %s\n",
-            ($_->{preferred} ? '*' : $_->{valid} ? ' ' : '?'), $_->{version}, $_->{path} for values %{$d->detect};
+        for (values %{$d->detect}){
+            printf "      %s %-12s %s\n",
+                ($_->{preferred} ? '*' : $_->{valid} ? ' ' : '?'), $_->{version}, $_->{path};
+            push @detected_DEs, { path => $_->{path}, code => $d->code } if ($_->{preferred});
+        }
     }
 };
 
@@ -111,3 +115,21 @@ my @p = qw(lib cats-problem CATS);
 step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p, 'Config.pm'));
 
 step_copy('config.xml.template', 'config.xml');
+
+step 'Add path to development environment', sub {
+    @detected_DEs or return;
+    open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
+    open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml";
+    my %path_idx;
+    $path_idx{$_->{code}} = $_ for @detected_DEs;
+    my $flag = 0;
+    while (<$conf_in>) {
+        $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
+        my ($code) = /de_code_autodetect="(\d+)"/;
+        s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};
+        print $conf_out $_;
+    }
+    close $conf_in;
+    close $conf_out;
+    rename 'config.xml.tmp', 'config.xml';
+};

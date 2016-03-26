@@ -9,6 +9,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Delphi' }
+sub code { '203' }
 
 sub _detect {
     my ($self) = @_;

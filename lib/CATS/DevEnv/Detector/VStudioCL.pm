@@ -10,6 +10,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Visual C++' }
+sub code { '113' }
 
 sub _detect {
     my ($self) = @_;
