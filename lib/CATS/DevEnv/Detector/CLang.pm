@@ -17,7 +17,10 @@ sub _detect {
     which($self, 'clang');
     drives($self, 'clang', 'clang');
     lang_dirs($self, 'clang', '', 'clang');
-    program_files($self, 'clang', 'g++');
+    lang_dirs($self, 'LLVM', '', 'clang');
+    program_files($self, 'clang', 'clang');
+    program_files($self, 'LLVM', 'clang');
+    registry_glob($self, 'LLVM/LLVM/', 'bin', 'clang');
 }
 
 sub hello_world {
@@ -32,7 +35,7 @@ END
 ;
     my $source = write_temp_file('hello_world.cpp', $hello_world);
     my $exe = temp_file('hello_world.exe');
-    run command => [ $clang, $source ] or return;
+    run command => [ $clang, '-o', $exe, $source ] or return;
     my ($ok, undef, undef, my $out) = run command => [ $exe ];
     $ok && $out->[0] eq 'Hello World';
 }

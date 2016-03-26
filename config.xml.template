@@ -38,14 +38,13 @@
 <define name="#gnu_c" de_code_autodetect="105" value="%comspec% /C ..\gcc.cmd" />
 <define name="#gnu_cpp" de_code_autodetect="102" value="%comspec% /C ..\g++.cmd" />
 <define name="#bcc" de_code_autodetect="104" value="%comspec% /C ..\bcc.cmd" />
-<define name="#clang" de_code_autodetect="106" value="%comspec% /C ..\clang++" />
+<define name="#clang" de_code_autodetect="106" value="C:\lang\LLVM\bin\clang.exe" />
 
 <define name="#delphi" de_code_autodetect="203" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
 <define name="#fpc" de_code_autodetect="204" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
 <define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\PascalABC.NET\2.2\pabcnetcclear.exe" />
 <define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
 <!-- END -->
-
 
 <!-- standart checkers -->
 <checker
