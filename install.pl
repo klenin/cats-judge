@@ -122,7 +122,7 @@ step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p,
 
 step_copy('config.xml.template', 'config.xml');
 
-step 'Add path to development environment', sub {
+step 'Adding development environment paths to config', sub {
     @detected_DEs or return;
     open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
     open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml";
