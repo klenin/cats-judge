@@ -38,6 +38,7 @@
 <define name="#gnu_c" de_code_autodetect="105" value="%comspec% /C ..\gcc.cmd" />
 <define name="#gnu_cpp" de_code_autodetect="102" value="%comspec% /C ..\g++.cmd" />
 <define name="#bcc" de_code_autodetect="104" value="%comspec% /C ..\bcc.cmd" />
+<define name="#clang" de_code_autodetect="106" value="%comspec% /C ..\clang++" />
 
 <define name="#delphi" de_code_autodetect="203" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
 <define name="#fpc" de_code_autodetect="204" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
@@ -163,6 +164,15 @@
     validate='#spawner %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='c'/>
+
+<de
+    code="106"
+    compile='#spawner #clang'
+    run='#run "%name.exe"'
+    run_interactive='#run_interactive "%name.exe"'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    validate='#spawner %limits "%name.exe" "%test_input"'
+    check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- Visual C++ 2003 compatible -->
 <de
