@@ -7,6 +7,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Perl' }
+sub code { '501' }
 
 sub _detect {
     my ($self) = @_;

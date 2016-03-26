@@ -10,6 +10,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Python 2' }
+sub code { '502' }
 
 sub _detect {
     my ($self) = @_;

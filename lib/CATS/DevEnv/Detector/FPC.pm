@@ -9,6 +9,7 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Free Pascal' }
+sub code { '202' }
 
 sub _detect {
     my ($self) = @_;
