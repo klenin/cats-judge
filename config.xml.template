@@ -166,7 +166,7 @@
 
 <de
     code="106"
-    compile='#spawner #clang'
+    compile='#spawner #clang "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
