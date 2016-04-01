@@ -995,12 +995,6 @@ sub main_loop
     }
 }
 
-sub auto_detect_de{
-    my (undef, undef, undef, undef, $ext) = split_fname($opts{solution});
-    defined $cfg->def_DEs->{$ext} or die "Can not auto-detect DE for file $opts{solution}";
-    $opts{de} = $cfg->def_DEs->{$ext};
-}
-
 sub usage
 {
     my (undef, undef, $cmd) = File::Spec->splitpath($0);
@@ -1034,7 +1028,6 @@ usage if defined $opts{help};
     $cfg->read_file($cfg_file, $opts{'set-config'});
 }
 
-auto_detect_de() if defined $opts{solution} && !defined $opts{de};
 
 if (defined(my $regexp = $opts{'print-config'})) {
     $cfg->print_params($regexp);
@@ -1050,7 +1043,7 @@ ensure_dir('rundir', $cfg->rundir);
 
 $log->init($cfg->logdir);
 
-my $local = defined $opts{solution} && defined $opts{problem} && defined $opts{de};
+my $local = defined $opts{solution} && defined $opts{problem};
 
 CATS::DB::sql_connect({
     ib_timestampformat => $CATS::Judge::Base::timestamp_format,
@@ -1064,6 +1057,7 @@ $judge = $local ?
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
+$judge->set_def_DEs($cfg->def_DEs) if $local;
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 

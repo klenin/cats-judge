@@ -11,6 +11,8 @@ use CATS::Problem::ImportSource;
 use CATS::Problem::Source::Zip;
 use CATS::Problem::Source::PlainFiles;
 
+use CATS::Utils qw(split_fname);
+
 use base qw(CATS::Judge::Base);
 
 my $pid;
@@ -81,6 +83,12 @@ sub set_DEs {
     $self->{supported_DEs} = $cfg_de;
 }
 
+sub set_def_DEs {
+    my ($self, $cfg_def_DEs) = @_;
+    $self->{def_DEs} = $cfg_def_DEs;
+    $self->{de} = $self->auto_detect_de($self->{solution}) if !$self->{de};
+}
+
 sub pack_problem_source
 {
     my ($self, %p) = @_;
@@ -102,10 +110,16 @@ sub pack_problem_source
     }
 }
 
+sub auto_detect_de {
+    my ($self, $fname) = @_;
+    my (undef, undef, undef, undef, $ext) = split_fname($fname);
+    defined $self->{def_DEs}{$ext} or die "Can not auto-detect DE for file $fname";
+    $self->{def_DEs}{$ext};
+}
+
 sub ensure_de {
     my ($self, $source) = @_;
-    $source->{code}
-        or die "Mandatory de_code is omitted for source '$source->{fname}'";
+    $source->{de_id} = $source->{code} = $self->auto_detect_de($source->{fname}) if !$source->{code};
     exists $self->{supported_DEs}{$source->{code}}
         or die "Unsupported de: $_->{code} for source '$source->{fname}'";
 }
