@@ -15,6 +15,8 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'clang');
     which($self, 'clang');
+    env_path($self, 'clang++');
+    which($self, 'clang++');
     drives($self, 'clang', 'clang');
     lang_dirs($self, 'clang', '', 'clang');
     lang_dirs($self, 'LLVM', '', 'clang');
