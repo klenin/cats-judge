@@ -34,14 +34,14 @@ END
     my $source = write_temp_file('hello_world.c', $hello_world);
     my $exe = temp_file('hello_world.exe');
     run command => [ $gcc, '-o', $exe, $source ] or return;
-    my ($ok, undef, undef, my $out) = run command => [ $exe ];
+    my ($ok, undef, undef, $out) = run command => [ $exe ];
     $ok && $out->[0] eq 'Hello World';
 }
 
 sub get_version {
     my ($self, $path) = @_;
-    my $v = `"$path" --version`;
-    $v =~ /(?:gcc|GCC).+\s((?:\d+\.)+\d+)/ ? $1 : 0;
+    my ($ok, undef, undef, $out) = run command => [ $path, '--version' ];
+    $ok && $out->[0] =~ /(?:gcc|GCC).+\s((?:\d+\.)+\d+)/ ? $1 : 0;
 }
 
 1;
