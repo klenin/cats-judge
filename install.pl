@@ -95,14 +95,14 @@ step 'Cloning sumbodules', sub {
 };
 
 step 'Disabling Windows Error Reporting UI', sub {
-    CATS::DevEnv::Detector::Utils::disable_windows_error_reporting_ui;
+    CATS::DevEnv::Detector::Utils::disable_windows_error_reporting_ui();
 };
 
 my @detected_DEs;
 step 'Detecting development environments', sub {
     IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
     print "\n";
-    CATS::DevEnv::Detector::Utils::disable_error_dialogs;
+    CATS::DevEnv::Detector::Utils::disable_error_dialogs();
     for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ qr/$opts{devenv}/i;
