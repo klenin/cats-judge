@@ -214,7 +214,14 @@ sub get_problem {
     };
 }
 
-sub is_problem_uptodate { 0 }
+sub is_problem_uptodate {
+    my ($self, $pid, $cached_date) = @_;
+    my $upload_date = $self->get_problem($pid)->{upload_date};
+    # date format: dd-mm-yyyy hh:mm:ss -> yyyy-mm-dd hh:mm:ss
+    $upload_date =~ m/^(\d+)-(\d+)-(\d+)\s(.+)$/ or return 0;
+    $upload_date = "$3-$2-$1 $4";
+    return $upload_date le $cached_date;
+}
 
 sub get_testset {
     my ($self, $rid, $update) = @_;
