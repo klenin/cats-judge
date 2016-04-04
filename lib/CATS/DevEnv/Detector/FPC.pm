@@ -30,7 +30,7 @@ end.
 END
 ;
     my $source = write_temp_file('hello_world.pp', $hello_world);
-    my $exe = temp_file('hello_world.exe');
+    my $exe = temp_file('hello_world' . ($^O eq 'MSWin32' ? '.exe' : ''));
     my ($ok, $err, $buf) = run command => [ $fpc, $source ];
     $ok or die $err;
     ($ok, $err, $buf) = run command => [ $exe ];
@@ -41,10 +41,7 @@ sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path, '-i' ];
     $ok or die $err;
-    if ($buf->[0] =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2})/) {
-        return $1;
-    }
-    return 0;
+    $buf->[0] =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2})/ ? $1 : 0;
 }
 
 1;
