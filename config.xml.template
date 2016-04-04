@@ -41,7 +41,7 @@
 <define name="#clang" de_code_autodetect="106" value="C:\lang\LLVM\bin\clang.exe" />
 
 <define name="#delphi" de_code_autodetect="203" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
-<define name="#fpc" de_code_autodetect="204" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
+<define name="#fpc" de_code_autodetect="202" value="C:\Lang\FPC\2.6.0\bin\i386-win32\fpc.exe" />
 <define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\PascalABC.NET\2.2\pabcnetcclear.exe" />
 <define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
 <!-- END -->
