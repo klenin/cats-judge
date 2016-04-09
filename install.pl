@@ -33,12 +33,9 @@ GetOptions(
 ) or usage;
 usage if defined $opts{help};
 
-print "Installing cats-judge\n";
+CATS::DevEnv::Detector::Utils::set_debug(1, *STDERR) if $opts{verbose};
 
-if ($opts{verbose}) {
-    $CATS::DevEnv::Detector::Utils::log = *STDERR;
-    $CATS::DevEnv::Detector::Utils::debug = 1;
-}
+printf "Installing cats-judge%s\n", ($opts{verbose} ? ' verbosely' : '');
 
 my %filter_steps;
 if ($opts{step}) {
