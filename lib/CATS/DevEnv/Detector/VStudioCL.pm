@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use File::Spec;
-use IPC::Cmd qw(can_run run);
 
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);

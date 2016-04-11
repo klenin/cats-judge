@@ -7,6 +7,7 @@ use Encode;
 use File::Glob 'bsd_glob';
 use File::Spec;
 use File::Path qw(remove_tree);
+use IPC::Cmd;
 use constant FS => 'File::Spec';
 
 use constant TEMP_SUBDIR => 'tmp';
@@ -14,7 +15,7 @@ use constant TEMP_SUBDIR => 'tmp';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder debug_log
+    which env_path folder debug_log run
 );
 
 our ($log, $debug);
@@ -74,6 +75,12 @@ sub folder {
 }
 
 sub normalize_path { FS->case_tolerant ? uc $_[0] : $_[0] }
+
+sub run {
+    my (%p) = @_;
+    debug_log(join ' ', 'run:', @{$p{command}});
+    goto &IPC::Cmd::run;
+}
 
 sub version_cmp {
     my ($a, $b) = @_;

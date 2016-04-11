@@ -3,8 +3,6 @@ package CATS::DevEnv::Detector::CLang;
 use strict;
 use warnings;
 
-use IPC::Cmd qw(run);
-
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
@@ -38,7 +36,7 @@ END
     my $source = write_temp_file('hello_world.cpp', $hello_world);
     my $exe = temp_file('hello_world.exe');
     run command => [ $clang, '-o', $exe, $source ] or return;
-    my ($ok, undef, undef, my $out) = run command => [ $exe ];
+    my ($ok, undef, undef, $out) = run command => [ $exe ];
     $ok && $out->[0] eq 'Hello World';
 }
 

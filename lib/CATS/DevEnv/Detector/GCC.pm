@@ -3,8 +3,6 @@ package CATS::DevEnv::Detector::GCC;
 use strict;
 use warnings;
 
-use IPC::Cmd qw(run);
-
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 

@@ -4,8 +4,6 @@ use strict;
 use warnings;
 no warnings 'redefine';
 
-use IPC::Cmd qw(run);
-
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 

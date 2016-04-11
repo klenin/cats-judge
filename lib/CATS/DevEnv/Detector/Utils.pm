@@ -10,7 +10,7 @@ use if $^O ne 'MSWin32', 'CATS::DevEnv::Detector::Utils::WindowsStub';
 use parent qw(Exporter);
 our @EXPORT = qw(
     TEMP_SUBDIR temp_file write_temp_file version_cmp clear normalize_path globq
-    which env_path folder debug_log
+    which env_path folder debug_log run
     set_debug
     registry registry_assoc registry_glob program_files drives lang_dirs
 );
