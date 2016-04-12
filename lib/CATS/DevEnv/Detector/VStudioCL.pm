@@ -44,7 +44,7 @@ cd ..
 END
 ;
     my $compile_bat = write_temp_file('compile.bat', $compile);
-    run(command => $compile_bat) && `"$exe"` eq 'Hello World';
+    run(command => [ $compile_bat ]) && `"$exe"` eq 'Hello World';
 }
 
 sub get_version {
