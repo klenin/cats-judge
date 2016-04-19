@@ -23,12 +23,19 @@ sub parse_report
     my $json = decode_json(join '', <$file>);
     my $sp_report = { report => $json };
 
-    my $exe_name = extract_file_name($fname);
-    my ($report_item) = grep extract_file_name($_->{Application}) eq $exe_name, @$json;
-    if (!$report_item) {
-        $log->msg("Warning: unable to find file name $exe_name in spawner report\n");
-        $report_item = $json->[0];
+    my $report_item;
+    if (@$json > 1) {
+      # Try to select user's program result from multi-run.
+      # TODO: Probably need a special marker passed through the spawner command line.
+      my $exe_name = extract_file_name($fname);
+      for my $run (@$json) {
+          0 < grep(extract_file_name($_) eq $exe_name, $run->{Application}, @{$run->{Arguments}}) or next;
+          $report_item = $run;
+          last;
+      }
+      $report_item or $log->msg("Warning: unable to find file name '$exe_name' in spawner report\n");
     }
+    $report_item //= $json->[0];
 
     for my $item (@required_fields) {
         defined($sp_report->{$item} = $report_item->{$item})
