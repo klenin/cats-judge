@@ -1059,7 +1059,7 @@ $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge->set_def_DEs($cfg->def_DEs) if $local;
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
+$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 
 $local ? process_request($judge->select_request) : main_loop;
 
