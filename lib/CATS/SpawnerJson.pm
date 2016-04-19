@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use JSON::XS;
+use CATS::Utils;
 use base qw(CATS::Spawner);
 
 my @required_fields = qw(
@@ -13,14 +14,21 @@ my @required_fields = qw(
     ExitStatus
 );
 
+sub extract_file_name { (CATS::Utils::split_fname($_[0]))[3] }
+
 sub parse_report
 {
-    my ($self, $file) = @_;
+    my ($self, $file, $fname) = @_;
     my $log = $self->{log};
     my $json = decode_json(join '', <$file>);
     my $sp_report = { report => $json };
 
-    my $report_item = $json->[0];
+    my $exe_name = extract_file_name($fname);
+    my ($report_item) = grep extract_file_name($_->{Application}) eq $exe_name, @$json;
+    if (!$report_item) {
+        $log->msg("Warning: unable to find file name $exe_name in spawner report\n");
+        $report_item = $json->[0];
+    }
 
     for my $item (@required_fields) {
         defined($sp_report->{$item} = $report_item->{$item})

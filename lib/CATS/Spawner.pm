@@ -232,7 +232,7 @@ sub execute_inplace
         return undef;
     };
 
-    my $sp_report = $self->parse_report($freport) or return undef;
+    my $sp_report = $self->parse_report($freport, $params->{full_name}) or return undef;
     $self->check_report($sp_report) or return undef;
     $sp_report;
 }
