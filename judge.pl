@@ -949,7 +949,8 @@ sub process_request
     }
     $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
-    return if $state == $cats::st_unhandled_error;
+    log_msg("error: missing solution\n") if ($judge->{de} || $judge->{testset}) && !$judge->{solution};
+    return if !$judge->{solution} || $state == $cats::st_unhandled_error;
 
     log_msg("test log:\n");
     if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
@@ -1001,7 +1002,7 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --problem <zip_or_directory> --solution <file> [--de <de_code>] [--testset <testset>] [--db]
+    $cmd --problem <zip_or_directory> [--solution <file> [--de <de_code>] [--testset <testset>]] [--db]
     $cmd --print-config <regexp>
     $cmd --set-config <name>=<value> ...
     $cmd --help|-?
@@ -1043,7 +1044,7 @@ ensure_dir('rundir', $cfg->rundir);
 
 $log->init($cfg->logdir);
 
-my $local = defined $opts{solution} && defined $opts{problem};
+my $local = defined $opts{problem};
 
 CATS::DB::sql_connect({
     ib_timestampformat => $CATS::Judge::Base::timestamp_format,
