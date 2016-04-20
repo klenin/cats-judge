@@ -80,6 +80,7 @@ sub normalize_path { FS->case_tolerant ? uc $_[0] : $_[0] }
 
 sub _run_quote {
     my ($arg) = @_;
+    $^O eq 'MSWin32' or return $arg;
     my $q = IPC::Cmd::QUOTE;
     $arg =~ s/$q/\\$q/g;
     "$q$arg$q";
