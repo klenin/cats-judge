@@ -76,10 +76,28 @@ sub folder {
 
 sub normalize_path { FS->case_tolerant ? uc $_[0] : $_[0] }
 
+sub _run_quote {
+    my ($arg) = @_;
+    my $q = IPC::Cmd::QUOTE;
+    $arg =~ s/$q/\\$q/g;
+    "$q$arg$q";
+}
+
 sub run {
     my (%p) = @_;
     debug_log(join ' ', 'run:', @{$p{command}});
-    goto &IPC::Cmd::run;
+    goto &IPC::Cmd::run if IPC::Cmd->can_capture_buffer;
+
+    -d TEMP_SUBDIR or mkdir TEMP_SUBDIR;
+    my ($fstdout, $fstderr) = map FS->catfile(TEMP_SUBDIR, $_), qw(stdout.txt stderr.txt);
+    my $command = join ' ',
+      (map _run_quote($_), @{$p{command}}),
+      '1>' . _run_quote($fstdout),
+      '2>' . _run_quote($fstderr);
+    system($command) == 0 or return (0, $!);
+    my @stdout = do { open my $f, '<', $fstdout; map $_, <$f>; };
+    my @stderr = do { open my $f, '<', $fstderr; map $_, <$f>; };
+    (1, '', [ @stdout, @stderr ], \@stdout, \@stderr);
 }
 
 sub version_cmp {

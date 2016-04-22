@@ -97,7 +97,7 @@ step 'Disabling Windows Error Reporting UI', sub {
 
 my @detected_DEs;
 step 'Detecting development environments', sub {
-    IPC::Cmd->can_capture_buffer or die 'IPC::Cmd failed';
+    IPC::Cmd->can_capture_buffer or print ' IPC::Cmd is inadequate, will use emulation';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs();
     for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
