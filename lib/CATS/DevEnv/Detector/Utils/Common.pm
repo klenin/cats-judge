@@ -85,15 +85,13 @@ sub _run_quote {
 
 sub run {
     my (%p) = @_;
-    debug_log(join ' ', 'run:', @{$p{command}});
-    goto &IPC::Cmd::run if IPC::Cmd->can_capture_buffer;
+    my @quoted = map _run_quote($_), @{$p{command}};
+    debug_log(join ' ', 'run:', @quoted);
+    return IPC::Cmd::run command => \@quoted if IPC::Cmd->can_capture_buffer;
 
     -d TEMP_SUBDIR or mkdir TEMP_SUBDIR;
     my ($fstdout, $fstderr) = map FS->catfile(TEMP_SUBDIR, $_), qw(stdout.txt stderr.txt);
-    my $command = join ' ',
-      (map _run_quote($_), @{$p{command}}),
-      '1>' . _run_quote($fstdout),
-      '2>' . _run_quote($fstderr);
+    my $command = join ' ', @quoted, '1>' . _run_quote($fstdout), '2>' . _run_quote($fstderr);
     system($command) == 0 or return (0, $!);
     my @stdout = do { open my $f, '<', $fstdout; map $_, <$f>; };
     my @stderr = do { open my $f, '<', $fstderr; map $_, <$f>; };
