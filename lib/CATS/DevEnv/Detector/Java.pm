@@ -40,8 +40,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path,  '-version' ];
-    $ok or return 0;
-    $buf->[0] =~ /javac\s((?:[0-9_]+\.)+[0-9_]+)/ ? $1 : 0;
+    $ok && $buf->[0] =~ /javac\s((?:[0-9_]+\.)+[0-9_]+)/ ? $1 : 0;
 }
 
 1;

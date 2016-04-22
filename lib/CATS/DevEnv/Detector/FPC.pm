@@ -38,8 +38,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path, '-i' ];
-    $ok or die $err;
-    $buf->[0] =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2})/ ? $1 : 0;
+    $ok && $buf->[0] =~ /Free Pascal Compiler version (\d{1,2}\.\d{1,2}\.\d{1,2})/ ? $1 : 0;
 }
 
 1;

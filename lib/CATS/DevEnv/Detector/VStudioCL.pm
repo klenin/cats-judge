@@ -50,8 +50,7 @@ END
 sub get_version {
     my ($self, $path) = @_;
     my ($ok, $err, $buf) = run command => [ $path ];
-    $ok or return;
-    $buf->[0] =~ m/C\/C\+\+.+\s((?:\d+\.)+\d+)\s.+86/ ? $1 : 0;
+    $ok && $buf->[0] =~ m/C\/C\+\+.+\s((?:\d+\.)+\d+)\s.+86/ ? $1 : 0;
 }
 
 sub get_init {

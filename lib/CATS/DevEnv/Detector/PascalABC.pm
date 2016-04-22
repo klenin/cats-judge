@@ -31,7 +31,7 @@ END
     my $source = write_temp_file('hello_world.pas', $hello_world);
     my $exe = temp_file('hello_world.exe');
     my ($ok, $err, $buf) = run command => [ $fpc, $source ];
-    $ok or die $err;
+    $ok or return;
     ($ok, $err, $buf) = run command => [ $exe ];
     $ok && $buf->[0] eq 'Hello World';
 }
