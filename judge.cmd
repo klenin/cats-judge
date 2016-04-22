@@ -1,6 +1,4 @@
 @echo off
-SET TEMP=..\tmp\
-SET TMP=..\tmp\
 SET PATH=%PATH%;%CD%/spawner;%CD%/check
 call "%VS100COMNTOOLS%vsvars32.bat"
 :SET SP_USER=

@@ -1,6 +1,4 @@
 @echo off
-SET TEMP=..\tmp\
-SET TMP=..\tmp\
 SET PATH=%PATH%;%CD%/spawner;%CD%/check
 :SET SP_USER=
 :SET SP_PASSWORD=
