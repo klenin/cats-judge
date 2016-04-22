@@ -307,7 +307,7 @@ sub generate_test
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
-        $redir = " -so:$out -ho:1";
+        $redir = " --out=nul --out=$out";
     }
     my $sp_report = $spawner->execute(
         $generate_cmd, {
@@ -949,8 +949,7 @@ sub process_request
     }
     $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
-    log_msg("error: missing solution\n") if ($judge->{de} || $judge->{testset}) && !$judge->{solution};
-    return if !$judge->{solution} || $state == $cats::st_unhandled_error;
+    return if !$r->{src} || $state == $cats::st_unhandled_error;
 
     log_msg("test log:\n");
     if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
@@ -1029,7 +1028,6 @@ usage if defined $opts{help};
     $cfg->read_file($cfg_file, $opts{'set-config'});
 }
 
-
 if (defined(my $regexp = $opts{'print-config'})) {
     $cfg->print_params($regexp);
     exit;
@@ -1045,6 +1043,10 @@ ensure_dir('rundir', $cfg->rundir);
 $log->init($cfg->logdir);
 
 my $local = defined $opts{problem};
+
+if ($local && !$opts{solution}) {
+    $opts{$_} && print "error: --$_ without --solution\n" for qw(de testset);
+}
 
 CATS::DB::sql_connect({
     ib_timestampformat => $CATS::Judge::Base::timestamp_format,
