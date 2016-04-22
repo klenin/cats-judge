@@ -20,15 +20,14 @@ sub _detect {
 
 sub hello_world {
     my ($self, $php) = @_;
-    return `"$php" -r "print 'Hello world';"` eq 'Hello world';
+    my ($ok, $err, $buf, $out) = run command => [ $php, '-r', q~print "Hello world";~ ];
+    $ok && $out->[0] eq 'Hello world';
 }
 
 sub get_version {
     my ($self, $path) = @_;
-    if (`"$path" -v` =~ /PHP (\d{1,2}\.\d{1,2}\.\d{1,2}).*/) {
-        return $1;
-    }
-    return 0;
+    my ($ok, $err, $buf) = run command => [ $path,  '-v' ];
+    $ok && $buf->[0] =~ /PHP (\d{1,2}\.\d{1,2}\.\d{1,2}).*/ ? $1 : 0;
 }
 
 1;
