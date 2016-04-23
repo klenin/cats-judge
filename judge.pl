@@ -56,6 +56,7 @@ my %opts = (
     problem => undef,
     solution => undef,
     testset => undef,
+    result => undef,
 );
 
 sub log_msg { $log->msg(@_); }
@@ -1020,6 +1021,7 @@ GetOptions(
     'testset=s',
     'print-config:s',
     'set-config=s%',
+    'result=s',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1041,6 +1043,7 @@ ensure_dir('cachedir', $cfg->cachedir);
 ensure_dir('solutions', $cfg->workdir . '/solutions');
 ensure_dir('logdir', $cfg->logdir);
 ensure_dir('rundir', $cfg->rundir);
+ensure_dir('resultsdir', $cfg->resultsdir);
 
 $log->init($cfg->logdir);
 
@@ -1053,7 +1056,7 @@ CATS::DB::sql_connect({
 }) if !$local || defined $opts{db};
 
 $judge = $local ?
-    CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, logger => $log, %opts) :
+    CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, logger => $log, resultsdir => $cfg->resultsdir, %opts) :
     CATS::Judge::Server->new(name => $cfg->name);
 
 $judge->auth;
@@ -1064,6 +1067,6 @@ $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
 $local ? process_request($judge->select_request) : main_loop;
 
-CATS::DB::sql_disconnect;
+$judge->finalize;
 
 1;

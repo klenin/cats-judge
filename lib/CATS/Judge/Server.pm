@@ -191,4 +191,8 @@ sub get_testset {
     CATS::Testset::get_testset($rid, $update);
 }
 
+sub finalize {
+    CATS::DB::sql_disconnect;
+}
+
 1;

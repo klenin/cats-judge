@@ -173,10 +173,12 @@ sub get_problem_sources {
 
 sub delete_req_details {
     my ($self, $req_id) = @_;
+    delete $self->{results}->{$req_id};
 }
 
 sub insert_req_details {
     my ($self, $p) = @_;
+    push @{$self->{results}->{$p->{req_id}}}, $p;
 }
 
 sub get_problem_tests {
@@ -230,6 +232,104 @@ sub get_testset {
     my @all_tests = map { $_->{rank} } values %{$self->{parser}{problem}{tests}};
     my %tests = %{CATS::Testset::parse_test_rank($self->{parser}{problem}{testsets}, $self->{testset})};
     map { exists $tests{$_} ? ($_ => $tests{$_}) : () } @all_tests;
+}
+
+use constant headers => (
+    { c => 'Test'   , n => 'test_rank',       a => 'left' },
+    { c => 'Result' , n => 'result',          a => 'left' },
+    { c => 'Time'   , n => 'time_used',       a => 'left' },
+    { c => 'Memory' , n => 'memory_used',     a => 'right' },
+    { c => 'Disk'   , n => 'disk_used',       a => 'right' },
+    { c => 'Comment', n => 'checker_comment', a => 'left' },
+);
+
+use constant states => (
+    $cats::st_accepted => { r => 'OK',  c => '#A0FFA0' },
+    $cats::st_wrong_answer => { r => 'WA', c => '#FFA0A0' },
+    $cats::st_presentation_error => { r => 'PE', c => '#FFFFA0' },
+    $cats::st_time_limit_exceeded => { r => 'time limit', c => '#FFFFFF' },
+    $cats::st_runtime_error => { r => 'runtime', c => '#FFA0A0' },
+    $cats::st_memory_limit_exceeded => { r => 'memory limit', c => '#FFA0A0' },
+    $cats::st_idleness_limit_exceeded => { r => 'idleness limit', c => '#FFA0A0' },
+    $cats::st_unhandled_error => { r => 'abnornal process termination', c => '#FFA0A0' },
+    $cats::st_compilation_error => { r => 'CE', c => '#FFA0A0'},
+);
+
+sub html_result {
+    my ($self) = @_;
+    my $sid = (keys %{$self->{results}})[0];
+    defined $sid or return;
+    my %states = states;
+    my @headers = headers;
+    my @results = @{$self->{results}->{$sid}};
+    my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
+    $html_name =~ tr/:/\./;
+    open my $html, '>', "$self->{resultsdir}/$html_name.html" or die "Can't open $self->{resultsdir}/$html_name.html";
+    print $html '<!DOCTYPE html>' .
+        '<html>' .
+        '<head>' .
+        '  <meta charset="utf-8" >' .
+        '  <title>' . $self->{parser}{problem}{description}{title} . '</title>' .
+        '  <style>' .
+        '    .Border { border: 1px solid #4040ff; }' .
+        '    .Align_left { align-content: left }' .
+        '    .Align_right { align-content: right }' .
+        '    .Align_center { align-content: center }' .
+        '  </style>' .
+        '</head>' .
+        '<body>' .
+        '<table class="Border">' .
+        '<tr>';
+    print $html "<th>$_->{c}</th>" for @headers;
+    print $html '</tr>';
+    $_->{result} = $states{$_->{result}}->{r} for @results;
+    for my $res (@results) {
+        my ($state) = grep $res->{result} eq $_->{r}, values %states;
+        printf $html "<tr style=\"background: %s\"><td>", $state->{c};
+        print $html join('</td><td>', map $res->{$_->{n}} // '', @headers);
+        print $html "</td></tr>\n";
+    }
+    print $html '</table>';
+    print $html '</body>';
+    print $html '</html>';
+}
+
+sub get_cell {
+    my ($value, $width, $align) = @_;
+    my $half = int(($width - length($value)) / 2);
+    $align eq 'center' and
+        return (' ' x $half) . $value . (' ' x ($width - length($value) - $half));
+    $align eq 'left' and return ' ' . $value . (' ' x ($width - length($value) - 1));
+    $align eq 'right' and return (' ' x ($width - length($value) - 1)) . $value . ' ';
+}
+
+sub ascii_result {
+    my ($self) = @_;
+    my $sid = (keys %{$self->{results}})[0];
+    defined $sid or return;
+    my %states = states;
+    my @headers = headers;
+    my @results = @{$self->{results}->{$sid}};
+    $_->{result} = $states{$_->{result}}->{r} for @results;
+    for my $h (@headers) {
+        $h->{width} = 2 + max(length $h->{c}, map length($_->{$h->{n}} // ''), @results);
+    }
+    my $line = join '|', map get_cell($_->{c}, $_->{width}, 'center'), @headers;
+    my $table_width = length $line;
+    print '-' x $table_width, "\n";
+    print "$line\n";
+    print '-' x $table_width, "\n";
+    for my $res (@results) {
+        print join('|', map get_cell($res->{$_->{n}} // '', $_->{width}, $_->{a}), @headers),
+            "\n";
+    }
+    print '-' x $table_width, "\n";
+}
+
+sub finalize {
+    my $self = shift;
+    $self->{solution} or return;
+    $self->{result} && $self->{result} eq 'html' ? $self->html_result : $self->ascii_result;
 }
 
 1;
