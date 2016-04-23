@@ -49,4 +49,6 @@ sub is_problem_uptodate { 0 }
 
 sub get_testset { (0) }
 
+sub finalize {}
+
 1;
