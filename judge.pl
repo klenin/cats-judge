@@ -998,13 +998,15 @@ sub main_loop
 
 sub usage
 {
+    my ($error) = @_;
+    print "$error\n"  if $error;
     my (undef, undef, $cmd) = File::Spec->splitpath($0);
     print <<"USAGE";
 Usage:
-    $cmd
+    $cmd --server
     $cmd --problem <zip_or_directory> [--solution <file> [--de <de_code>] [--testset <testset>]] [--db]
-    $cmd --print-config <regexp>
-    $cmd --set-config <name>=<value> ...
+    $cmd --config-print <regexp>
+    $cmd --config-set <name>=<value> ...
     $cmd --help|-?
 USAGE
     exit;
@@ -1018,22 +1020,25 @@ GetOptions(
     'de=i',
     'db',
     'testset=s',
-    'print-config:s',
-    'set-config=s%',
+    'config-print:s',
+    'config-set=s%',
     'result=s',
+    'server',
 ) or usage;
 usage if defined $opts{help};
 
 {
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
-    $cfg->read_file($cfg_file, $opts{'set-config'});
+    $cfg->read_file($cfg_file, $opts{'config-set'});
 }
 
-if (defined(my $regexp = $opts{'print-config'})) {
+if (defined(my $regexp = $opts{'config-print'})) {
     $cfg->print_params($regexp);
     exit;
 }
+
+usage('Must supply either --problem or --server option') if !$opts{problem} && !$opts{server};
 
 sub ensure_dir { -d $_[1] or mkdir $_[1] or die "Can not create $_[0] '$_[1]': $!"; }
 
@@ -1065,7 +1070,7 @@ $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge->set_def_DEs($cfg->def_DEs) if $local;
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
+$spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
 $local ? process_request($judge->select_request) : main_loop;
 
