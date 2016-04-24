@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use List::Util qw (max);
+use Encode qw(encode_utf8);
 use POSIX qw(strftime);
 
 use CATS::Constants;
@@ -266,34 +267,38 @@ sub html_result {
     my @results = @{$self->{results}->{$sid}};
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
-    open my $html, '>', "$self->{resultsdir}/$html_name.html" or die "Can't open $self->{resultsdir}/$html_name.html";
-    print $html '<!DOCTYPE html>' .
-        '<html>' .
-        '<head>' .
-        '  <meta charset="utf-8" >' .
-        '  <title>' . $self->{parser}{problem}{description}{title} . '</title>' .
-        '  <style>' .
-        '    .Border { border: 1px solid #4040ff; }' .
-        '    .Align_left { align-content: left }' .
-        '    .Align_right { align-content: right }' .
-        '    .Align_center { align-content: center }' .
-        '  </style>' .
-        '</head>' .
-        '<body>' .
-        '<table class="Border">' .
-        '<tr>';
-    print $html "<th>$_->{c}</th>" for @headers;
-    print $html '</tr>';
+    $html_name = "$self->{resultsdir}/$html_name.html";
+    open my $html, '>', $html_name or die "Can't open '$html_name': $!";
+    print $html join "\n",
+        '<!DOCTYPE html>',
+        '<html>',
+        '<head>',
+        '  <meta charset="utf-8" >',
+        '  <title>' . encode_utf8($self->{parser}{problem}{description}{title}) . '</title>',
+        '  <style>',
+        map("    .$_->{r} { background-color: $_->{c} }", values %{state_styles()}),
+        '    .border { border: 1px solid #4040ff; }',
+        '    .left { text-align: left }',
+        '    .right { text-align: right }',
+        '    .center { text-align: center }',
+        '  </style>',
+        '</head>',
+        '<body>',
+        '<table class="border">',
+        '<tr>',
+        map("<th>$_->{c}</th>", @headers),
+        "</tr>\n";
     $_->{result} = state_styles->{$_->{result}}->{r} for @results;
     for my $res (@results) {
         my ($state) = grep $res->{result} eq $_->{r}, values %{state_styles()};
-        printf $html "<tr style=\"background: %s\"><td>", $state->{c};
-        print $html join('</td><td>', map $res->{$_->{n}} // '', @headers);
-        print $html "</td></tr>\n";
+        print $html qq~<tr class="$state->{r}">~;
+        print $html join '',
+            map sprintf('<td class="%s">%s</td>',
+                $_->{a}, encode_utf8($res->{$_->{n}} // '')), @headers;
+        print $html "</tr>\n";
     }
-    print $html '</table>';
-    print $html '</body>';
-    print $html '</html>';
+    print $html "</table>\n";
+    print $html "</body></html>\n";
 }
 
 sub get_cell {
