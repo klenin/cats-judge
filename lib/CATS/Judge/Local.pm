@@ -1,8 +1,10 @@
 package CATS::Judge::Local;
 
+use v5.10;
 use strict;
 use warnings;
 
+use List::Util qw (max);
 use POSIX qw(strftime);
 
 use CATS::Constants;
@@ -235,12 +237,12 @@ sub get_testset {
 }
 
 use constant headers => (
-    { c => 'Test'   , n => 'test_rank',       a => 'left' },
-    { c => 'Result' , n => 'result',          a => 'left' },
-    { c => 'Time'   , n => 'time_used',       a => 'left' },
-    { c => 'Memory' , n => 'memory_used',     a => 'right' },
-    { c => 'Disk'   , n => 'disk_used',       a => 'right' },
-    { c => 'Comment', n => 'checker_comment', a => 'left' },
+    { c => 'Test'   , n => 'test_rank',       a => 'right'  },
+    { c => 'Result' , n => 'result',          a => 'center' },
+    { c => 'Time'   , n => 'time_used',       a => 'left'   },
+    { c => 'Memory' , n => 'memory_used',     a => 'right'  },
+    { c => 'Disk'   , n => 'disk_used',       a => 'right'  },
+    { c => 'Comment', n => 'checker_comment', a => 'left'   },
 );
 
 use constant states => (
@@ -296,11 +298,9 @@ sub html_result {
 
 sub get_cell {
     my ($value, $width, $align) = @_;
-    my $half = int(($width - length($value)) / 2);
-    $align eq 'center' and
-        return (' ' x $half) . $value . (' ' x ($width - length($value) - $half));
-    $align eq 'left' and return ' ' . $value . (' ' x ($width - length($value) - 1));
-    $align eq 'right' and return (' ' x ($width - length($value) - 1)) . $value . ' ';
+    $width -= length($value);
+    my $left = { center => int($width / 2), left => 1, right => $width - 1 }->{$align};
+    (' ' x $left) . $value . (' ' x ($width - $left));
 }
 
 sub ascii_result {
@@ -314,16 +314,14 @@ sub ascii_result {
     for my $h (@headers) {
         $h->{width} = 2 + max(length $h->{c}, map length($_->{$h->{n}} // ''), @results);
     }
-    my $line = join '|', map get_cell($_->{c}, $_->{width}, 'center'), @headers;
-    my $table_width = length $line;
-    print '-' x $table_width, "\n";
-    print "$line\n";
-    print '-' x $table_width, "\n";
+    my $separator = join '+', map '-' x $_->{width}, @headers;
+    say $separator;
+    say join('|', map get_cell($_->{c}, $_->{width}, 'center'), @headers);
+    say $separator;
     for my $res (@results) {
-        print join('|', map get_cell($res->{$_->{n}} // '', $_->{width}, $_->{a}), @headers),
-            "\n";
+        say join('|', map get_cell($res->{$_->{n}} // '', $_->{width}, $_->{a}), @headers);
     }
-    print '-' x $table_width, "\n";
+    say $separator;
 }
 
 sub finalize {
