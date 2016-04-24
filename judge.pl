@@ -1005,7 +1005,9 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd --server
-    $cmd --problem <zip_or_directory> [--run <file> [--de <de_code>] [--testset <testset>]] [--db]
+    $cmd --problem <zip_or_directory>
+        [--run <file>... [--de <de_code>] [--testset <testset>]]
+        [--result=html] [--result=columns=<regexp>] [--db]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1024,6 +1026,7 @@ GetOptions(
     'config-print:s',
     'config-set=s%',
     'result=s',
+    'result-columns=s',
     'server',
 ) or usage;
 usage if defined $opts{help};

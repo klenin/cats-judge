@@ -259,11 +259,16 @@ use constant state_styles => {
     $cats::st_compilation_error       => { r => 'CE', c => '#FFA0A0', t => 'red' },
 };
 
+sub filtered_headers {
+    my ($self) = @_;
+    grep !$self->{'result-columns'} || $_->{c} =~ m/$self->{'result-columns'}/, headers;
+}
+
 sub html_result {
     my ($self) = @_;
     my $sid = (keys %{$self->{results}})[0];
     defined $sid or return;
-    my @headers = headers;
+    my @headers = $self->filtered_headers;
     my @results = @{$self->{results}->{$sid}};
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
@@ -322,8 +327,8 @@ sub ascii_result {
     my @headers = map {
         my $k = $_;
         my $first = 0;
-        map +{ %$_, r => $k, f => !$first++ }, headers;
-    } @runs;
+        map +{ %$_, r => $k, f => !$first++ }, $self->filtered_headers;
+    } @runs or return;
     my %run_widths = map +{ $_ => 0 }, @runs;
     for my $h (@headers) {
         $h->{width} = 2 + max(length $h->{c},
