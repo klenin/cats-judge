@@ -1,6 +1,6 @@
 @echo off
 SET PATH=%PATH%;%CD%/spawner;%CD%/check
-call "%VS100COMNTOOLS%vsvars32.bat"
+call preparevs.cmd
 :SET SP_USER=
 :SET SP_PASSWORD=
 :SET SP_RUNAS=60

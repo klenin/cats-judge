@@ -1,5 +1,6 @@
 @echo off
 SET PATH=%PATH%;%CD%/spawner;%CD%/check
+call "%~dp0..\preparevs.cmd"
 :SET SP_USER=
 :SET SP_PASSWORD=
 SET SP_RUNAS=0
@@ -16,4 +17,4 @@ SET CATS_JUDGE=1
 :SET SP_LEGACY=sp00
 :SET SP_JSON=1
 
-perl judge.pl %*
+perl "%~dp0..\judge.pl" %*
