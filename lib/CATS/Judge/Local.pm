@@ -266,10 +266,8 @@ sub filtered_headers {
 
 sub html_result {
     my ($self) = @_;
-    my $sid = (keys %{$self->{results}})[0];
-    defined $sid or return;
-    my @headers = $self->filtered_headers;
-    my @results = @{$self->{results}->{$sid}};
+    my @headers = $self->filtered_headers or return;
+    my @runs = sort keys %{$self->{results}} or return;
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
     $html_name = "$self->{resultsdir}/$html_name.html";
@@ -282,27 +280,29 @@ sub html_result {
         '  <title>' . encode_utf8($self->{parser}{problem}{description}{title}) . '</title>',
         '  <style>',
         map("    .$_->{r} { background-color: $_->{c} }", values %{state_styles()}),
-        '    .border { border: 1px solid #4040ff; }',
+        '    .border { border: 1px solid #4040ff; float: left; }',
         '    .left { text-align: left }',
         '    .right { text-align: right }',
         '    .center { text-align: center }',
         '  </style>',
         '</head>',
-        '<body>',
-        '<table class="border">',
-        '<tr>',
-        map("<th>$_->{c}</th>", @headers),
-        "</tr>\n";
-    $_->{result} = state_styles->{$_->{result}}->{r} for @results;
-    for my $res (@results) {
-        my ($state) = grep $res->{result} eq $_->{r}, values %{state_styles()};
-        print $html qq~<tr class="$state->{r}">~;
-        print $html join '',
-            map sprintf('<td class="%s">%s</td>',
-                $_->{a}, encode_utf8($res->{$_->{n}} // '')), @headers;
-        print $html "</tr>\n";
+        "<body>\n";
+    for my $run_id (@runs) {
+        print $html join "\n",
+            qq~<div class="border">$run_id<table>~,
+            '<tr>',
+            map("<th>$_->{c}</th>", @headers),
+            "</tr>\n";
+        for my $res (@{$self->{results}->{$run_id}}) {
+            $res->{result} = state_styles->{$res->{result}}->{r};
+            print $html join '',
+                sprintf('<tr class="%s">', $res->{result}),
+                map(sprintf('<td class="%s">%s</td>',
+                    $_->{a}, encode_utf8($res->{$_->{n}} // '')), @headers),
+                "</tr>\n";
+        }
+        print $html "</table></div>\n";
     }
-    print $html "</table>\n";
     print $html "</body></html>\n";
 }
 
