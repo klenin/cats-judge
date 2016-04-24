@@ -54,7 +54,7 @@ my %opts = (
     db => undef,
     help => undef,
     problem => undef,
-    solution => undef,
+    run => undef,
     testset => undef,
     result => undef,
 );
@@ -1004,7 +1004,7 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd --server
-    $cmd --problem <zip_or_directory> [--solution <file> [--de <de_code>] [--testset <testset>]] [--db]
+    $cmd --problem <zip_or_directory> [--run <file> [--de <de_code>] [--testset <testset>]] [--db]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1016,7 +1016,7 @@ GetOptions(
     \%opts,
     'help|?',
     'problem=s',
-    'solution=s',
+    'run=s',
     'de=i',
     'db',
     'testset=s',
@@ -1052,8 +1052,8 @@ $log->init($cfg->logdir);
 
 my $local = defined $opts{problem};
 
-if ($local && !$opts{solution}) {
-    $opts{$_} && print "error: --$_ without --solution\n" for qw(de testset);
+if ($local && !$opts{run}) {
+    $opts{$_} && print "error: --$_ without --run\n" for qw(de testset);
 }
 
 CATS::DB::sql_connect({
@@ -1063,7 +1063,9 @@ CATS::DB::sql_connect({
 }) if !$local || defined $opts{db};
 
 $judge = $local ?
-    CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir, logger => $log, resultsdir => $cfg->resultsdir, %opts) :
+    CATS::Judge::Local->new(
+        name => $cfg->name, modulesdir => $cfg->modulesdir, resultsdir => $cfg->resultsdir,
+        logger => $log, %opts) :
     CATS::Judge::Server->new(name => $cfg->name);
 
 $judge->auth;

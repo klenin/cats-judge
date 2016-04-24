@@ -59,7 +59,7 @@ sub select_request {
     eval { $self->{parser}->parse; };
     die "Problem parsing failed: $@" if $@;
 
-    !$self->{solution} or open FILE, $self->{solution} or die "Couldn't open file: $!";
+    !$self->{run} or open FILE, $self->{run} or die "Couldn't open file: $!";
     {
         id => 0,
         problem_id => $self->get_problem_id,
@@ -68,8 +68,8 @@ sub select_request {
         is_jury => 0,
         run_all_tests => 1,
         status => $cats::problem_st_ready,
-        fname => $self->{solution},
-        src => $self->{solution} ? (join '', <FILE>) : '',
+        fname => $self->{run},
+        src => $self->{run} ? (join '', <FILE>) : '',
         de_id => $self->{de},
     };
 }
@@ -89,7 +89,7 @@ sub set_DEs {
 sub set_def_DEs {
     my ($self, $cfg_def_DEs) = @_;
     $self->{def_DEs} = $cfg_def_DEs;
-    $self->{de} = $self->auto_detect_de($self->{solution}) if !$self->{de} && $self->{solution};
+    $self->{de} = $self->auto_detect_de($self->{run}) if !$self->{de} && $self->{run};
 }
 
 sub pack_problem_source
@@ -331,7 +331,7 @@ sub ascii_result {
 
 sub finalize {
     my $self = shift;
-    $self->{solution} or return;
+    $self->{run} or return;
     $self->{result} && $self->{result} eq 'html' ? $self->html_result : $self->ascii_result;
 }
 
