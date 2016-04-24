@@ -8,6 +8,7 @@ use List::Util qw (max);
 use POSIX qw(strftime);
 
 use CATS::Constants;
+use CATS::ConsoleColor;
 use CATS::Problem::Parser;
 use CATS::Problem::ImportSource;
 use CATS::Problem::Source::Zip;
@@ -245,23 +246,22 @@ use constant headers => (
     { c => 'Comment', n => 'checker_comment', a => 'left'   },
 );
 
-use constant states => (
-    $cats::st_accepted => { r => 'OK',  c => '#A0FFA0' },
-    $cats::st_wrong_answer => { r => 'WA', c => '#FFA0A0' },
-    $cats::st_presentation_error => { r => 'PE', c => '#FFFFA0' },
-    $cats::st_time_limit_exceeded => { r => 'time limit', c => '#FFFFFF' },
-    $cats::st_runtime_error => { r => 'runtime', c => '#FFA0A0' },
-    $cats::st_memory_limit_exceeded => { r => 'memory limit', c => '#FFA0A0' },
-    $cats::st_idleness_limit_exceeded => { r => 'idleness limit', c => '#FFA0A0' },
-    $cats::st_unhandled_error => { r => 'abnornal process termination', c => '#FFA0A0' },
-    $cats::st_compilation_error => { r => 'CE', c => '#FFA0A0'},
-);
+use constant state_styles => {
+    $cats::st_accepted                => { r => 'OK', c => '#A0FFA0', t => 'green' },
+    $cats::st_wrong_answer            => { r => 'WA', c => '#FFA0A0', t => 'red' },
+    $cats::st_presentation_error      => { r => 'PE', c => '#FFFFA0', t => 'yellow bold' },
+    $cats::st_time_limit_exceeded     => { r => 'TL', c => '#FFFFFF', t => 'cyan bold' },
+    $cats::st_runtime_error           => { r => 'RE', c => '#FFA0A0', t => 'magenta' },
+    $cats::st_memory_limit_exceeded   => { r => 'ML', c => '#FFA0A0', t => 'cyan bold' },
+    $cats::st_idleness_limit_exceeded => { r => 'IL', c => '#FFA0A0', t => 'cyan bold' },
+    $cats::st_unhandled_error         => { r => 'UH', c => '#FFA0A0', t => 'on_red' },
+    $cats::st_compilation_error       => { r => 'CE', c => '#FFA0A0', t => 'red' },
+};
 
 sub html_result {
     my ($self) = @_;
     my $sid = (keys %{$self->{results}})[0];
     defined $sid or return;
-    my %states = states;
     my @headers = headers;
     my @results = @{$self->{results}->{$sid}};
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
@@ -284,9 +284,9 @@ sub html_result {
         '<tr>';
     print $html "<th>$_->{c}</th>" for @headers;
     print $html '</tr>';
-    $_->{result} = $states{$_->{result}}->{r} for @results;
+    $_->{result} = state_styles->{$_->{result}}->{r} for @results;
     for my $res (@results) {
-        my ($state) = grep $res->{result} eq $_->{r}, values %states;
+        my ($state) = grep $res->{result} eq $_->{r}, values %{state_styles()};
         printf $html "<tr style=\"background: %s\"><td>", $state->{c};
         print $html join('</td><td>', map $res->{$_->{n}} // '', @headers);
         print $html "</td></tr>\n";
@@ -297,20 +297,24 @@ sub html_result {
 }
 
 sub get_cell {
-    my ($value, $width, $align) = @_;
+    my ($value, $width, $align, $color) = @_;
     $width -= length($value);
     my $left = { center => int($width / 2), left => 1, right => $width - 1 }->{$align};
-    (' ' x $left) . $value . (' ' x ($width - $left));
+    my $cell = (' ' x $left) . $value . (' ' x ($width - $left));
+    $color ? CATS::ConsoleColor::colored($cell, $color) : $cell;
 }
 
 sub ascii_result {
     my ($self) = @_;
     my $sid = (keys %{$self->{results}})[0];
     defined $sid or return;
-    my %states = states;
-    my @headers = headers;
     my @results = @{$self->{results}->{$sid}};
-    $_->{result} = $states{$_->{result}}->{r} for @results;
+    for (@results) {
+        my $st = state_styles->{$_->{result}};
+        $_->{result} = $st->{r};
+        $_->{result__color} = $st->{t};
+    }
+    my @headers = headers;
     for my $h (@headers) {
         $h->{width} = 2 + max(length $h->{c}, map length($_->{$h->{n}} // ''), @results);
     }
@@ -319,7 +323,8 @@ sub ascii_result {
     say join('|', map get_cell($_->{c}, $_->{width}, 'center'), @headers);
     say $separator;
     for my $res (@results) {
-        say join('|', map get_cell($res->{$_->{n}} // '', $_->{width}, $_->{a}), @headers);
+        say join('|', map get_cell(
+            $res->{$_->{n}} // '', $_->{width}, $_->{a}, $res->{$_->{n} . '__color'}), @headers);
     }
     say $separator;
 }

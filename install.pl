@@ -10,6 +10,7 @@ use List::Util qw(max);
 
 use lib 'lib';
 use CATS::DevEnv::Detector::Utils qw(globq run);
+use CATS::ConsoleColor qw(colored);
 
 $| = 1;
 
@@ -214,7 +215,8 @@ step 'Installing cats-modules', sub {
     my $w = max(map length $_->{name}, @modules);
     for my $m (@modules) {
         printf " %*s : %s\n", $w, $m->{name},
-            !$m->{success} ? 'FAILED' :
-            $m->{success} < $m->{total} ? "PARTIAL $m->{success}/$m->{total}" : 'ok';
+            !$m->{success} ? colored('FAILED', 'red'):
+            $m->{success} < $m->{total} ? colored("PARTIAL $m->{success}/$m->{total}", 'yellow') :
+            colored('ok', 'green');
     }
 };
