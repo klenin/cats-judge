@@ -157,6 +157,12 @@ sub get_dirs {
     ($modulesdir, $cachedir);
 }
 
+sub slurp_lines {
+    my ($filename) = @_;
+    open my $f, '<', $filename or return ();
+    map { chomp; $_ } <$f>;
+}
+
 sub check_module {
     my ($module_name, $cachedir) = @_;
     -e $module_name or return;
@@ -168,9 +174,7 @@ sub check_module {
     });
     $module_cache = File::Spec->catfile($cachedir, $module_cache);
     -e $module_cache or return;
-    open my $fcache, '<', "$module_cache.des" or return;
-    my (undef, undef, $state) = (<$fcache>, <$fcache>, <$fcache>);
-    $state =~ m/state:ready/ ? 1 : 0;
+    ((slurp_lines("$module_cache.des"))[2] // '') eq 'state:ready';
 }
 
 step 'Installing cats-modules', sub {
@@ -178,19 +182,11 @@ step 'Installing cats-modules', sub {
     # todo use CATS::Judge::Config
     my ($modulesdir, $cachedir) = get_dirs();
     my $cats_modules_dir = File::Spec->catfile(qw[lib cats-modules]);
-    my @modules = do {
-        open my $fmodules, '<', File::Spec->catfile($cats_modules_dir, 'modules.txt')
-            or die "Can't open modules_list.txt";
-        map {
-            chomp;
-            my $module_dir = File::Spec->catfile($cats_modules_dir, $_);
-            {
-                xml => globq(File::Spec->catfile($module_dir, '*.xml')),
-                dir => $module_dir,
-                success => 0
-            };
-        } <$fmodules>;
-    };
+    my @modules = map +{
+        xml => globq(File::Spec->catfile($cats_modules_dir, $_, '*.xml')),
+        dir => File::Spec->catfile($cats_modules_dir, $_),
+        success => 0
+    }, slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
     my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
     print "\n";
     for (@modules) {
