@@ -8,7 +8,7 @@ use Getopt::Long;
 use IPC::Cmd;
 
 use lib 'lib';
-use CATS::DevEnv::Detector::Utils qw(globq);
+use CATS::DevEnv::Detector::Utils qw(globq run);
 
 $| = 1;
 
@@ -190,7 +190,9 @@ step 'Installing cats-modules', sub {
     my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
     print "\n";
     for (@modules) {
-        !system("$jcmd --problem $_->{dir} >nul 2>nul") or next;
+        my ($ok, $err, $buf) = run command => [ $jcmd, '--problem', $_->{dir} ];
+        $ok or print $err, next;
+        print @$buf if $opts{verbose};
         my $module_name;
         parse_xml_file($_->{xml}, Start => sub {
             my ($p, $el, %atts) = @_;
