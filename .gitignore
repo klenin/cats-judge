@@ -3,6 +3,7 @@ run
 tests
 cache
 modules
+results
 log/*
 *.rar
 config.xml
