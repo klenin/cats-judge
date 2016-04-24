@@ -137,39 +137,40 @@ step 'Adding development environment paths to config', sub {
     rename 'config.xml.tmp', 'config.xml';
 };
 
+sub parse_xml_file {
+    my ($file, %handlers) = @_;
+    my $xml_parser = XML::Parser::Expat->new;
+    $xml_parser->setHandlers(%handlers);
+    $xml_parser->parsefile($file);
+}
+
 sub get_dirs {
     -e 'config.xml' or die 'Missing config.xml';
-    my $xml_parser = XML::Parser::Expat->new;
-    my $modulesdir;
-    my $cachedir;
-    $xml_parser->setHandlers(Start => sub {
+    my ($modulesdir, $cachedir);
+    parse_xml_file('config.xml', Start => sub {
         my ($p, $el, %atts) = @_;
         $el eq 'judge' or return;
         $modulesdir = $atts{modulesdir};
         $cachedir = $atts{cachedir};
+        $p->finish;
     });
-    $xml_parser->parsefile('config.xml');
     ($modulesdir, $cachedir);
 }
 
 sub check_module {
     my ($module_name, $cachedir) = @_;
     -e $module_name or return;
-    my $xml_parser = XML::Parser::Expat->new;
-    my $path;
     my $module_cache;
-    $xml_parser->setHandlers(Char => sub {
+    parse_xml_file($module_name, Char => sub {
         my ($p, $string) = @_;
         $string =~ m/$cachedir.(.*).temp/ or return;
         $module_cache = $1;
     });
-    $xml_parser->parsefile($module_name);
     $module_cache = File::Spec->catfile($cachedir, $module_cache);
     -e $module_cache or return;
     open my $fcache, '<', "$module_cache.des" or return;
     my (undef, undef, $state) = (<$fcache>, <$fcache>, <$fcache>);
-    $state =~ m/state:ready/ or return;
-    1;
+    $state =~ m/state:ready/ ? 1 : 0;
 }
 
 step 'Installing cats-modules', sub {
@@ -177,26 +178,30 @@ step 'Installing cats-modules', sub {
     # todo use CATS::Judge::Config
     my ($modulesdir, $cachedir) = get_dirs();
     my $cats_modules_dir = File::Spec->catfile(qw[lib cats-modules]);
-    open my $fmodules, '<', File::Spec->catfile($cats_modules_dir, 'modules.txt') or die "Can't open modules_list.txt";
-    my @modules;
-    for (<$fmodules>) {
-        chomp $_;
-        my $module = File::Spec->catfile($cats_modules_dir, $_);
-        push @modules, { xml => globq(File::Spec->catfile($module, '*.xml')), dir => $module, success => 0 };
-    }
+    my @modules = do {
+        open my $fmodules, '<', File::Spec->catfile($cats_modules_dir, 'modules.txt')
+            or die "Can't open modules_list.txt";
+        map {
+            chomp;
+            my $module_dir = File::Spec->catfile($cats_modules_dir, $_);
+            {
+                xml => globq(File::Spec->catfile($module_dir, '*.xml')),
+                dir => $module_dir,
+                success => 0
+            };
+        } <$fmodules>;
+    };
     my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
     print "\n";
     for (@modules) {
         !system("$jcmd --problem $_->{dir} >nul 2>nul") or next;
         my $module_name;
-        my $xml_parser = XML::Parser::Expat->new;
-        $xml_parser->setHandlers(Start => sub {
+        parse_xml_file($_->{xml}, Start => sub {
             my ($p, $el, %atts) = @_;
             exists $atts{export} or return;
             my $name = File::Spec->catfile($modulesdir, "$atts{export}.xml");
             -e $name and $module_name = $name;
         });
-        $xml_parser->parsefile($_->{xml});
         $module_name and check_module($module_name, $cachedir) or next;
         $_->{success} = 1;
         print "    $_->{dir} installed\n";
