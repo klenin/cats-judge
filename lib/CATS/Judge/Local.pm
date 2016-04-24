@@ -41,7 +41,7 @@ sub set_request_state {
 
 sub select_request {
     my ($self, $supported_DEs) = @_;
-    -f $self->{problem} or -d $self->{problem} or die 'Bad problem';
+    -f $self->{problem} or -d $self->{problem} or die "Bad problem '$self->{problem}'";
 
     my $source = -f $self->{problem} ?
         CATS::Problem::Source::Zip->new($self->{problem}, $self->{logger}) :
@@ -62,7 +62,7 @@ sub select_request {
 
     !$self->{run} or open FILE, $self->{run} or die "Couldn't open file: $!";
     {
-        id => 0,
+        id => $self->{run} || 0,
         problem_id => $self->get_problem_id,
         contest_id => 0,
         state => 1,
@@ -311,25 +311,35 @@ sub get_cell {
 
 sub ascii_result {
     my ($self) = @_;
-    my $sid = (keys %{$self->{results}})[0];
-    defined $sid or return;
-    my @results = @{$self->{results}->{$sid}};
-    for (@results) {
-        my $st = state_styles->{$_->{result}};
-        $_->{result} = $st->{r};
-        $_->{result__color} = $st->{t};
+    my @runs = sort keys %{$self->{results}} or return;
+    for my $req_results (values %{$self->{results}}) {
+        for (@$req_results) {
+            my $st = state_styles->{$_->{result}};
+            $_->{result} = $st->{r};
+            $_->{result__color} = $st->{t};
+        }
     }
-    my @headers = headers;
+    my @headers = map {
+        my $k = $_;
+        my $first = 0;
+        map +{ %$_, r => $k, f => !$first++ }, headers;
+    } @runs;
+    my %run_widths = map +{ $_ => 0 }, @runs;
     for my $h (@headers) {
-        $h->{width} = 2 + max(length $h->{c}, map length($_->{$h->{n}} // ''), @results);
+        $h->{width} = 2 + max(length $h->{c},
+            map length($_->{$h->{n}} // ''), @{$self->{results}->{$h->{r}}});
+        $run_widths{$h->{r}} += $h->{width};
     }
+    say join('|', map get_cell($_, $run_widths{$_} + (@headers / @runs) - 1, 'left'), @runs);
     my $separator = join '+', map '-' x $_->{width}, @headers;
     say $separator;
     say join('|', map get_cell($_->{c}, $_->{width}, 'center'), @headers);
     say $separator;
-    for my $res (@results) {
-        say join('|', map get_cell(
-            $res->{$_->{n}} // '', $_->{width}, $_->{a}, $res->{$_->{n} . '__color'}), @headers);
+    for my $i (0 .. max(map scalar $#$_, values %{$self->{results}})) {
+        say join('|', map {
+            my $row = $self->{results}->{$_->{r}}->[$i];
+            get_cell($row->{$_->{n}} // '', $_->{width}, $_->{a}, $row->{$_->{n} . '__color'});
+        } @headers);
     }
     say $separator;
 }

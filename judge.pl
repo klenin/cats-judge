@@ -2,6 +2,7 @@
 use v5.10;
 use strict;
 
+use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
 use File::Copy::Recursive qw(rcopy);
@@ -1016,7 +1017,7 @@ GetOptions(
     \%opts,
     'help|?',
     'problem=s',
-    'run=s',
+    'run=s@',
     'de=i',
     'db',
     'testset=s',
@@ -1070,11 +1071,21 @@ $judge = $local ?
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
-$judge->set_def_DEs($cfg->def_DEs) if $local;
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
-$local ? process_request($judge->select_request) : main_loop;
+if ($local) {
+    for (@{$opts{run}}) {
+        my $wd = Cwd::cwd();
+        $judge->{run} = $_;
+        $judge->set_def_DEs($cfg->def_DEs);
+        process_request($judge->select_request);
+        chdir($wd);
+    }
+}
+else {
+    main_loop;
+}
 
 $judge->finalize;
 
