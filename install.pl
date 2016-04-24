@@ -6,6 +6,7 @@ use File::Copy qw(copy);
 use File::Spec;
 use Getopt::Long;
 use IPC::Cmd;
+use List::Util qw(max);
 
 use lib 'lib';
 use CATS::DevEnv::Detector::Utils qw(globq run);
@@ -190,6 +191,7 @@ step 'Installing cats-modules', sub {
     my ($modulesdir, $cachedir) = get_dirs();
     my $cats_modules_dir = File::Spec->catfile(qw[lib cats-modules]);
     my @modules = map +{
+        name => $_,
         xml => globq(File::Spec->catfile($cats_modules_dir, $_, '*.xml')),
         dir => File::Spec->catfile($cats_modules_dir, $_),
         success => 0
@@ -197,20 +199,22 @@ step 'Installing cats-modules', sub {
         slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
     my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
     print "\n";
-    for (@modules) {
-        my ($ok, $err, $buf) = run command => [ $jcmd, '--problem', $_->{dir} ];
+    for my $m (@modules) {
+        my ($ok, $err, $buf) = run command => [ $jcmd, '--problem', $m->{dir} ];
         $ok or print $err, next;
         print @$buf if $opts{verbose};
-        my $module_name;
-        parse_xml_file($_->{xml}, Start => sub {
+        parse_xml_file($m->{xml}, Start => sub {
             my ($p, $el, %atts) = @_;
             exists $atts{export} or return;
-            my $name = File::Spec->catfile($modulesdir, "$atts{export}.xml");
-            -e $name and $module_name = $name;
+            $m->{total}++;
+            my $module_xml = File::Spec->catfile($modulesdir, "$atts{export}.xml");
+            $m->{success}++ if check_module($module_xml, $cachedir);
         });
-        $module_name and check_module($module_name, $cachedir) or next;
-        $_->{success} = 1;
-        print "    $_->{dir} installed\n";
     }
-    $_->{success} or print "    Failed to install: $_->{dir}\n" for @modules;
+    my $w = max(map length $_->{name}, @modules);
+    for my $m (@modules) {
+        printf " %*s : %s\n", $w, $m->{name},
+            !$m->{success} ? 'FAILED' :
+            $m->{success} < $m->{total} ? "PARTIAL $m->{success}/$m->{total}" : 'ok';
+    }
 };
