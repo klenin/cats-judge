@@ -1078,7 +1078,7 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
 if ($local) {
-    for (@{$opts{run}}) {
+    for (@{$opts{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
         $judge->{run} = $_;
         $judge->set_def_DEs($cfg->def_DEs);
