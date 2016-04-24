@@ -18,7 +18,7 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --step <num> ... [--devenv <devenv-filter>] [--verbose]
+    $cmd --step <num> ... [--devenv <devenv-filter>] [--modules <modules-filter>] [--verbose]
     $cmd --help|-?
 USAGE
     exit;
@@ -28,6 +28,7 @@ GetOptions(
     \my %opts,
     'step=i@',
     'devenv=s',
+    'modules=s',
     'verbose',
     'help|?',
 ) or usage;
@@ -166,13 +167,19 @@ sub slurp_lines {
 sub check_module {
     my ($module_name, $cachedir) = @_;
     -e $module_name or return;
-    my $module_cache;
-    parse_xml_file($module_name, Char => sub {
-        my ($p, $string) = @_;
-        $string =~ m/$cachedir.(.*).temp/ or return;
-        $module_cache = $1;
-    });
-    $module_cache = File::Spec->catfile($cachedir, $module_cache);
+    my $path = '';
+    parse_xml_file($module_name,
+        Start => sub {
+            my ($p, $el) = @_;
+            $p->setHandlers(Char => sub { $path .= $_[1] }) if $el eq 'path';
+        },
+        End => sub {
+            my ($p, $el) = @_;
+            $p->finish if $el eq 'path';
+        }
+    );
+    $path or return;
+    my ($module_cache) = $path =~ /^(.*\Q$cachedir\E.*)[\\\/]temp/ or return;
     -e $module_cache or return;
     ((slurp_lines("$module_cache.des"))[2] // '') eq 'state:ready';
 }
@@ -186,7 +193,8 @@ step 'Installing cats-modules', sub {
         xml => globq(File::Spec->catfile($cats_modules_dir, $_, '*.xml')),
         dir => File::Spec->catfile($cats_modules_dir, $_),
         success => 0
-    }, slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
+    }, grep !$opts{modules} || /$opts{modules}/,
+        slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
     my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
     print "\n";
     for (@modules) {
