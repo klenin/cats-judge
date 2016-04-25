@@ -204,7 +204,7 @@ sub get_problem_tests {
 
 sub get_problem {
     my ($self, $pid) = @_;
-    die "no parser" if !defined $self->{parser};
+    $self->{parser} or die 'no parser';
     my $p = $self->{parser}{problem}{description};
     {
         id => $self->get_problem_id,
@@ -216,6 +216,7 @@ sub get_problem {
         input_file => $p->{input_file},
         output_file => $p->{output_file},
         std_checker => $p->{std_checker},
+        run_method => $self->{parser}{problem}{run_method},
         contest_id => 0
     };
 }
