@@ -58,6 +58,7 @@ my %opts = (
     run => undef,
     testset => undef,
     result => undef,
+    package => undef,
 );
 
 sub log_msg { $log->msg(@_); }
@@ -292,7 +293,7 @@ sub generate_test
     my ($pid, $test, $input_fname) = @_;
     die 'generated' if $test->{generated};
 
-    my ($ps) = grep $_->{id} == $test->{generator_id}, @$problem_sources or die;
+    my ($ps) = grep $_->{id} eq $test->{generator_id}, @$problem_sources or die;
 
     clear_rundir or return undef;
 
@@ -382,7 +383,7 @@ sub validate_test
     if ($in_v_id) {
         clear_rundir or return undef;
 
-        my ($validator) = grep $_->{id} == $in_v_id, @$problem_sources or die;
+        my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
         my_copy($path_to_test, $cfg->rundir) and
         my_copy($cfg->cachedir . "/$pid/temp/$in_v_id/*", $cfg->rundir)
             or return undef;
@@ -458,7 +459,7 @@ sub prepare_tests
         }
         elsif (defined $t->{std_solution_id})
         {
-            my ($ps) = grep $_->{id} == $t->{std_solution_id}, @$problem_sources;
+            my ($ps) = grep $_->{id} eq $t->{std_solution_id}, @$problem_sources;
 
             clear_rundir or return undef;
 
@@ -638,7 +639,7 @@ sub run_checker
     }
     else
     {
-        my ($ps) = grep $_->{id} == $problem->{checker_id}, @$problem_sources;
+        my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy($cfg->cachedir . "/$problem->{id}/temp/$problem->{checker_id}/*", $cfg->rundir, $problem->{id})
             or return undef;
@@ -1018,6 +1019,7 @@ Usage:
     $cmd --problem <zip_or_directory>
         [--run <file>... [--de <de_code>] [--testset <testset>]]
         [--result=html] [--result=columns=<regexp>] [--db]
+        [--package=polygon]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1038,6 +1040,7 @@ GetOptions(
     'result=s',
     'result-columns=s',
     'server',
+    'package=s'
 ) or usage;
 usage if defined $opts{help};
 
