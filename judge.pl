@@ -362,9 +362,17 @@ sub input_output_redir {
     input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
 }
 
-sub interactor_name_or_default {
-    interactor_name => get_cmd("interactor_name", $_[0]) ||
-        get_cfg_define("#default_interactor_name"),
+sub interactor_params {
+    my ($run_method) = @_;
+    $run_method == $cats::rm_interactive or return {};
+    # Suppose that interactor is the sole compilable solution module.
+    my (@interactors) =
+        grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}),
+        @$problem_sources;
+    @interactors == 0 ? log_msg("Unable to find interactor\n") :
+    @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
+        { interactor_name => get_cmd('interactor_name', $interactors[0]->{de_id}) ||
+            get_cfg_define('#default_interactor_name') }
 }
 
 sub validate_test
@@ -466,13 +474,14 @@ sub prepare_tests
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
+            my $interactor_params = interactor_params($run_method) or return;
             my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname,
                 name => $name,
                 time_limit => $ps->{time_limit} || $tlimit,
                 memory_limit => $ps->{memory_limit} || $mlimit,
                 deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
-                interactor_name_or_default($ps->{de_id}),
+                %$interactor_params,
                 input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
@@ -695,11 +704,12 @@ sub run_single_test
     my $run_key = get_run_key($problem->{run_method});
     my $run_cmd = get_cmd($run_key, $p{de_id})
         or return log_msg("No '$run_key' action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
+    my $interactor_params = interactor_params($problem->{run_method}) or return;
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
         input_output_redir(@$problem{qw(input_file output_file)}),
-        interactor_name_or_default($p{de_id}),
+        %$interactor_params,
         test_rank => sprintf('%02d', $p{rank}),
     };
     $exec_params->{memory_limit} += $p{memory_handicap} || 0;
