@@ -15,6 +15,8 @@ use CATS::Problem::ImportSource;
 use CATS::Problem::Source::Zip;
 use CATS::Problem::Source::PlainFiles;
 
+use CATS::Problem::PolygonParser;
+
 use CATS::Utils qw(split_fname);
 
 use base qw(CATS::Judge::Base);
@@ -51,11 +53,14 @@ sub select_request {
         CATS::Problem::ImportSource::DB->new :
         CATS::Problem::ImportSource::Local->new(modulesdir => $self->{modulesdir});
 
-    $self->{parser} = CATS::Problem::Parser->new(
+    my %opts = (
         id_gen => \&CATS::DB::new_id,
         source => $source,
         import_source => $import_source,
     );
+    $self->{parser} = $self->{package} && $self->{package} eq 'polygon'
+        ? CATS::Problem::PolygonParser->new(%opts)
+        : CATS::Problem::Parser->new(%opts);
 
     eval { $self->{parser}->parse; };
     die "Problem parsing failed: $@" if $@;

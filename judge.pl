@@ -58,6 +58,7 @@ my %opts = (
     run => undef,
     testset => undef,
     result => undef,
+    package => undef,
 );
 
 sub log_msg { $log->msg(@_); }
@@ -1008,6 +1009,7 @@ Usage:
     $cmd --problem <zip_or_directory>
         [--run <file>... [--de <de_code>] [--testset <testset>]]
         [--result=html] [--result=columns=<regexp>] [--db]
+        [--package=polygon]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1028,6 +1030,7 @@ GetOptions(
     'result=s',
     'result-columns=s',
     'server',
+    'package=s'
 ) or usage;
 usage if defined $opts{help};
 
