@@ -323,6 +323,7 @@ sub ascii_result {
             my $st = state_styles->{$_->{result}};
             $_->{result} = $st->{r};
             $_->{result__color} = $st->{t};
+            chomp $_->{checker_comment} if $_->{checker_comment};
         }
     }
     my @headers = map {
@@ -330,7 +331,7 @@ sub ascii_result {
         my $first = 0;
         map +{ %$_, r => $k, f => !$first++ }, $self->filtered_headers;
     } @runs or return;
-    my %run_widths = map +{ $_ => 0 }, @runs;
+    my %run_widths = map { $_ => 0 } @runs;
     for my $h (@headers) {
         $h->{width} = 2 + max(length $h->{c},
             map length($_->{$h->{n}} // ''), @{$self->{results}->{$h->{r}}});
