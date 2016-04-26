@@ -198,7 +198,7 @@ step 'Installing cats-modules', sub {
         success => 0
     }, grep !$opts{modules} || /$opts{modules}/,
         slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
-    my $jcmd = File::Spec->catfile('cmd', 'j.cmd');
+    my $jcmd = File::Spec->catfile('cmd', 'j.'. ($^O eq 'MSWin32' ? 'cmd' : 'sh'));
     print "\n";
     for my $m (@modules) {
         my ($ok, $err, $buf) = run command => [ $jcmd, '--problem', $m->{dir} ];
