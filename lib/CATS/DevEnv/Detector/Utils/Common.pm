@@ -44,10 +44,12 @@ sub write_temp_file {
 
 sub which {
     my ($detector, $file) = @_;
-    return 0 if $^O eq 'MSWin32';
-    my $output =`which $file`;
-    for my $line (split /\n/, $output) {
-        $detector->validate_and_add($line);
+    return if $^O eq 'MSWin32';
+    my ($ok, undef, undef, $out) = run(command => [ 'which', $file ]);
+    $ok or return;
+    for (@$out) {
+        chomp;
+        $detector->validate_and_add($_);
     }
 }
 
