@@ -31,6 +31,7 @@
 <define name="#haskell" de_code_autodetect="503" value="C:\Lang\Haskell\2011.2.0.1\bin\ghc.exe" />
 <define name="#php" de_code_autodetect="505" value="C:\Lang\PHP\5.4.0\php.exe" />
 <define name="#erlang" de_code_autodetect="506" value="C:\Lang\Erlang\erl5.10.4\bin\erl.exe" />
+<define name="#nodejs" de_code_autodetect="507" value="C:\Lang\nodejs\nodejs.exe" />
 
 <define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\FreeBasic\0.23\fbc.exe" />
@@ -356,5 +357,15 @@
     generate='#spawner%redir %limits "#erlang" -run "%name" %args -run init stop'
     check='#spawner %limits "#erlang" -run "%name" %checker_args -run init stop'
     extension='erl'/>
+
+<!-- NodeJS -->
+<de
+    code="507"
+    compile='#run #nodejs -c "%full_name"'
+    run='#run "#nodejs" "%full_name"'
+    generate='#spawner%redir %limits "#nodejs" "%name" %args'
+    validate='#spawner %limits "#nodejs" %full_name "%test_input"'
+    check='#spawner %limits "#nodejs" %full_name %checker_args'
+    extension='js'/>
 
 </judge>
