@@ -922,8 +922,7 @@ sub problem_ready
     $judge->is_problem_uptodate($pid, $date);
 }
 
-sub process_request
-{
+sub prepare_problem {
     my ($r) = @_;
     $r or return;
 
@@ -962,7 +961,12 @@ sub process_request
     }
     $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
-    return if !$r->{src} || $state == $cats::st_unhandled_error;
+    ($r, $state);
+}
+
+sub test_problem {
+    my ($r) = @_;
+    my $state;
 
     log_msg("test log:\n");
     if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
@@ -1004,7 +1008,8 @@ sub main_loop
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        process_request($judge->select_request);
+        my ($r, $state) = prepare_problem($judge->select_request);
+        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
     }
 }
 
@@ -1040,7 +1045,7 @@ GetOptions(
     'result=s',
     'result-columns=s',
     'server',
-    'package=s'
+    'package=s',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1095,7 +1100,8 @@ if ($local) {
         my $wd = Cwd::cwd();
         $judge->{run} = $_;
         $judge->set_def_DEs($cfg->def_DEs);
-        process_request($judge->select_request);
+        my ($r, $state) = prepare_problem($judge->select_request);
+        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
         chdir($wd);
     }
 }
