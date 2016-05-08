@@ -12,6 +12,8 @@
     formal_input_fname="formal.input"
     show_child_stdout="0"
     save_child_stdout="1"
+    cats_url="http://imcs.dvfu.ru/cats"
+    polygon_url="https://polygon.codeforces.com"
 >
 
 <define name="#spawner" value="%workdir/spawner-bin/sp"/>

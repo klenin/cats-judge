@@ -21,6 +21,8 @@ use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
 use CATS::Judge::Local;
+use CATS::Problem::Backend;
+use CATS::Problem::PolygonBackend;
 
 use CATS::SpawnerJson;
 use CATS::Spawner;
@@ -59,6 +61,8 @@ my %opts = (
     testset => undef,
     result => undef,
     package => undef,
+    system => undef,
+    contest => undef,
 );
 
 sub log_msg { $log->msg(@_); }
@@ -964,6 +968,23 @@ sub prepare_problem {
     ($r, $state);
 }
 
+sub update {
+    $judge->{system} or return;
+    print 'login: ';
+    chomp(my $login = <>);
+    print 'password: ';
+    chomp(my $password = <>);
+    my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/ or $log->error('bad option --system');
+    my $problem_exist = -d $judge->{problem} or -f $judge->{problem};
+    $problem_exist and $judge->select_request;
+    my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
+    my $Backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
+        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest}, $login, $password,
+        $action, $problem_exist, $root);
+    $Backend->update;
+    $problem_exist or $judge->{problem} .= '.zip';
+}
+
 sub test_problem {
     my ($r) = @_;
     my $state;
@@ -1021,10 +1042,10 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd --server
-    $cmd --problem <zip_or_directory>
+    $cmd --problem <zip_or_directory_or_name>
         [--run <file>... [--de <de_code>] [--testset <testset>]]
         [--result=html] [--result=columns=<regexp>] [--db]
-        [--package=polygon]
+        [--package=polygon] [--update=cats_or_polygon:upload_or_download [--contest=<url>]]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1046,6 +1067,8 @@ GetOptions(
     'result-columns=s',
     'server',
     'package=s',
+    'system=s',
+    'contest=s',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1096,6 +1119,7 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
 if ($local) {
+    $opts{system} and update;
     for (@{$opts{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
         $judge->{run} = $_;
