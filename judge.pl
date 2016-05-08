@@ -9,6 +9,7 @@ use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
 use sigtrap qw(die INT);
+use Term::ReadKey;
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
@@ -970,10 +971,13 @@ sub prepare_problem {
 
 sub update {
     $judge->{system} or return;
+    ReadMode('noecho');
     print 'login: ';
     chomp(my $login = <>);
-    print 'password: ';
+    print "\npassword: ";
     chomp(my $password = <>);
+    print "\n";
+    ReadMode('restore');
     my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/ or $log->error('bad option --system');
     my $problem_exist = -d $judge->{problem} or -f $judge->{problem};
     $problem_exist and $judge->select_request;
