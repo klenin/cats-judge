@@ -9,6 +9,7 @@ use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
 use sigtrap qw(die INT);
+use Term::ReadKey;
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
@@ -21,6 +22,8 @@ use CATS::Judge::Config;
 use CATS::Judge::Log;
 use CATS::Judge::Server;
 use CATS::Judge::Local;
+use CATS::Problem::Backend;
+use CATS::Problem::PolygonBackend;
 
 use CATS::SpawnerJson;
 use CATS::Spawner;
@@ -59,6 +62,8 @@ my %opts = (
     testset => undef,
     result => undef,
     package => undef,
+    system => undef,
+    contest => undef,
 );
 
 sub log_msg { $log->msg(@_); }
@@ -922,8 +927,7 @@ sub problem_ready
     $judge->is_problem_uptodate($pid, $date);
 }
 
-sub process_request
-{
+sub prepare_problem {
     my ($r) = @_;
     $r or return;
 
@@ -962,7 +966,32 @@ sub process_request
     }
     $judge->save_log_dump($r, $log->{dump});
     $judge->set_request_state($r, $state, %$r);
-    return if !$r->{src} || $state == $cats::st_unhandled_error;
+    ($r, $state);
+}
+
+sub update {
+    $judge->{system} or return;
+    ReadMode('noecho');
+    print 'login: ';
+    chomp(my $login = <>);
+    print "\npassword: ";
+    chomp(my $password = <>);
+    print "\n";
+    ReadMode('restore');
+    my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/ or $log->error('bad option --system');
+    my $problem_exist = -d $judge->{problem} or -f $judge->{problem};
+    $problem_exist and $judge->select_request;
+    my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
+    my $Backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
+        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest}, $login, $password,
+        $action, $problem_exist, $root);
+    $Backend->update;
+    $problem_exist or $judge->{problem} .= '.zip';
+}
+
+sub test_problem {
+    my ($r) = @_;
+    my $state;
 
     log_msg("test log:\n");
     if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
@@ -1004,7 +1033,8 @@ sub main_loop
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        process_request($judge->select_request);
+        my ($r, $state) = prepare_problem($judge->select_request);
+        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
     }
 }
 
@@ -1016,10 +1046,10 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd --server
-    $cmd --problem <zip_or_directory>
+    $cmd --problem <zip_or_directory_or_name>
         [--run <file>... [--de <de_code>] [--testset <testset>]]
         [--result=html] [--result=columns=<regexp>] [--db]
-        [--package=polygon]
+        [--package=polygon] [--update=cats_or_polygon:upload_or_download [--contest=<url>]]
     $cmd --config-print <regexp>
     $cmd --config-set <name>=<value> ...
     $cmd --help|-?
@@ -1040,7 +1070,9 @@ GetOptions(
     'result=s',
     'result-columns=s',
     'server',
-    'package=s'
+    'package=s',
+    'system=s',
+    'contest=s',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1091,11 +1123,13 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
 
 if ($local) {
+    $opts{system} and update;
     for (@{$opts{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
         $judge->{run} = $_;
         $judge->set_def_DEs($cfg->def_DEs);
-        process_request($judge->select_request);
+        my ($r, $state) = prepare_problem($judge->select_request);
+        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
         chdir($wd);
     }
 }
