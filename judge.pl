@@ -9,7 +9,6 @@ use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use Getopt::Long qw(GetOptions);
 use sigtrap qw(die INT);
-use Term::ReadKey;
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
@@ -61,7 +60,7 @@ my %opts = (
     run => undef,
     testset => undef,
     result => undef,
-    package => undef,
+    'package' => undef,
     system => undef,
     contest => undef,
 );
@@ -969,23 +968,30 @@ sub prepare_problem {
     ($r, $state);
 }
 
-sub update {
-    $judge->{system} or return;
-    ReadMode('noecho');
+sub interactive_login {
+    eval { require Term::ReadKey; 1; } or $log->error('Term::ReadKey is required for interactive login');
     print 'login: ';
     chomp(my $login = <>);
-    print "\npassword: ";
+    print "password: ";
+    Term::ReadKey::ReadMode('noecho');
     chomp(my $password = <>);
     print "\n";
-    ReadMode('restore');
-    my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/ or $log->error('bad option --system');
-    my $problem_exist = -d $judge->{problem} or -f $judge->{problem};
+    Term::ReadKey::ReadMode('restore');
+    ($login, $password);
+}
+
+sub update {
+    $judge->{system} or return;
+    my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/
+        or $log->error('bad option --system');
+    my $problem_exist = -d $judge->{problem} || -f $judge->{problem};
     $problem_exist and $judge->select_request;
     my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
-    my $Backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
-        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest}, $login, $password,
+    my $backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
+        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest},
         $action, $problem_exist, $root);
-    $Backend->update;
+    $backend->login(interactive_login) if $backend->needs_login;
+    $backend->update;
     $problem_exist or $judge->{problem} .= '.zip';
 }
 
