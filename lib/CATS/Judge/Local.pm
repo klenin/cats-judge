@@ -30,7 +30,8 @@ sub auth {
 }
 
 sub get_problem_id {
-    $pid ||= Digest::MD5::md5_hex(Encode::encode_utf8($_[0]->{parser}{problem}{description}{title}))
+    my $t = $_[0]->{parser}{problem}{description}{title} or die 'No title';
+    $pid ||= Digest::MD5::md5_hex(Encode::encode_utf8($t))
 }
 
 sub update_state {
