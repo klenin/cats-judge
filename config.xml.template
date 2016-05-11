@@ -18,7 +18,6 @@
 >
 
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp"/>
-<define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#run" value='#spawner -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
 <define name="#default_interactor_name" value="Interact.exe" />
 <define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin %interactor_name --// %deadline -sr= "/>
@@ -26,6 +25,7 @@
 <define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
 
 <!-- This code is touched by install.pl -->
+<define name="#arch_7z" de_code_autodetect="2" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#java" de_code_autodetect="403" value="C:\Program Files\Java\jdk1.7.0_03\bin" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#ruby" de_code_autodetect="504" value="C:\Lang\Ruby\1.9.3\bin\ruby.exe" />
