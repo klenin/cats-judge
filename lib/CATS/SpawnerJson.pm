@@ -56,9 +56,9 @@ sub check_report
 
     foreach my $report_item (@{$sp_report->{report}}) {
         $log->msg("-> Process: $report_item->{Application}\n");
-        if (@{$report_item->{SpawnerError}})
+        if (@{$report_item->{SpawnerError}} && $report_item->{SpawnerError}->[0] ne '<none>')
         {
-            $log->msg("\tspawner error: " . join(' ', $report_item->{SpawnerError}) . "\n");
+            $log->msg("\tspawner error: " . join(' ', @{$report_item->{SpawnerError}}) . "\n");
             return undef;
         }
 
