@@ -119,8 +119,9 @@ step 'Detecting development environments', sub {
 
 my $proxy = '';
 step 'Detecting proxy', sub {
-    $proxy = CATS::DevEnv::Detector::Utils::detect_proxy();
-    print " $proxy " if $proxy;
+    $proxy = CATS::DevEnv::Detector::Utils::detect_proxy() or return;
+    print " $proxy ";
+    $proxy = "http://$proxy";
 };
 
 my @p = qw(lib cats-problem CATS);
@@ -136,7 +137,7 @@ step 'Saving configuration', sub {
     $path_idx{$_->{code}} = $_ for @detected_DEs;
     my $flag = 0;
     while (<$conf_in>) {
-        s~(\s+proxy=")"~$1http://$proxy"~;
+        s~(\s+proxy=")"~$1$proxy"~;
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
         s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};
