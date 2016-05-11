@@ -1,5 +1,4 @@
 @echo off
-SET PATH=%PATH%;%CD%/spawner;%CD%/check
 call "%~dp0..\preparevs.cmd"
 :SET SP_USER=
 :SET SP_PASSWORD=
