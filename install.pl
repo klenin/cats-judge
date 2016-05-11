@@ -227,3 +227,7 @@ step 'Installing cats-modules', sub {
             colored('ok', 'green');
     }
 };
+
+step 'Adding j to path', sub {
+    print CATS::DevEnv::Detector::Utils::add_to_path(File::Spec->rel2abs('cmd'));
+};

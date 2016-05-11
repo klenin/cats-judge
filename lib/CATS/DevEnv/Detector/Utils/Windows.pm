@@ -16,7 +16,7 @@ use CATS::DevEnv::Detector::Utils::Common;
 use parent qw(Exporter);
 our @EXPORT = qw(
     registry registry_assoc registry_glob program_files drives lang_dirs
-    disable_error_dialogs disable_windows_error_reporting_ui detect_proxy
+    disable_error_dialogs disable_windows_error_reporting_ui detect_proxy add_to_path
 );
 
 use constant REGISTRY_PREFIX => qw(
@@ -186,6 +186,17 @@ sub detect_proxy {
         'HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Internet Settings') or return '';
     $key->GetValue('ProxyEnable') or return '';
     $key->GetValue('ProxyServer') // '';
+}
+
+sub add_to_path {
+    my ($dir) = @_;
+    my $key = Win32::TieRegistry->new('HKEY_CURRENT_USER/Environment', REG_READ_WRITE) or return;
+    my ($path, $type) = $key->GetValue('PATH');
+    my $dir_re = qr/\Q$dir\E\\?$/;
+    return ' (already in user path)' if grep /$dir_re/, split /;/, $path;
+    return ' (already in some other path)' if grep /$dir_re/, FS->path;
+    $key->SetValue('PATH', "$path;$dir", $type // Win32::TieRegistry::REG_SZ);
+    return 'added';
 }
 
 1;
