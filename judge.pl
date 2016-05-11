@@ -989,9 +989,10 @@ sub update {
     my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
     my $backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
         $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest},
-        $action, $problem_exist, $root);
+        $problem_exist, $root, $judge->{verbose});
     $backend->login(interactive_login) if $backend->needs_login;
-    $backend->update;
+    $backend->start;
+    $action eq 'upload' ? $backend->upload_problem : $backend->download_problem;
     $problem_exist or $judge->{problem} .= '.zip';
 }
 
@@ -1079,6 +1080,7 @@ GetOptions(
     'package=s',
     'system=s',
     'contest=s',
+    'verbose',
 ) or usage;
 usage if defined $opts{help};
 
@@ -1126,7 +1128,7 @@ $judge = $local ?
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::Spawner->new(cfg => $cfg, log => $log);
+$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 
 if ($local) {
     $opts{system} and update;
