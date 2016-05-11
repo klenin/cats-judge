@@ -60,7 +60,7 @@ my $step_count = 0;
 
 sub step($&) {
     my ($msg, $action) = @_;
-    print ++$step_count, ". $msg ...";
+    print colored(sprintf('%2d', ++$step_count), 'bold white'), ". $msg ...";
     if (!%filter_steps || exists $filter_steps{$step_count}) {
         $action->();
         print " ok\n";
@@ -78,37 +78,37 @@ sub step_copy {
     };
 }
 
-step 'Verifying', sub {
+step 'Verify install', sub {
     -f 'judge.pl' && -d 'lib' or die 'Must run from cats-judge directory';
     -f 'config.xml' and maybe_die 'Seems to be already installed';
 };
 
-step 'Verifying git', sub {
+step 'Verify git', sub {
     my $x = `git --version` or die 'Git not found';
     $x =~ /^git version/ or die "Git not found: $x";
 };
 
-step 'Verifying required modules', sub {
+step 'Verify required modules', sub {
     my @bad = grep !eval "require $_; 1;", qw(Archive::Zip DBI JSON::XS XML::Parser::Expat File::Copy::Recursive);
     maybe_die join "\n", 'Some required modules not found:', @bad, '' if @bad;
 };
 
-step 'Verifying optional modules', sub {
+step 'Verify optional modules', sub {
     my @bad = grep !eval "require $_; 1;", qw(FormalInput IPC::Run);
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
-step 'Cloning sumbodules', sub {
+step 'Clone sumbodules', sub {
     system('git submodule update --init');
     $? and maybe_die "Failed: $?, $!";
 };
 
-step 'Disabling Windows Error Reporting UI', sub {
+step 'Disable Windows Error Reporting UI', sub {
     CATS::DevEnv::Detector::Utils::disable_windows_error_reporting_ui();
 };
 
 my @detected_DEs;
-step 'Detecting development environments', sub {
+step 'Detect development environments', sub {
     IPC::Cmd->can_capture_buffer or print ' IPC::Cmd is inadequate, will use emulation';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs();
@@ -127,7 +127,7 @@ step 'Detecting development environments', sub {
 };
 
 my $proxy = '';
-step 'Detecting proxy', sub {
+step 'Detect proxy', sub {
     $proxy = CATS::DevEnv::Detector::Utils::detect_proxy() or return;
     print " $proxy ";
     $proxy = "http://$proxy";
@@ -138,7 +138,7 @@ step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p,
 
 step_copy('config.xml.template', 'config.xml');
 
-step 'Saving configuration', sub {
+step 'Save configuration', sub {
     @detected_DEs || $proxy or return;
     open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
     open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml.tmp";
@@ -203,7 +203,7 @@ sub check_module {
     ((slurp_lines("$module_cache.des"))[2] // '') eq 'state:ready';
 }
 
-step 'Installing cats-modules', sub {
+step 'Install cats-modules', sub {
     require XML::Parser::Expat;
     # todo use CATS::Judge::Config
     my ($modulesdir, $cachedir) = get_dirs();
@@ -238,6 +238,6 @@ step 'Installing cats-modules', sub {
     }
 };
 
-step 'Adding j to path', sub {
+step 'Add j to path', sub {
     print CATS::DevEnv::Detector::Utils::add_to_path(File::Spec->rel2abs('cmd'));
 };
