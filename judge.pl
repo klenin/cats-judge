@@ -992,8 +992,10 @@ sub update {
         $problem_exist, $root, $judge->{verbose});
     $backend->login(interactive_login) if $backend->needs_login;
     $backend->start;
+    $log->msg('%s problem %s ... ', ($action eq 'upload' ? 'Uploading' : 'Downloading'), ($judge->{problem} || 'by url'));
     $action eq 'upload' ? $backend->upload_problem : $backend->download_problem;
     $problem_exist or $judge->{problem} .= '.zip';
+    $log->note('ok');
 }
 
 sub test_problem {
