@@ -72,7 +72,7 @@ sub step($&) {
 
 sub step_copy {
     my ($from, $to) = @_;
-    step "Copying $from -> $to", sub {
+    step "Copy $from -> $to", sub {
         -e $to and maybe_die "Destination already exists: $to";
         copy($from, $to) or maybe_die $!;
     };
