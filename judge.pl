@@ -918,6 +918,11 @@ sub problem_ready
 sub clear_problem_cache {
     my ($r) = @_;
     $r or return;
+    for (CATS::SourceManager::get_guids_by_regexp('*', $cfg->{modulesdir})) {
+        my $m = CATS::SourceManager::load($_, $cfg->{modulesdir});
+        $log->warning("Orphaned module: $_")
+            if $m->{path} =~ m~[\/\\]\Q$r->{problem_id}\E[\/\\]~;
+    }
     $log->clear_dump;
     my_remove($cfg->cachedir . "/$r->{problem_id}*") or return;
     log_msg("problem '$r->{problem_id}' cache removed\n");
