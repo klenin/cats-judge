@@ -5,6 +5,8 @@ use warnings;
 
 use Getopt::Long qw(GetOptions);
 
+use CATS::ConsoleColor;
+
 sub new {
     my ($class) = shift;
     my $self = { command => '', opts => {} };
@@ -19,20 +21,24 @@ sub usage
     my ($error) = @_;
     print "$error\n" if $error;
     my (undef, undef, $cmd) = File::Spec->splitpath($0);
-    print <<"USAGE";
+
+    my $text = <<"USAGE";
 Usage:
-    $cmd serve
-    $cmd install --problem <zip_or_directory_or_name> [--force-install]
-    $cmd run --problem <zip_or_directory_or_name> [--force-install]
+    $cmd <command> <options>
+
+Commands:
+    #serve#
+    #install# --problem <zip_or_directory_or_name> [--force-install]
+    #run# --problem <zip_or_directory_or_name> [--force-install]
         --solution <file>... [--de <de_code>] [--testset <testset>]
         [--result text|html] [--result=columns <regexp>]
-    $cmd download --problem <zip_or_directory_or_name> --url <url>
+    #download# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
-    $cmd upload --problem <zip_or_directory_or_name> --url <url>
+    #upload# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
-    $cmd config --print <regexp>
-    $cmd clear-cache --problem <zip_or_directory_or_name>
-    $cmd help|-?
+    #config# --print <regexp>
+    #clear-cache# --problem <zip_or_directory_or_name>
+    #help#|-?
 
 Common options:
     --config-set <name>=<value> ...
@@ -40,6 +46,9 @@ Common options:
     --format cats|polygon
     --verbose
 USAGE
+    ;
+    $text =~ s/#(\S+)#/CATS::ConsoleColor::colored($1, 'bold white')/eg;
+    print $text;
     exit;
 }
 
