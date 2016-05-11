@@ -162,7 +162,7 @@ sub my_remove
     {
         if (-f $_ || -l $_) {
             for my $retry (0..9) {
-                -f $_ || -l $_ or last;
+                -f $_ || -l $_ or do { $res = 1; last; };
                 $retry and log_msg("rm: retry $retry: $_\n");
                 unless (unlink $_) {
                     log_msg("rm $_: $!\n");
