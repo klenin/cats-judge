@@ -133,13 +133,27 @@ step 'Detect proxy', sub {
     $proxy = "http://$proxy";
 };
 
+my $platform;
+step 'Detect platform', sub {
+    if ($^O eq 'MSWin32') {
+        $platform = 'win32';
+    }
+    elsif ($^O eq 'linux') {
+        $platform = `uname -i` eq 'x86_64' ? 'linux-amd64' : 'linux-i386';
+    }
+    else {
+        maybe_die "Unsupported platform: $^O";
+    }
+    print " $platform" if $platform;
+};
+
 my @p = qw(lib cats-problem CATS);
 step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p, 'Config.pm'));
 
 step_copy('config.xml.template', 'config.xml');
 
 step 'Save configuration', sub {
-    @detected_DEs || $proxy or return;
+    @detected_DEs || defined $proxy || defined $platform or return;
     open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
     open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml.tmp";
     my %path_idx;
@@ -147,6 +161,8 @@ step 'Save configuration', sub {
     my $flag = 0;
     while (<$conf_in>) {
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
+        my $sp = 'value="%workdir/spawner-bin/';
+        s~(\s$sp)\w+~ $sp$platform~ if defined $platform;
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
         s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};

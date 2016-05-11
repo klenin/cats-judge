@@ -17,7 +17,7 @@
     proxy=""
 >
 
-<define name="#spawner" value="%workdir/spawner-bin/sp"/>
+<define name="#spawner" value="%workdir/spawner-bin/win32/sp"/>
 <define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#run" value='#spawner -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
 <define name="#default_interactor_name" value="Interact.exe" />
