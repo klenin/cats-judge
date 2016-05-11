@@ -63,10 +63,10 @@ sub step($&) {
     print colored(sprintf('%2d', ++$step_count), 'bold white'), ". $msg ...";
     if (!%filter_steps || exists $filter_steps{$step_count}) {
         $action->();
-        print " ok\n";
+        say colored(' ok', 'green');
     }
     else {
-        print " skipped\n";
+        say colored(' skipped', 'cyan');
     }
 }
 
