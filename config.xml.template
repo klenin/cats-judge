@@ -14,6 +14,7 @@
     save_child_stdout="1"
     cats_url="http://imcs.dvfu.ru/cats"
     polygon_url="https://polygon.codeforces.com"
+    proxy=""
 >
 
 <define name="#spawner" value="%workdir/spawner-bin/sp"/>
