@@ -16,7 +16,7 @@ use CATS::DevEnv::Detector::Utils::Common;
 use parent qw(Exporter);
 our @EXPORT = qw(
     registry registry_assoc registry_glob program_files drives lang_dirs
-    disable_error_dialogs disable_windows_error_reporting_ui
+    disable_error_dialogs disable_windows_error_reporting_ui detect_proxy
 );
 
 use constant REGISTRY_PREFIX => qw(
@@ -179,6 +179,13 @@ sub disable_windows_error_reporting_ui {
         return;
     }
     print 'failed to set: ', windows_encode_console_message($^E);
+}
+
+sub detect_proxy {
+    my $key = get_registry_obj(
+        'HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Internet Settings') or return '';
+    $key->GetValue('ProxyEnable') or return '';
+    $key->GetValue('ProxyServer') // '';
 }
 
 1;

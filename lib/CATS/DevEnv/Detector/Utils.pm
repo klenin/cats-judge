@@ -16,9 +16,9 @@ our @EXPORT = qw(
 );
 
 sub set_debug {
-	my ($debug, $stderr) = @_;
-	$CATS::DevEnv::Detector::Utils::Common::debug = $debug;
-	$CATS::DevEnv::Detector::Utils::Common::log = $stderr;
+    my ($debug, $stderr) = @_;
+    $CATS::DevEnv::Detector::Utils::Common::debug = $debug;
+    $CATS::DevEnv::Detector::Utils::Common::log = $stderr;
 }
 
 1;

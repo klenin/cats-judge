@@ -117,19 +117,26 @@ step 'Detecting development environments', sub {
     }
 };
 
+my $proxy = '';
+step 'Detecting proxy', sub {
+    $proxy = CATS::DevEnv::Detector::Utils::detect_proxy();
+    print " $proxy " if $proxy;
+};
+
 my @p = qw(lib cats-problem CATS);
 step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p, 'Config.pm'));
 
 step_copy('config.xml.template', 'config.xml');
 
-step 'Adding development environment paths to config', sub {
-    @detected_DEs or return;
+step 'Saving configuration', sub {
+    @detected_DEs || $proxy or return;
     open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
     open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml";
     my %path_idx;
     $path_idx{$_->{code}} = $_ for @detected_DEs;
     my $flag = 0;
     while (<$conf_in>) {
+        s/(\s+proxy=")"/$1$proxy"/;
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
         s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};
@@ -137,7 +144,7 @@ step 'Adding development environment paths to config', sub {
     }
     close $conf_in;
     close $conf_out;
-    rename 'config.xml.tmp', 'config.xml';
+    rename 'config.xml.tmp', 'config.xml' or die "rename: $!";
 };
 
 sub parse_xml_file {
