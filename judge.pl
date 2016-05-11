@@ -1105,7 +1105,7 @@ $spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
 }
-if ($cli->command =~ /^(clear-cache)$/) {
+elsif ($cli->command =~ /^(clear-cache)$/) {
     $judge->{run} = $_;
     clear_problem_cache($judge->select_request);
 }
