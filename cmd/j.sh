@@ -11,8 +11,8 @@ export SP_HIDE_REPORT=1
 export SP_HIDE_OUTPUT=0
 export SP_SECURITY_LEVEL=0
 export CATS_JUDGE=1
-#export SP_LOAD_RATIO=5%%
+export SP_LOAD_RATIO=5%
 #export SP_LEGACY=sp00
-#export SP_JSON=1
+export SP_JSON=1
 DIR="$( cd "$( dirname "$0" )" && pwd -P )"
 perl $DIR/../judge.pl $*
