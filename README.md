@@ -32,7 +32,7 @@ At least some programming languages should be installed to actually judge soluti
   * Make sure your `perl` and `git` are in `PATH`
   * Clone this repository
   * Run `perl install.pl`
-  * See [Advanced installation](#Advanced_installation) in case of problems
+  * See [Advanced installation](#advanced-installation) in case of problems
 
 ## Usage
 
@@ -157,7 +157,8 @@ Display contest control system URL prefixes.
 
 ### `clear-cache` command
 
-Remove problem from the cache. Note that if the problem exports some modules, they will become orphaned and may break dependent problems.
+Remove problem from the cache. Note that if the problem exports some modules,
+they will become orphaned and may break dependent problems.
 
 Options:
   * `--problem <zip_or_directory_or_name>` required
@@ -165,6 +166,7 @@ Options:
 ### `serve` command
 
 Start judging server.
+
 ### `help` command
 
 Display basic usage.
