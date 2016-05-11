@@ -20,7 +20,9 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd
-    $cmd --step <num> ... [--devenv <devenv-filter>] [--modules <modules-filter>] [--verbose]
+    $cmd --step <num> ...
+        [--devenv <devenv-filter>] [--modules <modules-filter>]
+        [--verbose] [--force]
     $cmd --help|-?
 USAGE
     exit;
@@ -32,6 +34,7 @@ GetOptions(
     'devenv=s',
     'modules=s',
     'verbose',
+    'force',
     'help|?',
 ) or usage;
 usage if defined $opts{help};
@@ -45,6 +48,12 @@ if ($opts{step}) {
     my @steps = @{$opts{step}};
     undef @filter_steps{@steps};
     printf "Will only run steps: %s\n", join ' ', sort { $a <=> $b } @steps;
+}
+
+sub maybe_die {
+    $opts{force} or die @_;
+    print @_;
+    print ' overridden by --force';
 }
 
 my $step_count = 0;
@@ -64,14 +73,14 @@ sub step($&) {
 sub step_copy {
     my ($from, $to) = @_;
     step "Copying $from -> $to", sub {
-        -e $to and die "Destination already exists: $to";
-        copy($from, $to) or die $!;
+        -e $to and maybe_die "Destination already exists: $to";
+        copy($from, $to) or maybe_die $!;
     };
 }
 
 step 'Verifying', sub {
     -f 'judge.pl' && -d 'lib' or die 'Must run from cats-judge directory';
-    -f 'config.xml' and die 'Seems to be already installed';
+    -f 'config.xml' and maybe_die 'Seems to be already installed';
 };
 
 step 'Verifying git', sub {
@@ -81,7 +90,7 @@ step 'Verifying git', sub {
 
 step 'Verifying required modules', sub {
     my @bad = grep !eval "require $_; 1;", qw(Archive::Zip DBI JSON::XS XML::Parser::Expat File::Copy::Recursive);
-    die join "\n", 'Some required modules not found:', @bad, '' if @bad;
+    maybe_die join "\n", 'Some required modules not found:', @bad, '' if @bad;
 };
 
 step 'Verifying optional modules', sub {
@@ -91,7 +100,7 @@ step 'Verifying optional modules', sub {
 
 step 'Cloning sumbodules', sub {
     system('git submodule update --init');
-    $? and die "Failed: $?, $!";
+    $? and maybe_die "Failed: $?, $!";
 };
 
 step 'Disabling Windows Error Reporting UI', sub {
@@ -132,7 +141,7 @@ step_copy('config.xml.template', 'config.xml');
 step 'Saving configuration', sub {
     @detected_DEs || $proxy or return;
     open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
-    open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml";
+    open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml.tmp";
     my %path_idx;
     $path_idx{$_->{code}} = $_ for @detected_DEs;
     my $flag = 0;
