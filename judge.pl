@@ -1105,7 +1105,12 @@ my %commands = (
 );
 
 my $command = shift(@ARGV) // '';
-$commands{$command} or usage('Command required');
+$command or usage('Command required');
+my @command_candidates = grep /^\Q$command\E/, keys %commands;
+@command_candidates == 0 and usage("Unknown command '$command'");
+@command_candidates > 1
+    and usage(sprintf "Ambiguous command '$command' (%s)", join ', ', sort @command_candidates);
+$command = $command_candidates[0];
 
 GetOptions(
     \%opts,
