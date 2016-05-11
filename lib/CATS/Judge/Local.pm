@@ -278,7 +278,8 @@ sub filtered_headers {
 sub html_result {
     my ($self) = @_;
     my @headers = $self->filtered_headers or return;
-    my @runs = sort keys %{$self->{results}} or return;
+    my $rf = $self->{rid_to_fname};
+    my @runs = sort { $rf->{$a} cmp $rf->{$b} } keys %{$self->{results}} or return;
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
     $html_name = "$self->{resultsdir}/$html_name.html";
@@ -300,7 +301,7 @@ sub html_result {
         "<body>\n";
     for my $run_id (@runs) {
         print $html join "\n",
-            qq~<div class="border">$run_id<table>~,
+            qq~<div class="border">$rf->{$run_id}<table>~,
             '<tr>',
             map("<th>$_->{c}</th>", @headers),
             "</tr>\n";
@@ -327,7 +328,8 @@ sub get_cell {
 
 sub ascii_result {
     my ($self) = @_;
-    my @runs = sort keys %{$self->{results}} or return;
+    my $rf = $self->{rid_to_fname};
+    my @runs = sort { $rf->{$a} cmp $rf->{$b} } keys %{$self->{results}} or return;
     for my $req_results (values %{$self->{results}}) {
         for (@$req_results) {
             my $st = state_styles->{$_->{result}};
@@ -347,7 +349,15 @@ sub ascii_result {
             map length($_->{$h->{n}} // ''), @{$self->{results}->{$h->{r}}});
         $run_widths{$h->{r}} += $h->{width};
     }
-    say join('|', map get_cell($_, $run_widths{$_} + (@headers / @runs) - 1, 'left'), @runs);
+    for my $h (@headers) {
+        $h->{f} or next;
+        my $r = $h->{r};
+        my $delta = length($rf->{$r}) + 2 - $run_widths{$r};
+        $delta > 0 or next;
+        $run_widths{$r} += $delta;
+        $h->{width} += $delta;
+    }
+    say join('|', map get_cell($rf->{$_}, $run_widths{$_} + (@headers / @runs) - 1, 'left'), @runs);
     my $separator = join '+', map '-' x $_->{width}, @headers;
     say $separator;
     say join('|', map get_cell($_->{c}, $_->{width}, 'center'), @headers);

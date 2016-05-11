@@ -1111,6 +1111,7 @@ elsif ($cli->command =~ /^(install|run)$/) {
         $judge->set_def_DEs($cfg->def_DEs);
         my ($r, $state) = prepare_problem($judge->select_request);
         test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
+        $judge->{rid_to_fname}->{$r->{id}} = $_;
         chdir($wd);
     }
 }
