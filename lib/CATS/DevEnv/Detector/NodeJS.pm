@@ -16,7 +16,7 @@ sub _detect {
     program_files($self, 'nodejs', 'node');
     drives($self, 'Node', 'node');
     drives($self, 'NodeJS', 'node');
-    lang_dirs($self, 'node', '', 'perl');
+    lang_dirs($self, 'node', '', 'node');
 }
 
 sub hello_world {
