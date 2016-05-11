@@ -1110,13 +1110,13 @@ if ($cli->command =~ /^(clear-cache)$/) {
     clear_problem_cache($judge->select_request);
 }
 elsif ($cli->command =~ /^(install|run)$/) {
-    for (@{$cli->opts->{run} || [ '' ]}) {
+    for my $rr (@{$cli->opts->{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
-        $judge->{run} = $_;
+        $judge->{run} = $rr;
         $judge->set_def_DEs($cfg->def_DEs);
         my ($r, $state) = prepare_problem($judge->select_request);
         test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
-        $judge->{rid_to_fname}->{$r->{id}} = $_;
+        $judge->{rid_to_fname}->{$r->{id}} = $rr;
         chdir($wd);
     }
 }
