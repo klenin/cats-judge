@@ -913,6 +913,14 @@ sub problem_ready
     $judge->is_problem_uptodate($pid, $date);
 }
 
+sub clear_problem_cache {
+    my ($r) = @_;
+    $r or return;
+    $log->clear_dump;
+    my_remove($cfg->cachedir . "/$r->{problem_id}*") or return;
+    log_msg("problem '$r->{problem_id}' cache removed\n");
+}
+
 sub prepare_problem {
     my ($r) = @_;
     $r or return;
@@ -939,13 +947,14 @@ sub prepare_problem {
 
     my $state = $cats::st_testing;
     if (!problem_ready($r->{problem_id})) {
-        log_msg("install problem $r->{problem_id} log:\n");
+        log_msg("installing problem $r->{problem_id}\n");
         eval {
             initialize_problem($r->{problem_id});
         } or do {
             $state = $cats::st_unhandled_error;
             log_msg("error: $@\n");
-        }
+        };
+        log_msg("problem '$r->{problem_id}' installed\n") if $state != $cats::st_unhandled_error;
     }
     else {
         log_msg("problem $r->{problem_id} cached\n");
@@ -1088,6 +1097,10 @@ $spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 
 if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
+}
+if ($cli->command =~ /^(clear-cache)$/) {
+    $judge->{run} = $_;
+    clear_problem_cache($judge->select_request);
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for (@{$cli->opts->{run} || [ '' ]}) {

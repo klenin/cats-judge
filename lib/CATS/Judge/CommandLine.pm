@@ -31,6 +31,7 @@ Usage:
     $cmd upload --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
     $cmd config --print <regexp>
+    $cmd clear-cache --problem <zip_or_directory_or_name>
     $cmd help|-?
 
 Common options:
@@ -46,6 +47,9 @@ my %commands = (
     '-?' => [],
     config => [
         '!print:s'
+    ],
+    'clear-cache' => [
+        '!problem=s',
     ],
     download => [
         '!problem=s',
