@@ -26,10 +26,10 @@ Usage:
     $cmd run --problem <zip_or_directory_or_name>
         --solution <file>... [--de <de_code>] [--testset <testset>]
         [--result text|html] [--result=columns <regexp>]
-    $cmd download --problem <zip_or_directory_or_name>
-        --system cats|polygon --contest <url>
-    $cmd upload --problem <zip_or_directory_or_name>
-        --system cats|polygon --contest <url>
+    $cmd download --problem <zip_or_directory_or_name> --url <url>
+        [--system cats|polygon]
+    $cmd upload --problem <zip_or_directory_or_name> --url <url>
+        [--system cats|polygon]
     $cmd config --print <regexp>
     $cmd help|-?
 
@@ -49,8 +49,8 @@ my %commands = (
     ],
     download => [
         '!problem=s',
-        '!system=s',
-        '!contest=s',
+        'system=s',
+        '!url=s',
     ],
     help => [],
     install => [
@@ -67,8 +67,8 @@ my %commands = (
     serve => [],
     upload => [
         '!problem=s',
-        '!system=s',
-        '!contest=s',
+        'system=s',
+        '!url=s',
     ],
 );
 

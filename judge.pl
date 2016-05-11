@@ -967,15 +967,26 @@ sub interactive_login {
     ($login, $password);
 }
 
-sub update {
+sub get_system {
+    if ($judge->{system}) {
+        $judge->{system} =~ m/^(cats|polygon)$/ or $log->error('bad option --system');
+        return $judge->{system};
+    }
+    for (qw(cats polygon)) {
+        my $u = $cfg->{$_ . '_url'};
+        return $_ if $judge->{url} =~ /^\Q$u\E/;
+    }
+    die 'Unable to determine system from --system and --url options';
+}
+
+sub sync_problem {
     my ($action) = @_;
-    my ($system) = $judge->{system} =~ m/^(cats|polygon)$/ or $log->error('bad option --system');
+    my $system = get_system;
     my $problem_exist = -d $judge->{problem} || -f $judge->{problem};
     $problem_exist and $judge->select_request;
-    my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
+    my $root = $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
     my $backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
-        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{contest},
-        $problem_exist, $root, $judge->{verbose});
+        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{url},
     $backend->login(interactive_login) if $backend->needs_login;
     $backend->start;
     $log->msg('%s problem %s ... ', ($action eq 'upload' ? 'Uploading' : 'Downloading'), ($judge->{problem} || 'by url'));
@@ -1075,7 +1086,7 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 
 if ($cli->command =~ /^(download|upload)$/) {
-    update($cli->command);
+    sync_problem($cli->command);
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for (@{$cli->opts->{run} || [ '' ]}) {
