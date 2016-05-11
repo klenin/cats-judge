@@ -11,6 +11,7 @@ use POSIX qw(strftime);
 use CATS::Constants;
 use CATS::ConsoleColor;
 use CATS::Problem::Parser;
+use CATS::Problem::PolygonParser;
 use CATS::Problem::ImportSource;
 use CATS::Problem::Source::Zip;
 use CATS::Problem::Source::PlainFiles;
@@ -58,9 +59,12 @@ sub select_request {
         source => $source,
         import_source => $import_source,
     );
-    $self->{parser} = $self->{package} && $self->{package} eq 'polygon'
-        ? CATS::Problem::PolygonParser->new(%opts)
-        : CATS::Problem::Parser->new(%opts);
+    my $p = {
+        'cats' => 'CATS::Problem::Parser',
+        'polygon' => 'CATS::Problem::PolygonParser',
+    }->{$self->{format} // 'cats'};
+    $p or die "Unknown problem format: '$self->{format}'";
+    $self->{parser} = $p->new(%opts);
 
     eval { $self->{parser}->parse; };
     die "Problem parsing failed: $@" if $@;

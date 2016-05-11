@@ -36,7 +36,7 @@ Usage:
 Common options:
     --config-set <name>=<value> ...
     --db
-    --package cats|polygon
+    --format cats|polygon
     --verbose
 USAGE
     exit;
@@ -90,7 +90,7 @@ sub get_options {
         'help|?',
         'db',
         'config-set=s%',
-        'package=s',
+        'format=s',
         'verbose',
         map m/^\!?(.*)$/, @{$commands{$command}},
     ) or usage;
