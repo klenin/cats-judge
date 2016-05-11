@@ -18,6 +18,6 @@ SET SP_LEGACY=sp00
 SET SP_JSON=1
 
 :1
-perl judge.pl --server
+perl judge.pl serve
 timeout 2
 GOTO 1

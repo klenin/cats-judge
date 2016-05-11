@@ -981,9 +981,8 @@ sub interactive_login {
 }
 
 sub update {
-    $judge->{system} or return;
-    my ($system, $action) = $judge->{system} =~ m/^(cats|polygon):(upload|download)$/
-        or $log->error('bad option --system');
+    my ($action) = @_;
+    my ($system) = $judge->{system} =~ m/^(cats|polygon)$/ or $log->error('bad option --system');
     my $problem_exist = -d $judge->{problem} || -f $judge->{problem};
     $problem_exist and $judge->select_request;
     my $root =  $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
@@ -1050,41 +1049,79 @@ sub main_loop
 sub usage
 {
     my ($error) = @_;
-    print "$error\n"  if $error;
+    print "$error\n" if $error;
     my (undef, undef, $cmd) = File::Spec->splitpath($0);
     print <<"USAGE";
 Usage:
-    $cmd --server
-    $cmd --problem <zip_or_directory_or_name>
-        [--run <file>... [--de <de_code>] [--testset <testset>]]
-        [--result=html] [--result=columns=<regexp>] [--db]
-        [--package=polygon] [--update=cats_or_polygon:upload_or_download [--contest=<url>]]
-    $cmd --config-print <regexp>
-    $cmd --config-set <name>=<value> ...
-    $cmd --help|-?
+    $cmd serve
+    $cmd install --problem <zip_or_directory_or_name>
+    $cmd run --problem <zip_or_directory_or_name>
+        --solution <file>... [--de <de_code>] [--testset <testset>]
+        [--result text|html] [--result=columns <regexp>]
+    $cmd download --problem <zip_or_directory_or_name>
+        --system cats|polygon --contest <url>
+    $cmd upload --problem <zip_or_directory_or_name>
+        --system cats|polygon --contest <url>
+    $cmd config --print <regexp>
+    $cmd help|-?
+
+Common options:
+    --config-set <name>=<value> ...
+    --db
+    --package cats|polygon
+    --verbose
 USAGE
     exit;
 }
 
+my %commands = (
+    '-?' => [],
+    config => [
+        '!print:s'
+    ],
+    download => [
+        '!problem=s',
+        '!system=s',
+        '!contest=s',
+    ],
+    help => [],
+    install => [
+        '!problem=s',
+    ],
+    run => [
+        '!problem=s',
+        '!run=s@',
+        'de=i',
+        'testset=s',
+        'result=s',
+        'result-columns=s',
+    ],
+    serve => [],
+    upload => [
+        '!problem=s',
+        '!system=s',
+        '!contest=s',
+    ],
+);
+
+my $command = shift(@ARGV) // '';
+$commands{$command} or usage('Command required');
+
 GetOptions(
     \%opts,
     'help|?',
-    'problem=s',
-    'run=s@',
-    'de=i',
     'db',
-    'testset=s',
-    'config-print:s',
     'config-set=s%',
-    'result=s',
-    'result-columns=s',
-    'server',
     'package=s',
-    'system=s',
-    'contest=s',
     'verbose',
+    map m/^\!?(.*)$/, @{$commands{$command}},
 ) or usage;
-usage if defined $opts{help};
+usage if $command =~ /^(help| -?)$/ or defined $opts{help};
+
+for (@{$commands{$command}}) {
+    m/^!([a-z\-]+)/ or next;
+    defined $opts{$1} or die "Command $command requires --$1 option";
+}
 
 {
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
@@ -1092,12 +1129,10 @@ usage if defined $opts{help};
     $cfg->read_file($cfg_file, $opts{'config-set'});
 }
 
-if (defined(my $regexp = $opts{'config-print'})) {
-    $cfg->print_params($regexp);
+if ($command eq 'config') {
+    $cfg->print_params($opts{'print'});
     exit;
 }
-
-usage('Must supply either --problem or --server option') if !$opts{problem} && !$opts{server};
 
 sub ensure_dir { -d $_[1] or mkdir $_[1] or die "Can not create $_[0] '$_[1]': $!"; }
 
@@ -1109,19 +1144,13 @@ ensure_dir('resultsdir', $cfg->resultsdir);
 
 $log->init($cfg->logdir);
 
-my $local = defined $opts{problem};
-
-if ($local && !$opts{run}) {
-    $opts{$_} && print "error: --$_ without --run\n" for qw(de testset);
-}
-
 CATS::DB::sql_connect({
     ib_timestampformat => $CATS::Judge::Base::timestamp_format,
     ib_dateformat => '%d-%m-%Y',
     ib_timeformat => '%H:%M',
-}) if !$local || defined $opts{db};
+}) if $command eq 'serve' || defined $opts{db};
 
-$judge = $local ?
+$judge = $command ne 'serve' ?
     CATS::Judge::Local->new(
         name => $cfg->name, modulesdir => $cfg->modulesdir, resultsdir => $cfg->resultsdir,
         logger => $log, %opts) :
@@ -1132,8 +1161,10 @@ $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 
-if ($local) {
-    $opts{system} and update;
+if ($command =~ /^(download|upload)$/) {
+    update($command);
+}
+elsif ($command =~ /^(install|run)$/) {
     for (@{$opts{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
         $judge->{run} = $_;
@@ -1143,8 +1174,11 @@ if ($local) {
         chdir($wd);
     }
 }
-else {
+elsif ($command eq 'serve') {
     main_loop;
+}
+else {
+  die $command;
 }
 
 $judge->finalize;
