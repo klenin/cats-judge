@@ -17,7 +17,7 @@ sub drives {}
 sub lang_dirs {}
 sub disable_windows_error_reporting_ui {}
 sub disable_error_dialogs {}
-sub detect_proxy {}
+sub detect_proxy { '' }
 sub add_to_path {}
 
 1;
