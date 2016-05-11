@@ -177,6 +177,7 @@ sub get_problem_sources {
     for my $source ($self->{parser}{import_source}->get_sources_info($problem->{imports})) {
         $source->{problem_id} = $self->get_problem_id;
         $source->{de_id} = $self->{supported_DEs}{$source->{code}}{id};
+        $source->{is_imported} = 1;
         push @$problem_sources, $source;
     }
 

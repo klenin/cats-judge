@@ -139,6 +139,7 @@ sub get_problem_sources {
             INNER JOIN problem_sources_import psi ON ps.guid = psi.guid
         WHERE psi.problem_id = ? ORDER BY ps.id~, { Slice => {} },
         $pid);
+    $_->{is_imported} = 1 for @$imported;
     [ @$problem_sources, @$imported ];
 }
 

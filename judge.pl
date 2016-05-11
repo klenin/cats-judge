@@ -573,7 +573,7 @@ sub initialize_problem
             or return undef;
 
         for my $guided_source (@$problem_sources) {
-            next if !$guided_source->{guid} || $guided_source->{guid} eq '';
+            next if !$guided_source->{guid} || $guided_source->{is_imported};
             my $path = File::Spec->catfile(File::Spec->rel2abs($tmp), $guided_source->{fname});
             if (-e $path) {
                 CATS::SourceManager::save($guided_source, $cfg->modulesdir, $path);
