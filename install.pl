@@ -208,7 +208,7 @@ step 'Installing cats-modules', sub {
     my $jcmd = File::Spec->catfile('cmd', 'j.'. ($^O eq 'MSWin32' ? 'cmd' : 'sh'));
     print "\n";
     for my $m (@modules) {
-        my ($ok, $err, $buf) = run command => [ $jcmd, '--problem', $m->{dir} ];
+        my ($ok, $err, $buf) = run command => [ $jcmd, 'install', '--problem', $m->{dir} ];
         $ok or print $err, next;
         print @$buf if $opts{verbose};
         parse_xml_file($m->{xml}, Start => sub {
