@@ -3,6 +3,7 @@ package CATS::Judge::Log;
 use strict;
 use warnings;
 
+use Carp;
 use Encode;
 use POSIX qw(strftime);
 use File::Spec;
@@ -54,19 +55,19 @@ sub msg {
 }
 
 sub error {
-    my $self = shift;
-    $self->msg("Error: $_[0]\n");
-    die "Unrecoverable error";
+    my ($self, $fmt, @rest) = @_;
+    $self->msg("Error: $fmt\n", @rest);
+    croak 'Unrecoverable error';
 }
 
 sub note {
-    my $self = shift;
-    $self->msg("$_[0]\n");
+    my ($self, $fmt, @rest) = @_;
+    $self->msg("$fmt\n", @rest);
 }
 
 sub warning {
-    my $self = shift;
-    $self->msg("Warning: $_[0]\n");
+    my ($self, $fmt, @rest) = @_;
+    $self->msg("Warning: $fmt\n", @rest);
 }
 
 sub dump_write {
