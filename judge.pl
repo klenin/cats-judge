@@ -46,6 +46,8 @@ END {
 
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
+my $cli = CATS::Judge::CommandLine->new;
+
 my $judge;
 my $spawner;
 my %judge_de_idx;
@@ -946,8 +948,9 @@ sub prepare_problem {
     }
 
     my $state = $cats::st_testing;
-    if (!problem_ready($r->{problem_id})) {
-        log_msg("installing problem $r->{problem_id}\n");
+    my $is_ready = problem_ready($r->{problem_id});
+    if (!$is_ready || $cli->opts->{'force-install'}) {
+        log_msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
         eval {
             initialize_problem($r->{problem_id});
         } or do {
@@ -1054,7 +1057,6 @@ sub main_loop
     }
 }
 
-my $cli = CATS::Judge::CommandLine->new;
 $cli->parse;
 
 {

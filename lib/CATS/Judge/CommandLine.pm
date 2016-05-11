@@ -22,8 +22,8 @@ sub usage
     print <<"USAGE";
 Usage:
     $cmd serve
-    $cmd install --problem <zip_or_directory_or_name>
-    $cmd run --problem <zip_or_directory_or_name>
+    $cmd install --problem <zip_or_directory_or_name> [--force-install]
+    $cmd run --problem <zip_or_directory_or_name> [--force-install]
         --solution <file>... [--de <de_code>] [--testset <testset>]
         [--result text|html] [--result=columns <regexp>]
     $cmd download --problem <zip_or_directory_or_name> --url <url>
@@ -58,15 +58,17 @@ my %commands = (
     ],
     help => [],
     install => [
+        'force-install',
         '!problem=s',
     ],
     run => [
-        '!problem=s',
-        '!run=s@',
         'de=i',
-        'testset=s',
+        'force-install',
+        '!problem=s',
         'result=s',
         'result-columns=s',
+        '!run=s@',
+        'testset=s',
     ],
     serve => [],
     upload => [
