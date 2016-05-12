@@ -19,7 +19,7 @@
 
 <define name="#spawner" value="%workdir/spawner-bin/sp"/>
 <define name="#arch_7z" value="C:\Program Files\7-Zip\7z.exe" />
-<define name="#run" value='#spawner -runas:1 -u:test -p:esta -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
+<define name="#run" value='#spawner -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
 <define name="#default_interactor_name" value="Interact.exe" />
 <define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin %interactor_name --// %deadline -sr= "/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
