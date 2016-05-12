@@ -1,5 +1,6 @@
 @echo off
-if not "%VS130COMNTOOLS%"=="" ( call "%VS130COMNTOOLS%vsvars32.bat"
+if not "%VS140COMNTOOLS%"=="" ( call "%VS140COMNTOOLS%vsvars32.bat"
+) else if not "%VS130COMNTOOLS%"=="" ( call "%VS130COMNTOOLS%vsvars32.bat"
 ) else if not "%VS120COMNTOOLS%"=="" ( call "%VS120COMNTOOLS%vsvars32.bat"
 ) else if not "%VS110COMNTOOLS%"=="" ( call "%VS110COMNTOOLS%vsvars32.bat"
 ) else if not "%VS100COMNTOOLS%"=="" ( call "%VS100COMNTOOLS%vsvars32.bat"
