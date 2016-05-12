@@ -9,9 +9,10 @@ use parent qw(Exporter);
 our @EXPORT_OK = qw(colored);
 
 BEGIN {
-    eval { require Win32::Console::ANSI; } if $^O eq 'MSWin32';
+    my $use_color = -t STDOUT;
+    eval { require Win32::Console::ANSI; 1; } or $use_color = 0 if $^O eq 'MSWin32';
     no warnings 'redefine';
-    *colored = -t STDOUT ? *Term::ANSIColor::colored : sub { $_[0] };
+    *colored = $use_color ? *Term::ANSIColor::colored : sub { $_[0] };
 }
 
 1;
