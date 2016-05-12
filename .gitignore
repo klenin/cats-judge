@@ -8,3 +8,4 @@ log/*
 *.rar
 config.xml
 judge.lock
+tmp
