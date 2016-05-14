@@ -142,6 +142,9 @@ step 'Detect platform', sub {
     elsif ($^O eq 'linux') {
         $platform = `uname -i` eq 'x86_64' ? 'linux-amd64' : 'linux-i386';
     }
+    elsif ($^O eq 'darwin') {
+        $platform = 'darwin';
+    }
     else {
         maybe_die "Unsupported platform: $^O";
     }
