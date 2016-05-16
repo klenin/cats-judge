@@ -20,12 +20,16 @@ For problem authors:
 
 `cats-judge` requires [Perl](https://www.perl.org/) 5.12 or later and `git` of any version.
 
-Current version also requires Windows XP or later,
-cross-platform support is at the moment in *unstable/experimental* state.
+Current version supports various Windows flavors, from Windows XP to Windows 10.
+Other platforms are currently in *experimental* state.
+Some features may be missing or unstable.
 
-It is recommended to use [Strawberry Perl](http://strawberryperl.com) distribution on Windows.
+Nevertheless, `cats-judge` was at least lightly tested on Debian, Red Hat, Ubuntu, OS X and OpenBSD.
 
-At least some programming languages should be installed to actually judge solutions.
+It is recommended to use [Strawberry Perl](http://strawberryperl.com) distribution on Windows,
+but [Active State Perl](http://www.activestate.com/activeperl) was also reported to be working.
+
+At least some programming languages, such as C++ and Pascal should be installed to actually judge solutions.
 
 ## Installation
 
