@@ -14,5 +14,6 @@ export CATS_JUDGE=1
 export SP_LOAD_RATIO=5%
 #export SP_LEGACY=sp00
 export SP_JSON=1
-DIR="$( cd "$( dirname "$0" )" && pwd -P )"
+ABS_PATH="$( readlink "$0" )"
+DIR="$( cd "$( dirname $ABS_PATH )" && pwd -P )"
 perl $DIR/../judge.pl $*
