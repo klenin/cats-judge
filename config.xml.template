@@ -200,7 +200,7 @@
 <!-- Free Pascal -->
 <de
     code="202"
-    compile='#spawner "#fpc" -Mobjfpc "%full_name"'
+    compile='#spawner "#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
@@ -223,7 +223,7 @@
 <!-- Free Pascal in Delphi mode -->
 <de
     code="204"
-    compile='#spawner "#fpc" -Mdelphi "%full_name"'
+    compile='#spawner "#fpc" -Mdelphi "%full_name" -o"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
