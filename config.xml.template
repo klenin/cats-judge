@@ -364,7 +364,7 @@
 <!-- NodeJS -->
 <de
     code="507"
-    compile='#run #nodejs -c "%full_name"'
+    compile='#spawner #nodejs -c "%full_name"'
     run='#run "#nodejs" "%full_name"'
     generate='#spawner%redir %limits "#nodejs" "%name" %args'
     validate='#spawner %limits "#nodejs" %full_name "%test_input"'

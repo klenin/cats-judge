@@ -17,6 +17,7 @@ sub _detect {
     drives($self, 'Node', 'node');
     drives($self, 'NodeJS', 'node');
     lang_dirs($self, 'node', '', 'node');
+    lang_dirs($self, 'nodejs', '', 'node');
 }
 
 sub hello_world {
