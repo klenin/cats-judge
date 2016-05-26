@@ -391,8 +391,7 @@ sub validate_test
     1;
 }
 
-sub prepare_tests
-{
+sub prepare_tests {
     my ($pid, $input_fname, $output_fname, $tlimit, $mlimit, $run_method) = @_;
     my $tests = $judge->get_problem_tests($pid);
 
@@ -401,43 +400,36 @@ sub prepare_tests
         return undef;
     }
 
-    for my $t (@$tests)
-    {
-        # создаем входной файл теста
-        if (defined $t->{in_file})
-        {
+    for my $t (@$tests) {
+        # Create test input file.
+        if (defined $t->{in_file}) {
             $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], $t->{in_file}) or return;
         }
-        elsif (defined $t->{generator_id})
-        {
-            if ($t->{gen_group})
-            {
+        elsif (defined $t->{generator_id}) {
+            if ($t->{gen_group}) {
                 generate_test_group($pid, $t, $tests)
                     or return undef;
             }
-            else
-            {
+            else {
                 my $out = generate_test($pid, $t, $input_fname)
                     or return undef;
                 my_copy($cfg->rundir . "/$out", $cfg->cachedir . "/$pid/$t->{rank}.tst")
                     or return undef;
             }
         }
-        else
-        {
+        else {
             log_msg("no input file defined for test #$t->{rank}\n");
             return undef;
         }
 
         validate_test($pid, $t, $cfg->cachedir . "/$pid/$t->{rank}.tst") or
             return log_msg("input validation failed: #$t->{rank}\n");
-        # создаем выходной файл теста
-        if (defined $t->{out_file})
-        {
+
+        # Create test output file.
+        if (defined $t->{out_file}) {
             $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.ans" ], $t->{out_file}) or return;
         }
-        elsif (defined $t->{std_solution_id})
-        {
+        elsif (defined $t->{std_solution_id}) {
             my ($ps) = grep $_->{id} eq $t->{std_solution_id}, @$problem_sources;
 
             clear_rundir or return undef;
@@ -465,16 +457,14 @@ sub prepare_tests
                 input_output_redir($input_fname, $output_fname),
             }) or return undef;
 
-            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
-            {
+            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0') {
                 return undef;
             }
 
             my_copy(output_or_default($output_fname), $cfg->cachedir . "/$pid/$t->{rank}.ans")
                 or return undef;
         }
-        else
-        {
+        else {
             log_msg("no output file defined for test #$t->{rank}\n");
             return undef;
         }
