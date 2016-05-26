@@ -1,0 +1,29 @@
+package CATS::FileUtil;
+
+use strict;
+use warnings;
+
+use File::Spec;
+
+sub new {
+    my ($class, $opts) = @_;
+    my $self = { logger => $opts->{logger} };
+    bless $self, $class;
+}
+
+sub log { $_[0]->{logger}->msg(@_); }
+
+sub fn {
+    my ($file) = @_;
+    ref $file eq 'ARRAY' ? File::Spec->catfile(@$file) : $file;
+}
+
+sub write_to_file {
+    my ($self, $file_name, $src) = @_;
+    my $fn = fn($file_name);
+    open my $file, '>', $fn or return $self->log("open failed: '$fn' ($!)\n");
+    print $file $src;
+    1;
+}
+
+1;

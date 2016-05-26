@@ -15,6 +15,7 @@ use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem')
 use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
+use CATS::FileUtil;
 use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
@@ -47,6 +48,7 @@ END {
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
+my $fu = CATS::FileUtil->new;
 
 my $judge;
 my $spawner;
@@ -90,20 +92,6 @@ sub get_std_checker_cmd
      $cfg->checkers->{$std_checker_name};
 }
 
-
-sub write_to_file
-{
-    my ($file_name, $src) = @_;
-
-    unless (open(F, ">$file_name")) {
-        log_msg("open failed: '$file_name' ($!)\n");
-        return undef;
-    }
-
-    print F $src;
-    close F;
-    1;
-}
 
 sub recurse_dir
 {
@@ -418,8 +406,7 @@ sub prepare_tests
         # создаем входной файл теста
         if (defined $t->{in_file})
         {
-            write_to_file($cfg->cachedir . "/$pid/$t->{rank}.tst", $t->{in_file})
-                or return undef;
+            $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], $t->{in_file}) or return;
         }
         elsif (defined $t->{generator_id})
         {
@@ -447,8 +434,7 @@ sub prepare_tests
         # создаем выходной файл теста
         if (defined $t->{out_file})
         {
-            write_to_file($cfg->cachedir . "/$pid/$t->{rank}.ans", $t->{out_file})
-                or return undef;
+            $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.ans" ], $t->{out_file}) or return;
         }
         elsif (defined $t->{std_solution_id})
         {
@@ -506,8 +492,7 @@ sub prepare_modules
     {
         my (undef, undef, $fname, $name, undef) = split_fname($m->{fname});
         log_msg("module: $fname\n");
-        write_to_file($cfg->rundir . "/$fname", $m->{src})
-            or return undef;
+        $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
 
         # в данном случае ничего страшного, если compile_cmd нету,
         # это значит, что модуль компилировать не надо (de_code=1)
@@ -546,8 +531,7 @@ sub initialize_problem
             or return undef;
 
         my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
-        write_to_file($cfg->rundir . "/$fname", $ps->{src})
-            or return undef;
+        $fu->write_to_file([ $cfg->rundir, $fname ], $ps->{src}) or return;
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
         {
@@ -561,8 +545,7 @@ sub initialize_problem
         }
 
         if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
-           write_to_file($cfg->rundir . '/' . $cfg->formal_input_fname, $p->{formal_input})
-              or return undef;
+           $fu->write_to_file([ $cfg->rundir, $cfg->formal_input_fname ], $p->{formal_input}) or return;
         }
 
         my $tmp = $cfg->cachedir . "/$pid/temp/$ps->{id}";
@@ -794,8 +777,7 @@ sub test_solution {
     clear_rundir or return undef;
 
     prepare_modules($cats::solution_module) or return undef;
-    write_to_file($cfg->rundir . "/$problem->{full_name}", $r->{src})
-        or return undef;
+    $fu->write_to_file([ $cfg->rundir, $problem->{full_name} ], $r->{src}) or return;
 
     my $compile_cmd = get_cmd('compile', $de_id);
     defined $compile_cmd or return undef;
