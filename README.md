@@ -1,8 +1,10 @@
 # Automated judging system for programming contests.
+[![Build Status](https://travis-ci.org/klenin/cats-judge.svg?branch=master)](https://travis-ci.org/klenin/cats-judge)
 
 `cats-judge` can be used either as a component of [CATS](https://github.com/klenin/cats-main) contest control system or
 as a standalone command-line application for both competitors and problem authors.
 
+Licensed under GPL v2 or later, see COPYING file.
 
 ## Features
 
