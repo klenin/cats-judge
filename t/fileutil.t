@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 17;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -51,6 +51,38 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     ok -f $fn, 'write_to_file exists';
     is -s $fn, 5, 'write_to_file size';
     unlink $fn;
+}
+
+{
+    my $fu = make_fu;
+    ok !$fu->remove_file([ $tmpdir, 'f.txt' ]), 'remove_file no file';
+    is $fu->{logger}->count, 1, 'remove_file no file log';
+}
+
+{
+    my $fu = make_fu;
+
+    my $fn = FS->catfile($tmpdir, 'f1.txt');
+    ok $fu->write_to_file($fn, 'abc') && -f $fn, 'remove_file prepare';
+
+    ok $fu->remove_file($fn), 'remove_file';
+    ok ! -f $fn, 'remove_file ok';
+    is $fu->{logger}->count, 0, 'remove_file no log';
+}
+
+{
+    my $fu = make_fu;
+
+    my $fn = FS->catfile($tmpdir, 'f2.exe');
+    $fu->write_to_file($fn, 'MZabc') && -f $fn;
+    {
+        open my $f, '<', $fn or die "$fn: $!";
+        ok !$fu->remove_file($fn), 'remove_file locked';
+        ok -f $fn, 'remove_file locked ok';
+        ok $fu->{logger}->count > 0, 'remove_file locked log';
+    }
+    ok $fu->remove_file($fn), 'remove_file unlocked';
+    ok ! -f $fn, 'remove_file unlocked ok';
 }
 
 1;

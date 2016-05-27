@@ -111,12 +111,8 @@ sub recurse_dir
     for (@files) {
         my $f = "$dir/$_";
         if (-f $f || -l $f) {
-            unless (unlink $f) {
-                log_msg("rm $f: $!\n");
-                $res = 0;
-            }
+            $fu->remove_file($f) or $res = 0;
         }
-
         elsif (-d $f && ! -l $f) {
             recurse_dir($f)
                 or $res = 0;
@@ -149,15 +145,7 @@ sub my_remove
     for (@files)
     {
         if (-f $_ || -l $_) {
-            for my $retry (0..9) {
-                -f $_ || -l $_ or do { $res = 1; last; };
-                $retry and log_msg("rm: retry $retry: $_\n");
-                unless (unlink $_) {
-                    log_msg("rm $_: $!\n");
-                    $res = 0;
-                }
-                $retry and sleep 1;
-            }
+            $fu->remove_file($_) or $res = 0;
         }
         elsif (-d $_)
         {
