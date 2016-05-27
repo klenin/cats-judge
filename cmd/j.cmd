@@ -1,5 +1,5 @@
 @echo off
-call "%~dp0..\preparevs.cmd"
+call "%~dp0..\preparevs.cmd" >nul
 :SET SP_USER=
 :SET SP_PASSWORD=
 SET SP_RUNAS=0
