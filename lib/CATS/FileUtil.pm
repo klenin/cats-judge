@@ -22,6 +22,7 @@ sub write_to_file {
     my ($self, $file_name, $src) = @_;
     my $fn = fn($file_name);
     open my $file, '>', $fn or return $self->log("open failed: '$fn' ($!)\n");
+    binmode $file;
     print $file $src;
     1;
 }

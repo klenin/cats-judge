@@ -9,7 +9,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -40,9 +40,11 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 {
     my $fu = make_fu;
     my $p = [ $tmpdir, 'f.txt' ];
-    ok $fu->write_to_file($p, 'abc'), 'write_to_file';
-    ok -f FS->catfile(@$p), 'write_to_file exists';
-    unlink FS->catfile(@$p);
+    ok $fu->write_to_file($p, 'abc' . chr(10) . chr(13)), 'write_to_file';
+    my $fn = FS->catfile(@$p);
+    ok -f $fn, 'write_to_file exists';
+    is -s $fn, 5, 'write_to_file size';
+    unlink $fn;
 }
 
 1;
