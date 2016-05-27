@@ -1,4 +1,4 @@
-# Automated judging system for programming contests.
+# Automated judging system for programming contests
 [![Build Status](https://travis-ci.org/klenin/cats-judge.svg?branch=master)](https://travis-ci.org/klenin/cats-judge)
 
 `cats-judge` can be used either as a component of [CATS](https://github.com/klenin/cats-main) contest control system or
@@ -197,6 +197,17 @@ the course of operation, it may conflict with some antivirus software.
 Usually conflicts are manifested by slow testing (several seconds per test) and/or intermittent error messages.
 
 You may want to exclude `cats-judge` directory from antivirus monitoring.
+
+### Perl modules
+
+Installation script checks for availability of some Perl modules,
+subdivided into *required* and *optional* categories.
+
+Absence of any required module will not allow `cats-judge` to run at all.
+
+Absence of an optional module will result in some capability reduction.
+For example, without `WWW::Mechanize` module Polygon backend will fail,
+but all other features should still work.
 
 ### Installation options
 
