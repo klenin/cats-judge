@@ -5,12 +5,13 @@ use strict;
 use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
-use File::Copy::Recursive qw(rcopy);
 use Fcntl qw(:flock);
 use sigtrap qw(die INT);
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
+
+use File::Copy::Recursive qw(rcopy);
 
 use CATS::Config;
 use CATS::Constants;
