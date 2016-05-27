@@ -11,7 +11,10 @@ sub new {
     bless $self, $class;
 }
 
-sub log { $_[0]->{logger}->msg(@_); }
+sub log {
+    my ($self, @rest) = @_;
+    $self->{logger}->msg(@rest);
+}
 
 sub fn {
     my ($file) = @_;
