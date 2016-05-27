@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 15;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -75,12 +75,13 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
     my $fn = FS->catfile($tmpdir, 'f2.exe');
     $fu->write_to_file($fn, 'MZabc') && -f $fn;
-    {
+    subtest 'remove_file locked ', sub {
+        plan $^O eq 'MSWin32' ? (tests => 3) : (skip_all => 'Windows only');
         open my $f, '<', $fn or die "$fn: $!";
         ok !$fu->remove_file($fn), 'remove_file locked';
         ok -f $fn, 'remove_file locked ok';
         ok $fu->{logger}->count > 0, 'remove_file locked log';
-    }
+    };
     ok $fu->remove_file($fn), 'remove_file unlocked';
     ok ! -f $fn, 'remove_file unlocked ok';
 }
