@@ -1,8 +1,14 @@
 package Logger;
 
-sub new { bless { count => 0 }, $_[0]; }
-sub msg { $_[0]->{count}++ }
-sub count { $_[0]->{count} }
+sub new { bless { msgs => [] }, $_[0]; }
+
+sub msg {
+    my ($self, @rest) = @_;
+    push @{$self->{msgs}}, join '', @rest;
+    0;
+}
+
+sub count { scalar @{$_[0]->{msgs}} }
 
 package main;
 
