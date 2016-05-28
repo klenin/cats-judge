@@ -3,7 +3,9 @@ package CATS::FileUtil;
 use strict;
 use warnings;
 
+use Carp;
 use File::Spec;
+use File::Copy::Recursive qw(rcopy);
 
 sub new {
     my ($class, $opts) = @_;
@@ -13,6 +15,7 @@ sub new {
 
 sub log {
     my ($self, @rest) = @_;
+    $self->{logger} or confess;
     $self->{logger}->msg(@rest);
 }
 
@@ -85,6 +88,13 @@ sub mkdir_clean {
     $self->remove($dn) or return;
     mkdir $dn, 0755 or return $self->log("mkdir '$dn' failed: $!\n");
     1;
+}
+
+sub copy {
+    my ($self, $src, $dest) = @_;
+    my ($sn, $dn) = map File::Spec->canonpath(fn $_), $src, $dest;
+    return 1 if rcopy $sn, $dn;
+    $self->log("copy failed: 'cp $sn $dn' '$!' " . Carp::longmess('') . "\n");
 }
 
 1;

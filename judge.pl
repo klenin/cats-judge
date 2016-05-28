@@ -107,19 +107,6 @@ sub my_chdir
 }
 
 
-sub my_copy
-{
-    my ($src, $dest) = @_;
-    #return 1
-    $src = File::Spec->canonpath($src);
-    $dest = File::Spec->canonpath($dest);
-    return 1 if rcopy $src, $dest;
-    use Carp;
-    log_msg "copy failed: 'cp $src $dest' '$!' " . Carp::longmess('') . "\n";
-    return undef;
-}
-
-
 sub my_safe_copy
 {
     my ($src, $dest, $pid) = @_;
@@ -130,7 +117,7 @@ sub my_safe_copy
     # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
     # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
     initialize_problem($pid);
-    my_copy($src, $dest);
+    $fu->copy($src, $dest);
     die 'REINIT';
 }
 
@@ -179,8 +166,8 @@ sub generate_test
 
     clear_rundir or return undef;
 
-    my_copy($cfg->cachedir . "/$pid/temp/$test->{generator_id}/*", $cfg->rundir)
-        or return undef;
+    $fu->copy([ $cfg->cachedir, $pid, 'temp', $test->{generator_id}, '*' ], $cfg->rundir)
+        or return;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
         or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
@@ -228,8 +215,9 @@ sub generate_test_group
     {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
-        my_copy($cfg->rundir . sprintf("/$out", $_->{rank}), $cfg->cachedir . "/$pid/$_->{rank}.tst")
-            or return undef;
+        $fu->copy(
+            [ $cfg->rundir, sprintf($out, $_->{rank}) ],
+            [ $cfg->cachedir, $pid, "$_->{rank}.tst" ]) or return;
     }
     1;
 }
@@ -266,9 +254,8 @@ sub validate_test
         clear_rundir or return undef;
 
         my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
-        my_copy($path_to_test, $cfg->rundir) and
-        my_copy($cfg->cachedir . "/$pid/temp/$in_v_id/*", $cfg->rundir)
-            or return undef;
+        $fu->copy($path_to_test, $cfg->rundir) or return;
+        $fu->copy([ $cfg->cachedir, $pid, 'temp', $in_v_id, '*' ], $cfg->rundir) or return;
 
         my $validate_cmd = get_cmd('validate', $validator->{de_id})
             or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
@@ -314,8 +301,8 @@ sub prepare_tests {
             else {
                 my $out = generate_test($pid, $t, $input_fname)
                     or return undef;
-                my_copy($cfg->rundir . "/$out", $cfg->cachedir . "/$pid/$t->{rank}.tst")
-                    or return undef;
+                $fu->copy([ $cfg->rundir, $out ], [ $cfg->cachedir, $pid, "$t->{rank}.tst" ])
+                    or return;
             }
         }
         else {
@@ -335,11 +322,11 @@ sub prepare_tests {
 
             clear_rundir or return undef;
 
-            my_copy($cfg->cachedir . "/$pid/temp/$t->{std_solution_id}/*", $cfg->rundir)
-                or return undef;
+            $fu->copy([ $cfg->cachedir, $pid, 'temp', $t->{std_solution_id}, '*' ], $cfg->rundir)
+                or return;
 
-            my_copy($cfg->cachedir . "/$pid/$t->{rank}.tst", input_or_default($input_fname))
-                or return undef;
+            $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
+                or return;
 
             my $run_key = get_run_key($run_method);
             my $run_cmd = get_cmd($run_key, $ps->{de_id})
@@ -362,8 +349,8 @@ sub prepare_tests {
                 return undef;
             }
 
-            my_copy(output_or_default($output_fname), $cfg->cachedir . "/$pid/$t->{rank}.ans")
-                or return undef;
+            $fu->copy(output_or_default($output_fname), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
+                or return;
         }
         else {
             log_msg("no output file defined for test #$t->{rank}\n");
@@ -438,8 +425,7 @@ sub initialize_problem
 
         my $tmp = [ $cfg->cachedir, $pid, 'temp', $ps->{id} ];
         $fu->mkdir_clean($tmp) or return;
-
-        my_copy($cfg->rundir . '/*', FS->catfile(@$tmp)) or return;
+        $fu->copy([ $cfg->rundir, '*' ], $tmp) or return;
 
         for my $guided_source (@$problem_sources) {
             next if !$guided_source->{guid} || $guided_source->{is_imported};
@@ -693,8 +679,7 @@ sub test_solution {
 
     my $sol_dir = [ $cfg->workdir, 'solutions', $sid ];
     $fu->mkdir_clean($sol_dir) or return;
-
-    my_copy($cfg->rundir . '/*', FS->catfile(@$sol_dir)) or return;
+    $fu->copy([ $cfg->rundir, '*' ], $sol_dir) or return;
 
     # сначале тестируем в случайном порядке,
     # если найдена ошибка -- подряд до первого ошибочного теста

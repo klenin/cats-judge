@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 40;
 use Test::Exception;
 
 use File::Spec;
@@ -30,7 +30,7 @@ use CATS::FileUtil;
 my $tmpdir;
 BEGIN {
     $tmpdir = FS->catdir($path, 'tmp');
-     -d $tmpdir or mkdir $tmpdir;
+     -d $tmpdir or mkdir $tmpdir or die 'Unable to create temporary directory';
 }
 END { -d $tmpdir and rmdir $tmpdir }
 
@@ -129,6 +129,22 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     ok !$fu->mkdir_clean([ $tmpdir, 'm', '*' ]), 'mkdir fail';
     is $fu->{logger}->count, 1, 'mkdir fail log';
     rmdir FS->catfile($tmpdir, 'm') or die;
+}
+
+{
+    my $fu = make_fu;
+    $fu->ensure_dir([ $tmpdir, 'a1' ]);
+    $fu->ensure_dir([ $tmpdir, 'a1', 'b' ]);
+    $fu->ensure_dir([ $tmpdir, 'a1', 'c' ]);
+    $fu->write_to_file([ $tmpdir, 'a1', 'b', 'f.txt' ], 'f');
+    ok -f FS->catfile($tmpdir, 'a1', 'b', 'f.txt'), 'copy before';
+    ok $fu->copy([ $tmpdir, 'a1' ], [ $tmpdir, 'a2' ]), 'copy';
+    ok -f FS->catfile($tmpdir, 'a2', 'b', 'f.txt'), 'copy after';
+    is $fu->{logger}->count, 0, 'copy no log';
+    ok $fu->remove([ $tmpdir, 'a?' ]), 'remove after copy';
+
+    ok !$fu->copy([ $tmpdir, 'x' ], $tmpdir), 'copy nonexistent';
+    is $fu->{logger}->count, 1, 'copy nonexistent log';
 }
 
 1;
