@@ -95,7 +95,7 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     ok -d $dn, 'ensure_dir after';
     $fu->ensure_dir($dn);
     rmdir $dn;
-    throws_ok { $fu->ensure_dir([ $tmpdir, '*' ], 'xxx') } qr/xxx/, 'ensure_dir fail';
+    throws_ok { $fu->ensure_dir([ $tmpdir, 'a/b' ], 'xxx') } qr/xxx/, 'ensure_dir fail';
 }
 
 {
