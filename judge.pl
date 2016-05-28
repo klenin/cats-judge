@@ -132,17 +132,10 @@ sub apply_params
     $str;
 }
 
-sub save_problem_description
-{
+sub save_problem_description {
     my ($pid, $title, $date, $state) = @_;
-
-    my $fn = $cfg->cachedir . "/$pid.des";
-    open my $desc, '>', $fn
-        or return log_msg("open failed: '$fn' ($!)\n");
-
-    print $desc join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state";
-    close $desc;
-    1;
+    $fu->write_to_file([ $cfg->cachedir,  "$pid.des" ],
+        join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
 
