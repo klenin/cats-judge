@@ -239,37 +239,28 @@ sub interactor_params {
             get_cfg_define('#default_interactor_name') }
 }
 
-sub validate_test
-{
+sub validate_test {
     my ($pid, $test, $path_to_test) = @_;
-    my $in_v_id = $test->{input_validator_id};
-    if ($in_v_id) {
-        clear_rundir or return undef;
+    my $in_v_id = $test->{input_validator_id} or return 1;
+    clear_rundir or return;
+    my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
+    $fu->copy($path_to_test, $cfg->rundir) or return;
+    $fu->copy([ $cfg->cachedir, $pid, 'temp', $in_v_id, '*' ], $cfg->rundir) or return;
 
-        my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
-        $fu->copy($path_to_test, $cfg->rundir) or return;
-        $fu->copy([ $cfg->cachedir, $pid, 'temp', $in_v_id, '*' ], $cfg->rundir) or return;
+    my $validate_cmd = get_cmd('validate', $validator->{de_id})
+        or return log_msg("No validate cmd for: $validator->{de_id}\n");
+    my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
+    my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname(FS->catfile(@$path_to_test));
 
-        my $validate_cmd = get_cmd('validate', $validator->{de_id})
-            or do { print "No validate cmd for: $validator->{de_id}\n"; return undef; };
-        my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
-        my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname($path_to_test);
-
-        my $sp_report = $spawner->execute(
-            $validate_cmd, {
-            full_name => $fname, name => $name,
-            limits => get_special_limits($validator),
-            test_input => $t_fname
-            }
-        ) or return undef;
-
-        if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
-        {
-            return undef;
+    my $sp_report = $spawner->execute(
+        $validate_cmd, {
+        full_name => $fname, name => $name,
+        limits => get_special_limits($validator),
+        test_input => $t_fname
         }
-    }
+    ) or return;
 
-    1;
+    $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
 }
 
 sub prepare_tests {
@@ -303,7 +294,7 @@ sub prepare_tests {
             return undef;
         }
 
-        validate_test($pid, $t, $cfg->cachedir . "/$pid/$t->{rank}.tst") or
+        validate_test($pid, $t, [ $cfg->cachedir, $pid, "$t->{rank}.tst" ]) or
             return log_msg("input validation failed: #$t->{rank}\n");
 
         # Create test output file.
@@ -805,7 +796,7 @@ sub prepare_problem {
             initialize_problem($r->{problem_id});
         } or do {
             $state = $cats::st_unhandled_error;
-            log_msg("error: $@\n");
+            log_msg("error: $@\n") if $@;
         };
         log_msg("problem '$r->{problem_id}' installed\n") if $state != $cats::st_unhandled_error;
     }
