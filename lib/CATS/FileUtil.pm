@@ -52,4 +52,30 @@ sub remove_file {
     }
 }
 
+sub _remove_files {
+    my ($self, @files) = @_;
+    # Do not recurse into directory symlinks.
+    @files == grep {
+        (-f || -l) ? $self->remove_file($_) :
+        (-d) ? $self->_remove_dir_rec($_) : 1 } @files;
+}
+
+sub _remove_dir_rec {
+    my ($self, $dir_name) = @_;
+
+    opendir my $dir, $dir_name or return $self->log("opendir: '$dir_name' ($!)\n");
+    my @files = map File::Spec->catfile($dir_name, $_), grep !/^\.\.?$/, readdir $dir;
+    closedir $dir;
+
+    $self->_remove_files(@files) or return;
+    rmdir $dir_name or return $self->log("remove_dir $dir_name: $!\n");
+    1;
+}
+
+sub remove {
+    @_ == 2 or die;
+    my ($self, $path) = @_;
+    $self->_remove_files(glob fn $path);
+}
+
 1;

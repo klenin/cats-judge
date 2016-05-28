@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 18;
+use Test::More tests => 26;
 use Test::Exception;
 
 use File::Spec;
@@ -96,6 +96,26 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     $fu->ensure_dir($dn);
     rmdir $dn;
     throws_ok { $fu->ensure_dir([ $tmpdir, '*' ], 'xxx') } qr/xxx/, 'ensure_dir fail';
+}
+
+{
+    my $fu = make_fu;
+    $fu->ensure_dir([ $tmpdir, 'a' ]);
+    $fu->ensure_dir([ $tmpdir, 'a', 'b' ]);
+    $fu->ensure_dir([ $tmpdir, 'a', 'c' ]);
+    $fu->write_to_file([ $tmpdir, 'a', 'b', 'f.txt' ], 'f');
+    $fu->write_to_file([ $tmpdir, "z$_" ], "z$_") for 1..2;
+
+    ok 2 == grep(-f FS->catfile($tmpdir, "z$_"), 1..2), 'remove glob before';
+    ok $fu->remove([ $tmpdir, 'z*' ]), 'remove glob';
+    ok 0 == grep(-f FS->catfile($tmpdir, "z$_"), 1..2), 'remove glob after';
+
+    ok -f FS->catfile($tmpdir, 'a', 'b', 'f.txt'), 'remove before';
+    ok $fu->remove([ $tmpdir, 'a' ]), 'remove';
+    ok !-e FS->catfile($tmpdir, 'a'), 'remove after';
+    is $fu->{logger}->count, 0, 'remove no log';
+
+    ok $fu->remove([ $tmpdir, 'qqq', 'ppp' ]), 'remove nonexistent';
 }
 
 1;

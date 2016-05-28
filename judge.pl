@@ -94,75 +94,6 @@ sub get_std_checker_cmd
 }
 
 
-sub recurse_dir
-{
-    my $dir = shift;
-
-    chmod 0777, $dir;
-    unless(opendir DIR, $dir)
-    {
-        log_msg("opendir $dir: $!\n");
-        return 0;
-    }
-
-    my @files = grep {! /^\.\.?$/} readdir DIR;
-    closedir DIR;
-
-    my $res = 1;
-    for (@files) {
-        my $f = "$dir/$_";
-        if (-f $f || -l $f) {
-            $fu->remove_file($f) or $res = 0;
-        }
-        elsif (-d $f && ! -l $f) {
-            recurse_dir($f)
-                or $res = 0;
-
-            unless (rmdir $f) {
-                log_msg("rm $f: $!\n");
-                $res = 0;
-            }
-        }
-    }
-    $res;
-}
-
-
-sub expand
-{
-    my @args;
-
-    for (@_) {
-        push @args, glob;
-    }
-    @args;
-}
-
-
-sub my_remove
-{
-    my @files = expand @_;
-    my $res = 1;
-    for (@files)
-    {
-        if (-f $_ || -l $_) {
-            $fu->remove_file($_) or $res = 0;
-        }
-        elsif (-d $_)
-        {
-            recurse_dir($_)
-                or $res = 0;
-
-            unless (rmdir $_) {
-                log_msg("rm $_: $!\n");
-                $res = 0;
-            }
-        }
-    }
-    $res;
-}
-
-
 sub my_chdir
 {
     my $path = shift;
@@ -180,8 +111,7 @@ sub my_mkdir
 {
     my $path = shift;
 
-    my_remove($path)
-        or return undef;
+    $fu->remove($path) or return;
 
     unless (mkdir($path, 0755))
     {
@@ -219,10 +149,7 @@ sub my_safe_copy
     die 'REINIT';
 }
 
-sub clear_rundir
-{
-    my_remove $cfg->rundir . '/*'
-}
+sub clear_rundir { $fu->remove([ $cfg->rundir, '*' ]); }
 
 
 sub apply_params
@@ -885,7 +812,7 @@ sub clear_problem_cache {
             if $m->{path} =~ m~[\/\\]\Q$r->{problem_id}\E[\/\\]~;
     }
     $log->clear_dump;
-    my_remove($cfg->cachedir . "/$r->{problem_id}*") or return;
+    $fu->remove([ $cfg->cachedir, "$r->{problem_id}*" ]) or return;
     log_msg("problem '$r->{problem_id}' cache removed\n");
 }
 

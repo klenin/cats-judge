@@ -45,7 +45,7 @@ sub set_request_state {
 
 sub select_request {
     my ($self, $supported_DEs) = @_;
-    -f $self->{problem} or -d $self->{problem} or die "Bad problem '$self->{problem}'";
+    -f $self->{problem} || -d $self->{problem} or die "Bad problem '$self->{problem}'";
 
     my $source = -f $self->{problem} ?
         CATS::Problem::Source::Zip->new($self->{problem}, $self->{logger}) :
