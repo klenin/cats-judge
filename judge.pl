@@ -107,21 +107,6 @@ sub my_chdir
 }
 
 
-sub my_mkdir
-{
-    my $path = shift;
-
-    $fu->remove($path) or return;
-
-    unless (mkdir($path, 0755))
-    {
-        log_msg("couldn't create directory '$path': $!\n");
-        return undef;
-    }
-    1;
-}
-
-
 sub my_copy
 {
     my ($src, $dest) = @_;
@@ -420,11 +405,8 @@ sub initialize_problem
         or return undef;
 
     # компилируем вспомогательные программы (эталонные решения, генераторы тестов, программы проверки)
-    my_mkdir($cfg->cachedir . "/$pid")
-        or return undef;
-
-    my_mkdir($cfg->cachedir . "/$pid/temp")
-        or return undef;
+    $fu->mkdir_clean([ $cfg->cachedir, $pid ]) or return;
+    $fu->mkdir_clean([ $cfg->cachedir, $pid, 'temp' ]) or return;
 
     my %main_source_types;
     $main_source_types{$_} = 1 for keys %cats::source_modules;
@@ -454,12 +436,10 @@ sub initialize_problem
            $fu->write_to_file([ $cfg->rundir, $cfg->formal_input_fname ], $p->{formal_input}) or return;
         }
 
-        my $tmp = $cfg->cachedir . "/$pid/temp/$ps->{id}";
-        my_mkdir($tmp)
-            or return undef;
+        my $tmp = [ $cfg->cachedir, $pid, 'temp', $ps->{id} ];
+        $fu->mkdir_clean($tmp) or return;
 
-        my_copy($cfg->rundir . '/*', $tmp)
-            or return undef;
+        my_copy($cfg->rundir . '/*', FS->catfile(@$tmp)) or return;
 
         for my $guided_source (@$problem_sources) {
             next if !$guided_source->{guid} || $guided_source->{is_imported};
@@ -711,11 +691,10 @@ sub test_solution {
         }
     }
 
-    my_mkdir("solutions/$sid")
-        or return undef;
+    my $sol_dir = [ $cfg->workdir, 'solutions', $sid ];
+    $fu->mkdir_clean($sol_dir) or return;
 
-    my_copy($cfg->rundir . '/*', "solutions/$sid")
-        or return undef;
+    my_copy($cfg->rundir . '/*', FS->catfile(@$sol_dir)) or return;
 
     # сначале тестируем в случайном порядке,
     # если найдена ошибка -- подряд до первого ошибочного теста

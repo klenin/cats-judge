@@ -78,4 +78,13 @@ sub remove {
     $self->_remove_files(glob fn $path);
 }
 
+sub mkdir_clean {
+    my ($self, $dir_name) = @_;
+
+    my $dn = fn $dir_name;
+    $self->remove($dn) or return;
+    mkdir $dn, 0755 or return $self->log("mkdir '$dn' failed: $!\n");
+    1;
+}
+
 1;

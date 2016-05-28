@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 33;
 use Test::Exception;
 
 use File::Spec;
@@ -116,6 +116,19 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     is $fu->{logger}->count, 0, 'remove no log';
 
     ok $fu->remove([ $tmpdir, 'qqq', 'ppp' ]), 'remove nonexistent';
+}
+
+{
+    my $fu = make_fu;
+    ok $fu->mkdir_clean([ $tmpdir, 'm' ]), 'mkdir';
+    ok -d FS->catfile($tmpdir, 'm'), 'mkdir after';
+    ok $fu->mkdir_clean([ $tmpdir, 'm', 'n' ]), 'mkdir subdir';
+    ok $fu->mkdir_clean([ $tmpdir, 'm' ]), 'mkdir twice';
+    ok -d FS->catfile($tmpdir, 'm') && !-e FS->catfile($tmpdir, 'm', 'n'), 'mkdir cleans';
+
+    ok !$fu->mkdir_clean([ $tmpdir, 'm', '*' ]), 'mkdir fail';
+    is $fu->{logger}->count, 1, 'mkdir fail log';
+    rmdir FS->catfile($tmpdir, 'm') or die;
 }
 
 1;
