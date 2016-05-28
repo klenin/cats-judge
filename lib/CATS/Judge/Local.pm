@@ -202,6 +202,7 @@ sub get_problem_tests {
     for (sort { $a->{rank} <=> $b->{rank} } values %{$self->{parser}{problem}->{tests}}) {
         push @$tests, {
             generator_id => $_->{generator_id},
+            input_validator_id => $_->{input_validator_id},
             rank => $_->{rank},
             param => $_->{param},
             std_solution_id => $_->{std_solution_id},
