@@ -93,20 +93,6 @@ sub get_std_checker_cmd
      $cfg->checkers->{$std_checker_name};
 }
 
-
-sub my_chdir
-{
-    my $path = shift;
-
-    unless (chdir($path))
-    {
-        log_msg("couldn't set directory '$path': $!\n");
-        return undef;
-    }
-    1;
-}
-
-
 sub my_safe_copy
 {
     my ($src, $dest, $pid) = @_;
@@ -881,12 +867,13 @@ sub test_problem {
     log_msg("==> $state_text\n");
 }
 
-sub main_loop
-{
+sub main_loop {
+    chdir $cfg->workdir
+        or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
+
     log_msg("judge: %s\n", $judge->name);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
-    my_chdir($cfg->workdir) or return;
     for (my $i = 0; ; $i++) {
         sleep 2;
         $log->rollover;
