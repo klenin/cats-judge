@@ -30,6 +30,13 @@ sub write_to_file {
     1;
 }
 
+sub ensure_dir {
+    my ($self, $dir_name, $name) = @_;
+    my $dn = fn $dir_name;
+    $name ||= '';
+    -d $dn or mkdir $dn or die "Can not create $name '$dn': $!";
+}
+
 sub remove_file {
     my ($self, $file_name) = @_;
     my $fn = fn($file_name);

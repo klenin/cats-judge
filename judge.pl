@@ -1036,13 +1036,11 @@ if ($cli->command eq 'config') {
     exit;
 }
 
-sub ensure_dir { -d $_[1] or mkdir $_[1] or die "Can not create $_[0] '$_[1]': $!"; }
-
-ensure_dir('cachedir', $cfg->cachedir);
-ensure_dir('solutions', $cfg->workdir . '/solutions');
-ensure_dir('logdir', $cfg->logdir);
-ensure_dir('rundir', $cfg->rundir);
-ensure_dir('resultsdir', $cfg->resultsdir);
+$fu->ensure_dir($cfg->cachedir, 'cachedir');
+$fu->ensure_dir([ $cfg->workdir, 'solutions' ], 'solutions');
+$fu->ensure_dir($cfg->logdir, 'logdir');
+$fu->ensure_dir($cfg->rundir, 'rundir');
+$fu->ensure_dir($cfg->resultsdir, 'resultsdir');
 
 $log->init($cfg->logdir);
 

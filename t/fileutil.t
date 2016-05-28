@@ -15,7 +15,8 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 15;
+use Test::More tests => 18;
+use Test::Exception;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -84,6 +85,17 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     };
     ok $fu->remove_file($fn), 'remove_file unlocked';
     ok ! -f $fn, 'remove_file unlocked ok';
+}
+
+{
+    my $fu = make_fu;
+    my $dn = FS->catfile($tmpdir, 'td');
+    ok !-d $dn, 'ensure_dir before';
+    $fu->ensure_dir($dn);
+    ok -d $dn, 'ensure_dir after';
+    $fu->ensure_dir($dn);
+    rmdir $dn;
+    throws_ok { $fu->ensure_dir([ $tmpdir, '*' ], 'xxx') } qr/xxx/, 'ensure_dir fail';
 }
 
 1;
