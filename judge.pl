@@ -11,8 +11,6 @@ use sigtrap qw(die INT);
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
 
-use File::Copy::Recursive qw(rcopy);
-
 use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
@@ -93,15 +91,12 @@ sub get_std_checker_cmd
      $cfg->checkers->{$std_checker_name};
 }
 
-sub my_safe_copy
-{
+sub my_safe_copy {
     my ($src, $dest, $pid) = @_;
-    $src = File::Spec->canonpath($src);
-    $dest = File::Spec->canonpath($dest);
-    return 1 if rcopy $src, $dest;
-    log_msg "copy failed: 'cp $src $dest' $!, trying to reinitialize\n";
-    # Возможно, что кеш задачи был повреждён, либо изменился импротированный модуль
-    # Попробуем переинициализировать задачу. Если и это не поможет -- вылетаем.
+    $fu->copy($src, $dest) and return 1;
+    log_msg "Trying to reinitialize\n";
+    # Either problem cache was damages or imported module has been changed.
+    # Try reinilializing the problem. If that does not help, fail the run.
     initialize_problem($pid);
     $fu->copy($src, $dest);
     die 'REINIT';
@@ -459,8 +454,9 @@ sub run_checker
     {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
-        my_safe_copy($cfg->cachedir . "/$problem->{id}/temp/$problem->{checker_id}/*", $cfg->rundir, $problem->{id})
-            or return undef;
+        my_safe_copy(
+            [ $cfg->cachedir, $problem->{id}, 'temp', $problem->{checker_id}, '*' ],
+            $cfg->rundir, $problem->{id}) or return;
 
         (undef, undef, undef, $checker_params->{name}, undef) =
             split_fname($checker_params->{full_name} = $ps->{fname});
@@ -513,12 +509,11 @@ sub run_single_test
 
     my $pid = $problem->{id};
 
-    my_safe_copy("solutions/$p{sid}/*", $cfg->rundir, $pid)
-        or return undef;
     my_safe_copy(
-        $cfg->cachedir . "/$problem->{id}/$p{rank}.tst",
-        input_or_default($problem->{input_file}), $pid)
-        or return undef;
+        [ $cfg->workdir, 'solutions', $p{sid}, '*' ], $cfg->rundir, $pid) or return;
+    my_safe_copy(
+        [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
+        input_or_default($problem->{input_file}), $pid) or return;
 
     my $run_key = get_run_key($problem->{run_method});
     my $run_cmd = get_cmd($run_key, $p{de_id})
@@ -563,11 +558,11 @@ sub run_single_test
         }
     }
     my_safe_copy(
-        $cfg->cachedir . "/$problem->{id}/$p{rank}.tst",
-        input_or_default($problem->{input_file}), $problem->{id})
-        or return undef;
-    my_safe_copy($cfg->cachedir . "/$problem->{id}/$p{rank}.ans", $cfg->rundir . "/$p{rank}.ans", $problem->{id})
-        or return undef;
+        [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
+        input_or_default($problem->{input_file}), $problem->{id}) or return;
+    my_safe_copy(
+        [ $cfg->cachedir, $problem->{id}, "$p{rank}.ans" ],
+        [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
     {
         my $sp_report = run_checker(problem => $problem, rank => $p{rank})
             or return undef;
