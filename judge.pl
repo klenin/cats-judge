@@ -509,8 +509,7 @@ sub run_single_test
 
     my $pid = $problem->{id};
 
-    my_safe_copy(
-        [ $cfg->workdir, 'solutions', $p{sid}, '*' ], $cfg->rundir, $pid) or return;
+    my_safe_copy([ $cfg->solutionsdir, $p{sid}, '*' ], $cfg->rundir, $pid) or return;
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
@@ -642,9 +641,8 @@ sub test_solution {
         }
     }
 
-    my $sol_dir = [ $cfg->workdir, 'solutions', $sid ];
-    $fu->mkdir_clean($sol_dir) or return;
-    $fu->copy([ $cfg->rundir, '*' ], $sol_dir) or return;
+    $fu->mkdir_clean([ $cfg->solutionsdir, $sid ]) or return;
+    $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $sid ]) or return;
 
     # сначале тестируем в случайном порядке,
     # если найдена ошибка -- подряд до первого ошибочного теста
@@ -894,7 +892,7 @@ if ($cli->command eq 'config') {
 }
 
 $fu->ensure_dir($cfg->cachedir, 'cachedir');
-$fu->ensure_dir([ $cfg->workdir, 'solutions' ], 'solutions');
+$fu->ensure_dir($cfg->solutionsdir, 'solutions');
 $fu->ensure_dir($cfg->logdir, 'logdir');
 $fu->ensure_dir($cfg->rundir, 'rundir');
 $fu->ensure_dir($cfg->resultsdir, 'resultsdir');

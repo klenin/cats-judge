@@ -5,6 +5,7 @@
     stdout_file="stdout.txt"
     workdir=""
     cachedir="cache"
+    solutionsdir="solutions"
     logdir="log"
     rundir="run"
     modulesdir="modules"
