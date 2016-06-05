@@ -90,8 +90,9 @@ step 'Verify git', sub {
 };
 
 step 'Verify required modules', sub {
-    my @bad = grep !eval "require $_; 1;", qw(Archive::Zip DBI JSON::XS XML::Parser::Expat File::Copy::Recursive);
-    maybe_die join "\n", 'Some required modules not found:', @bad, '' if @bad;
+    open my $cpanf, '<', 'cpanfile' or die $!;
+    my @missing = grep !eval "require $_; 1;", map /^requires '(.+)';$/ && $1, <$cpanf>;
+    maybe_die join "\n", 'Some required modules not found:', @missing, '' if @missing;
 };
 
 step 'Verify optional modules', sub {
