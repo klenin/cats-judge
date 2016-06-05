@@ -6,10 +6,19 @@ use warnings;
 use Carp;
 use File::Spec;
 use File::Copy::Recursive qw(rcopy);
+use IPC::Cmd;
+
+use constant OPTIONS => [qw(
+    logger
+    run_debug_log
+    run_temp_dir
+    run_use_ipc
+)];
 
 sub new {
     my ($class, $opts) = @_;
-    my $self = { logger => $opts->{logger} };
+    my $self = { map { $_ => $opts->{$_} } @{OPTIONS()} };
+    $self->{run_use_ipc} //= IPC::Cmd->can_capture_buffer;
     bless $self, $class;
 }
 
@@ -125,5 +134,44 @@ sub quote_braced {
     $cmd =~ s/\{([^\}]*)\}/$self->quote_fn($1)/eg;
     $cmd;
 }
+
+sub _run_array {
+    my ($self, $cmd) = @_;
+
+    my @quoted = map $self->quote_braced($_), @$cmd;
+    $self->log(join(' ', 'run:', @quoted), "\n") if $self->{run_debug_log};
+    return IPC::Cmd::run command => \@quoted if $self->{run_use_ipc};
+    my $tmp = $self->{run_temp_dir}
+        or confess 'run: run_temp_dir is required without IPC::Cmd';
+    -d $tmp or mkdir $tmp or return $self->log("run: mkdir: $!");
+    my @redirects = map File::Spec->catfile($tmp, $_), qw(stdout.txt stderr.txt);
+    my $command = join ' ', @quoted,
+        map { ($_ + 1) . '>' . $self->quote_fn($redirects[$_]) } 0..1;
+    system($command) == 0 or return (0, $!, [], [], []);
+    my $redirected_data = [ map $self->read_lines($_) // [], @redirects ];
+    (1, '', [ map @$_, @$redirected_data ], @$redirected_data);
+}
+
+sub run { CATS::RunResult->new(_run_array @_) }
+
+package CATS::RunResult;
+
+sub new {
+    my ($class, @p) = @_;
+    # $ok, $err, $full_buf, $stdout_buff, $stderr_buff
+    $p[0] //= 0;
+    $p[1] //= '';
+    ref $p[$_] eq 'ARRAY' or die for 2..4;
+    bless [ @p ], $class;
+}
+
+sub ok { $_[0]->[0] // 0 }
+sub err { $_[0]->[1] }
+sub full { $_[0]->[2] }
+sub stdout { $_[0]->[3] }
+sub stderr { $_[0]->[4] }
+
+sub check_err { !$_[0]->ok && $_[0]->err =~ $_[1] }
+sub check_stdout { $_[0]->ok && $_[0]->stdout_buf =~ $_[1] }
 
 1;

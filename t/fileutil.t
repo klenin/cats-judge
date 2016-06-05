@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 49;
+use Test::More tests => 55;
 use Test::Exception;
 
 use File::Spec;
@@ -21,8 +21,8 @@ BEGIN {
 }
 END { -d $tmpdir and rmdir $tmpdir }
 
-sub make_fu { CATS::FileUtil->new({ logger => CATS::Logger::Count->new }) }
-sub make_fu_dies { CATS::FileUtil->new({ logger => CATS::Logger::Die->new }) }
+sub make_fu { CATS::FileUtil->new({ logger => CATS::Logger::Count->new, @_ }) }
+sub make_fu_dies { CATS::FileUtil->new({ logger => CATS::Logger::Die->new, @_ }) }
 
 isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
@@ -163,5 +163,39 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     is $fu->quote_braced('{print 123}'), $q . "print 123$q", 'only braced';
     is $fu->quote_braced([ 'a b', 'c' ]), $q . FS->catfile('a b', 'c') . $q, 'braced fn';
 }
+
+sub test_run {
+    plan tests => 14;
+    my $fu = make_fu(@_);
+    my $perl = "{$^X}";
+
+    is $fu->run([ $tmpdir, 'nofile' ])->ok, 0, 'run nonexistent';
+    is $fu->run([ $perl, '-v' ])->ok, 1, 'run 0';
+
+    {
+        my $r = $fu->run([ $perl, '-e', '{print 123}' ]);
+        is $r->ok, 1, 'run 1';
+        is $r->err, '', 'run 1 no err';
+        is_deeply $r->stdout, [ '123' ], 'run 1 stdout';
+        is_deeply $r->stderr, [], 'run 1 stderr';
+        is_deeply $r->full, [ '123' ], 'run 1 full';
+    }
+
+    {
+        my $r = $fu->run([ $perl, '-e', '{print STDERR 567}' ]);
+        is $r->ok, 1, 'run 2';
+        is $r->err, '', 'run 2 no err';
+        is_deeply $r->stdout, [], 'run 2 stdout';
+        is_deeply $r->stderr, [ '567' ], 'run 2 stderr';
+        is_deeply $r->full, [ '567' ], 'run 2 full';
+    }
+
+    is $fu->run([ $perl, '-e', '{exit 77}' ])->ok, 0, 'run exit 77';
+
+    ok $fu->remove([ $tmpdir, '*.txt' ]), 'run cleanup';
+}
+
+subtest 'run IPC', sub { test_run(run_use_ipc => 0, run_temp_dir => $tmpdir); };
+subtest 'run no IPC', sub { test_run(run_use_ipc => 1); };
 
 1;
