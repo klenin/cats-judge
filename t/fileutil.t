@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 46;
+use Test::More tests => 49;
 use Test::Exception;
 
 use File::Spec;
@@ -22,6 +22,7 @@ BEGIN {
 END { -d $tmpdir and rmdir $tmpdir }
 
 sub make_fu { CATS::FileUtil->new({ logger => CATS::Logger::Count->new }) }
+sub make_fu_dies { CATS::FileUtil->new({ logger => CATS::Logger::Die->new }) }
 
 isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
@@ -32,12 +33,20 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 }
 
 {
+    my $fu = make_fu_dies;
+    throws_ok { $fu->read_lines([ $tmpdir, 'notxt' ]) } qr/notxt/, 'read_lines nonexistent';
+}
+
+{
     my $fu = make_fu;
     my $p = [ $tmpdir, 'f.txt' ];
-    ok $fu->write_to_file($p, 'abc' . chr(10) . chr(13)), 'write_to_file';
+    my $data = "abc\n";
+    ok $fu->write_to_file($p, $data), 'write_to_file';
     my $fn = FS->catfile(@$p);
     ok -f $fn, 'write_to_file exists';
-    is -s $fn, 5, 'write_to_file size';
+    is -s $fn, length $data, 'write_to_file size';
+    is_deeply $fu->read_lines($fn), [ "abc\n" ], 'write_to_file read_lines';
+    is_deeply $fu->read_lines_chomp($fn), [ 'abc' ], 'write_to_file read_lines_chomp';
     unlink $fn;
 }
 

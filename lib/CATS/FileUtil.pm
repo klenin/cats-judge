@@ -33,6 +33,20 @@ sub write_to_file {
     1;
 }
 
+sub read_lines {
+    my ($self, $file_name) = @_;
+    my $fn = fn($file_name);
+    open my $f, '<', $fn or return $self->log("read_lines failed: '$fn' ($!)\n");
+    [ map $_, <$f> ];
+}
+
+sub read_lines_chomp {
+    my ($self, $file_name) = @_;
+    my $fn = fn($file_name);
+    open my $f, '<', $fn  or return $self->log("read_lines_chomp failed: '$fn' ($!)\n");
+    [ map { chomp; $_ } <$f> ];
+}
+
 sub ensure_dir {
     my ($self, $dir_name, $name) = @_;
     my $dn = fn $dir_name;
