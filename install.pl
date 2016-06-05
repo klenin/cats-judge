@@ -195,12 +195,6 @@ sub get_dirs {
     ($modulesdir, $cachedir);
 }
 
-sub slurp_lines {
-    my ($filename) = @_;
-    open my $f, '<', $filename or return ();
-    map { chomp; $_ } <$f>;
-}
-
 sub check_module {
     my ($module_name, $cachedir) = @_;
     -e $module_name or return;
@@ -217,8 +211,8 @@ sub check_module {
     );
     $path or return;
     my ($module_cache) = $path =~ /^(.*\Q$cachedir\E.*)[\\\/]temp/ or return;
-    -e $module_cache or return;
-    ((slurp_lines("$module_cache.des"))[2] // '') eq 'state:ready';
+    -d $module_cache && -f "$module_cache.des" or return;
+    ($fu->read_lines_chomp("$module_cache.des")->[2] // '') eq 'state:ready';
 }
 
 step 'Install cats-modules', sub {
@@ -232,7 +226,7 @@ step 'Install cats-modules', sub {
         dir => File::Spec->catfile($cats_modules_dir, $_),
         success => 0
     }, grep !$opts{modules} || /$opts{modules}/,
-        slurp_lines(File::Spec->catfile($cats_modules_dir, 'modules.txt'));
+        @{$fu->read_lines_chomp([ $cats_modules_dir, 'modules.txt'])};
     my $jcmd = File::Spec->catfile('cmd', 'j.'. ($^O eq 'MSWin32' ? 'cmd' : 'sh'));
     print "\n";
     for my $m (@modules) {
