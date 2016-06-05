@@ -60,6 +60,10 @@ sub maybe_die {
 }
 
 my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Die->new });
+my $fr = CATS::FileUtil->new({
+    run_debug_log => $opts{verbose},
+    logger => CATS::Logger::FH->new(*STDERR),
+});
 
 my $step_count = 0;
 
@@ -223,16 +227,16 @@ step 'Install cats-modules', sub {
     my @modules = map +{
         name => $_,
         xml => globq(File::Spec->catfile($cats_modules_dir, $_, '*.xml')),
-        dir => File::Spec->catfile($cats_modules_dir, $_),
+        dir => [ $cats_modules_dir, $_ ],
         success => 0
     }, grep !$opts{modules} || /$opts{modules}/,
         @{$fu->read_lines_chomp([ $cats_modules_dir, 'modules.txt'])};
-    my $jcmd = File::Spec->catfile('cmd', 'j.'. ($^O eq 'MSWin32' ? 'cmd' : 'sh'));
+    my $jcmd = [ 'cmd', 'j.'. ($^O eq 'MSWin32' ? 'cmd' : 'sh') ];
     print "\n";
     for my $m (@modules) {
-        my ($ok, $err, $buf) = run command => [ $jcmd, 'install', '--problem', $m->{dir} ];
-        $ok or print $err, next;
-        print @$buf if $opts{verbose};
+        my $run = $fr->run([ $jcmd, 'install', '--problem', $m->{dir} ]);
+        $run->ok or print $run->err, next;
+        print @{$run->full} if $opts{verbose};
         parse_xml_file($m->{xml}, Start => sub {
             my ($p, $el, %atts) = @_;
             exists $atts{export} or return;

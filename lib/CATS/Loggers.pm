@@ -19,4 +19,14 @@ sub new { bless {}, $_[0] }
 
 sub msg { die join '', @_[1..$#_] }
 
+package CATS::Logger::FH;
+
+sub new { bless { fh => $_[1] || die }, $_[0] }
+
+sub msg {
+    my ($self, @rest) = @_;
+    $self->{fh}->print(@rest);
+    undef;
+}
+
 1;
