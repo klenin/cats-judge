@@ -1,17 +1,3 @@
-package Logger;
-
-sub new { bless { msgs => [] }, $_[0]; }
-
-sub msg {
-    my ($self, @rest) = @_;
-    push @{$self->{msgs}}, join '', @rest;
-    0;
-}
-
-sub count { scalar @{$_[0]->{msgs}} }
-
-package main;
-
 use strict;
 use warnings;
 
@@ -26,6 +12,7 @@ BEGIN { $path = FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1]); }
 use lib FS->catdir($path, '..', 'lib');
 
 use CATS::FileUtil;
+use CATS::Loggers;
 
 my $tmpdir;
 BEGIN {
@@ -34,7 +21,7 @@ BEGIN {
 }
 END { -d $tmpdir and rmdir $tmpdir }
 
-sub make_fu { CATS::FileUtil->new({ logger => Logger->new }) }
+sub make_fu { CATS::FileUtil->new({ logger => CATS::Logger::Count->new }) }
 
 isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
