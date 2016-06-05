@@ -142,9 +142,9 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     ok -f FS->catfile($tmpdir, 'a2', 'b', 'f.txt'), 'copy after';
     is $fu->{logger}->count, 0, 'copy no log';
     ok $fu->remove([ $tmpdir, 'a?' ]), 'remove after copy';
-
-    ok !$fu->copy([ $tmpdir, 'x' ], $tmpdir), 'copy nonexistent';
-    is $fu->{logger}->count, 1, 'copy nonexistent log';
+    local $SIG{__WARN__} = sub {};
+    ok !$fu->copy([ $tmpdir, 'x' ], $tmpdir), 'copy to self';
+    is $fu->{logger}->count, 1, 'copy to self log';
 }
 
 {
