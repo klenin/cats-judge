@@ -153,10 +153,13 @@ step 'Save configuration', sub {
     my %path_idx;
     $path_idx{$_->{code}} = $_ for @detected_DEs;
     my $flag = 0;
+    my $sp = $platform ?
+        File::Spec->rel2abs(CATS::Spawner::Platform::get_path($platform)) : undef;
     while (<$conf_in>) {
+
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
-        my $sp = 'value="%workdir/spawner-bin/';
-        s~(\s$sp)\w+~ $sp$platform~ if defined $platform;
+        s~(\svalue=")[^"]+"~$1$sp"~ if defined $platform;
+
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
         s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};
