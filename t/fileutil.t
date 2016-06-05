@@ -195,7 +195,7 @@ sub test_run {
     ok $fu->remove([ $tmpdir, '*.txt' ]), 'run cleanup';
 }
 
-subtest 'run IPC', sub { test_run(run_use_ipc => 0, run_temp_dir => $tmpdir); };
-subtest 'run no IPC', sub { test_run(run_use_ipc => 1); };
+subtest 'run no IPC', sub { test_run(run_use_ipc => 0, run_temp_dir => $tmpdir); };
+subtest 'run IPC', sub { test_run(run_use_ipc => 1); };
 
 1;
