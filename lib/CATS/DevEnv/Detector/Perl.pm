@@ -11,6 +11,7 @@ sub code { '501' }
 
 sub _detect {
     my ($self) = @_;
+    $self->validate_and_add($^X);
     env_path($self, 'perl');
     which($self, 'perl');
     registry_assoc($self, assoc => 'Perl_program_file', command => 'Execute Perl Program', file => 'perl');
