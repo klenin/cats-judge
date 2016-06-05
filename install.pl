@@ -9,8 +9,10 @@ use IPC::Cmd;
 use List::Util qw(max);
 
 use lib 'lib';
-use CATS::DevEnv::Detector::Utils qw(globq run);
 use CATS::ConsoleColor qw(colored);
+use CATS::DevEnv::Detector::Utils qw(globq run);
+use CATS::FileUtil;
+use CATS::Loggers;
 use CATS::Spawner::Platform;
 
 $| = 1;
@@ -57,6 +59,8 @@ sub maybe_die {
     print ' overridden by --force';
 }
 
+my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Die->new });
+
 my $step_count = 0;
 
 sub step($&) {
@@ -90,8 +94,8 @@ step 'Verify git', sub {
 };
 
 step 'Verify required modules', sub {
-    open my $cpanf, '<', 'cpanfile' or die $!;
-    my @missing = grep !eval "require $_; 1;", map /^requires '(.+)';$/ && $1, <$cpanf>;
+    my $lines = $fu->read_lines('cpanfile');
+    my @missing = grep !eval "require $_; 1;", map /^requires '(.+)';$/ && $1, @$lines;
     maybe_die join "\n", 'Some required modules not found:', @missing, '' if @missing;
 };
 

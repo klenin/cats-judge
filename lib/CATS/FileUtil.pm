@@ -15,7 +15,7 @@ sub new {
 
 sub log {
     my ($self, @rest) = @_;
-    $self->{logger} or confess;
+    $self->{logger} or confess 'No logger';
     $self->{logger}->msg(@rest);
 }
 
