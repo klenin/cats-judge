@@ -34,7 +34,13 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
 {
     my $fu = make_fu_dies;
-    throws_ok { $fu->read_lines([ $tmpdir, 'notxt' ]) } qr/notxt/, 'read_lines nonexistent';
+    throws_ok { $fu->read_lines([ $tmpdir, 'notxt' ]) } qr/notxt/, 'read_lines nonexistent die';
+}
+
+{
+    my $fu = make_fu;
+    ok !$fu->read_lines([ $tmpdir, 'notxt' ]), 'read_lines nonexistent';
+    is $fu->{logger}->count, 1, 'read_lines nonexistent log';
 }
 
 {
@@ -146,14 +152,16 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 {
     my $fu = make_fu;
     is $fu->quote_fn('abc'), 'abc', 'no quote';
-    my $q = $^O eq 'Win32' ? '"' : "'";
+    my $q = $^O eq 'MSWin32' ? '"' : "'";
     is $fu->quote_fn(' a bc'), "$q a bc$q", 'quote';
     is $fu->quote_fn(q~a "'bc~),
-        ($^O eq 'Win32' ? q~"a \"'bc"~ : q~'a "\'bc'~), 'escape quote';
+        ($^O eq 'MSWin32' ? q~"a \"'bc"~ : q~'a "\'bc'~), 'escape quote';
 
     is $fu->quote_braced('abc'), 'abc', 'no braced';
     is $fu->quote_braced('abc{}'), 'abc', 'empty braced';
     is $fu->quote_braced('{-a -b} {-c} -d'), "$q-a -b$q -c -d", 'braced';
+    is $fu->quote_braced('{print 123}'), $q . "print 123$q", 'only braced';
+    is $fu->quote_braced([ 'a b', 'c' ]), $q . FS->catfile('a b', 'c') . $q, 'braced fn';
 }
 
 1;

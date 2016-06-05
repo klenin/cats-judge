@@ -114,13 +114,14 @@ sub copy {
 sub quote_fn {
     my ($self, $fn) = @_;
     $fn =~ /\s/ or return $fn;
-    my $q = $^O eq 'Win32' ? '"' : "'";
+    my $q = $^O eq 'MSWin32' ? '"' : "'";
     $fn =~ s/$q/\\$q/g;
     "$q$fn$q";
 }
 
 sub quote_braced {
     my ($self, $cmd) = @_;
+    return $self->quote_fn(fn($cmd)) if ref $cmd eq 'ARRAY';
     $cmd =~ s/\{([^\}]*)\}/$self->quote_fn($1)/eg;
     $cmd;
 }
