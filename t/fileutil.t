@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 43;
+use Test::More tests => 46;
 use Test::Exception;
 
 use File::Spec;
@@ -154,6 +154,10 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     is $fu->quote_fn(' a bc'), "$q a bc$q", 'quote';
     is $fu->quote_fn(q~a "'bc~),
         ($^O eq 'Win32' ? q~"a \"'bc"~ : q~'a "\'bc'~), 'escape quote';
+
+    is $fu->quote_braced('abc'), 'abc', 'no braced';
+    is $fu->quote_braced('abc{}'), 'abc', 'empty braced';
+    is $fu->quote_braced('{-a -b} {-c} -d'), "$q-a -b$q -c -d", 'braced';
 }
 
 1;

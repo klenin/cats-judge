@@ -105,4 +105,10 @@ sub quote_fn {
     "$q$fn$q";
 }
 
+sub quote_braced {
+    my ($self, $cmd) = @_;
+    $cmd =~ s/\{([^\}]*)\}/$self->quote_fn($1)/eg;
+    $cmd;
+}
+
 1;
