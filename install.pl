@@ -11,6 +11,7 @@ use List::Util qw(max);
 use lib 'lib';
 use CATS::DevEnv::Detector::Utils qw(globq run);
 use CATS::ConsoleColor qw(colored);
+use CATS::Spawner::Platform;
 
 $| = 1;
 
@@ -136,18 +137,7 @@ step 'Detect proxy', sub {
 
 my $platform;
 step 'Detect platform', sub {
-    if ($^O eq 'MSWin32') {
-        $platform = 'win32';
-    }
-    elsif ($^O eq 'linux') {
-        $platform = `uname -i` eq 'x86_64' ? 'linux-amd64' : 'linux-i386';
-    }
-    elsif ($^O eq 'darwin') {
-        $platform = 'darwin';
-    }
-    else {
-        maybe_die "Unsupported platform: $^O";
-    }
+    $platform = CATS::Spawner::Platform::get or maybe_die "Unsupported platform: $^O";
     print " $platform" if $platform;
 };
 
