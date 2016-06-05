@@ -6,4 +6,5 @@ perl:
 - "5.16"
 - "5.14"
 - "5.12"
+after_install: perl install.pl
 sudo: false
