@@ -15,7 +15,7 @@ package main;
 use strict;
 use warnings;
 
-use Test::More tests => 40;
+use Test::More tests => 43;
 use Test::Exception;
 
 use File::Spec;
@@ -145,6 +145,15 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 
     ok !$fu->copy([ $tmpdir, 'x' ], $tmpdir), 'copy nonexistent';
     is $fu->{logger}->count, 1, 'copy nonexistent log';
+}
+
+{
+    my $fu = make_fu;
+    is $fu->quote_fn('abc'), 'abc', 'no quote';
+    my $q = $^O eq 'Win32' ? '"' : "'";
+    is $fu->quote_fn(' a bc'), "$q a bc$q", 'quote';
+    is $fu->quote_fn(q~a "'bc~),
+        ($^O eq 'Win32' ? q~"a \"'bc"~ : q~'a "\'bc'~), 'escape quote';
 }
 
 1;
