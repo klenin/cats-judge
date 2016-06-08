@@ -35,7 +35,8 @@ ok `$sp $perl -v` && $? == 0, 'runs perl';
 
 is $TR_OK, 1, 'const';
 
-my $b = CATS::Spawner::Builtin->new({ logger => CATS::Logger::Die->new });
+my $b = CATS::Spawner::Builtin->new({
+    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir });
 
 {
     my $r = $b->run(application => $perl, arguments => [ '-e', '{print(1)}' ]);

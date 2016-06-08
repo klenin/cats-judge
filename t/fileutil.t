@@ -5,6 +5,8 @@ use Test::More tests => 55;
 use Test::Exception;
 
 use File::Spec;
+use IPC::Cmd;
+
 use constant FS => 'File::Spec';
 my $path;
 BEGIN { $path = FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1]); }
@@ -196,6 +198,8 @@ sub test_run {
 }
 
 subtest 'run no IPC', sub { test_run(run_use_ipc => 0, run_temp_dir => $tmpdir); };
-subtest 'run IPC', sub { test_run(run_use_ipc => 1); };
+subtest 'run IPC',
+    IPC::Cmd->can_capture_buffer ?
+    sub { test_run(run_use_ipc => 1); } : sub { plan skip_all => 'Bad IPC' };
 
 1;

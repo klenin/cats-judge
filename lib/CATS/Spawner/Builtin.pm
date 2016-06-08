@@ -11,7 +11,8 @@ use CATS::Spawner::Const ':all';
 
 sub _init {
     my ($self) = @_;
-    $self->{fu} = CATS::FileUtil->new({ logger => $self->{opts}->{logger} });
+    $self->{fu} = CATS::FileUtil->new({
+        map { $_ => $self->{opts}->{$_} } qw(logger run_temp_dir) });
 }
 
 sub _run {
