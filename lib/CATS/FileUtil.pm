@@ -172,6 +172,7 @@ sub _split_braced {
             }
         }
     }
+    die 'Unmatched opening brace' if $state eq 'braced';
     @parts;
 }
 

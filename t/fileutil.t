@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 62;
+use Test::More tests => 63;
 use Test::Exception;
 
 use File::Spec;
@@ -174,7 +174,8 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     is_deeply [ sb('a{ abc }  ') ], [ 'a', ' abc ' ], 'split_braced 3';
     is_deeply [ sb('{}{}') ], [ '', '' ], 'split_braced empty';
     throws_ok { sb('{{') } qr/nested/i, 'split_braced nested';
-    throws_ok { sb('}') } qr/unmatched/i, 'split_braced unmatched';
+    throws_ok { sb('{') } qr/opening/i, 'split_braced unmatched opening';
+    throws_ok { sb('}') } qr/closing/i, 'split_braced unmatched closing';
 }
 
 sub test_run {
