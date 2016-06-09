@@ -30,8 +30,11 @@ my $perl = $fu->quote_fn($^X);
 my $sp = FS->catdir($path, '..', CATS::Spawner::Platform::get_path);
 
 ok -x $sp, 'exists';
-ok `$sp` && $? == 0, 'runs';
-ok `$sp $perl -v` && $? == 0, 'runs perl';
+
+my $spq = $fu->quote_fn($sp);
+
+ok `$spq` && $? == 0, 'runs';
+ok `$spq $perl -v` && $? == 0, 'runs perl';
 
 is $TR_OK, 1, 'const';
 
