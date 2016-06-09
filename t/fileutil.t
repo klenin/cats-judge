@@ -179,7 +179,7 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 }
 
 sub test_run {
-    plan tests => 14;
+    plan tests => 17;
     my $fu = make_fu(@_);
     my $perl = "{$^X}";
 
@@ -202,6 +202,16 @@ sub test_run {
         is_deeply $r->stdout, [], 'run 2 stdout';
         is_deeply $r->stderr, [ '567' ], 'run 2 stderr';
         is_deeply $r->full, [ '567' ], 'run 2 full';
+    }
+
+    {
+        my $fn = [ $tmpdir, 't.pl' ];
+        $fu->write_to_file($fn, 'print 3*3') or die;
+        my $r = $fu->run([ $perl, $fn ]);
+        is $r->ok, 1, 'run fn';
+        is $r->err, '', 'run fn';
+        is_deeply $r->stdout, [ '9' ], 'run fn stdout';
+        $fu->remove($fn) or die;
     }
 
     is $fu->run([ $perl, '-e', '{exit 77}' ])->ok, 0, 'run exit 77';

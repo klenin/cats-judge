@@ -199,7 +199,7 @@ sub _run_system {
 }
 
 sub _run_array {
-    goto $_[0]->{run_method} = 'ipc' ? \&_run_ipc : \&_run_system;
+    goto $_[0]->{run_method} eq 'ipc' ? \&_run_ipc : \&_run_system;
 }
 
 sub run { CATS::RunResult->new(_run_array @_) }
