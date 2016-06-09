@@ -208,9 +208,9 @@ sub test_run {
     ok $fu->remove([ $tmpdir, '*.txt' ]), 'run cleanup';
 }
 
-subtest 'run no IPC', sub { test_run(run_use_ipc => 0, run_temp_dir => $tmpdir); };
+subtest 'run no IPC', sub { test_run(run_method => 'system', run_temp_dir => $tmpdir); };
 subtest 'run IPC',
     IPC::Cmd->can_capture_buffer ?
-    sub { test_run(run_use_ipc => 1); } : sub { plan skip_all => 'Bad IPC' };
+    sub { test_run(run_method => 'ipc'); } : sub { plan skip_all => 'Bad IPC' };
 
 1;

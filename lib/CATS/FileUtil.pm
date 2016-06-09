@@ -12,13 +12,13 @@ use constant OPTIONS => [qw(
     logger
     run_debug_log
     run_temp_dir
-    run_use_ipc
+    run_method
 )];
 
 sub new {
     my ($class, $opts) = @_;
     my $self = { map { $_ => $opts->{$_} } @{OPTIONS()} };
-    $self->{run_use_ipc} //= IPC::Cmd->can_capture_buffer;
+    $self->{run_method} //= IPC::Cmd->can_capture_buffer ? 'ipc' : 'system';
     bless $self, $class;
 }
 
@@ -170,14 +170,19 @@ sub _split_braced {
     @parts;
 }
 
-sub _run_array {
+sub _run_ipc {
     my ($self, $cmd) = @_;
+    my @parts = map _split_braced(fn($_)), @$cmd;
+    $self->log(join(' ', 'run_ipc:', @parts), "\n") if $self->{run_debug_log};
+    IPC::Cmd::run command => \@parts;
+}
 
-    my @quoted = map $self->quote_braced($_), @$cmd;
-    $self->log(join(' ', 'run:', @quoted), "\n") if $self->{run_debug_log};
-    return IPC::Cmd::run command => \@quoted if $self->{run_use_ipc};
+sub _run_system {
+    my ($self, $cmd) = @_;
     my $tmp = $self->{run_temp_dir}
-        or confess 'run: run_temp_dir is required without IPC::Cmd';
+        or confess "run: run_temp_dir is required for 'system' method";
+    my @quoted = map $self->quote_braced($_), @$cmd;
+    $self->log(join(' ', 'run_system:', @quoted), "\n") if $self->{run_debug_log};
     -d $tmp or mkdir $tmp or return $self->log("run: mkdir: $!");
     my @redirects = map File::Spec->catfile($tmp, $_), qw(stdout.txt stderr.txt);
     my $command = join ' ', @quoted,
@@ -185,6 +190,10 @@ sub _run_array {
     system($command) == 0 or return (0, $!, [], [], []);
     my $redirected_data = [ map $self->read_lines($_) // [], @redirects ];
     (1, '', [ map @$_, @$redirected_data ], @$redirected_data);
+}
+
+sub _run_array {
+    goto $_[0]->{run_method} = 'ipc' ? \&_run_ipc : \&_run_system;
 }
 
 sub run { CATS::RunResult->new(_run_array @_) }
