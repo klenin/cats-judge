@@ -128,7 +128,7 @@ sub quote_fn {
         qq~"$fn"~;
     }
     else {
-        $fn =~ s/'/'\''/g;
+        $fn =~ s/'/'\\''/g;
         "'$fn'";
     }
 }
