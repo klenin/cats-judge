@@ -33,7 +33,7 @@ sub make_sp_params {
     );
     map {
         my ($name, $value) = splice @r, 0, 2;
-        defined $value ? "-$name=$value" : '';
+        defined $value ? "-$name=$value" : ();
     } 1 .. @r / 2;
 }
 
