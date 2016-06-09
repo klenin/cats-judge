@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 55;
+use Test::More tests => 62;
 use Test::Exception;
 
 use File::Spec;
@@ -164,6 +164,17 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     is $fu->quote_braced('{-a -b} {-c} -d'), "$q-a -b$q -c -d", 'braced';
     is $fu->quote_braced('{print 123}'), $q . "print 123$q", 'only braced';
     is $fu->quote_braced([ 'a b', 'c' ]), $q . FS->catfile('a b', 'c') . $q, 'braced fn';
+}
+
+{
+    *sb = \&CATS::FileUtil::_split_braced;
+    is_deeply [ sb('abc') ], [ 'abc' ], 'split_braced no braces';
+    is_deeply [ sb('{abc}') ], [ 'abc' ], 'split_braced 1';
+    is_deeply [ sb('{a  bc} d  ef') ], [ 'a  bc', 'd', 'ef' ], 'split_braced 2';
+    is_deeply [ sb('a{ abc }  ') ], [ 'a', ' abc ' ], 'split_braced 3';
+    is_deeply [ sb('{}{}') ], [ '', '' ], 'split_braced empty';
+    throws_ok { sb('{{') } qr/nested/i, 'split_braced nested';
+    throws_ok { sb('}') } qr/unmatched/i, 'split_braced unmatched';
 }
 
 sub test_run {

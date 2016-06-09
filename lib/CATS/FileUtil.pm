@@ -135,6 +135,41 @@ sub quote_braced {
     $cmd;
 }
 
+sub _split_braced {
+    my ($cmd) = @_;
+    my @parts;
+    my $state = 'spaces';
+    for my $c (split '', $cmd) {
+        if ($c eq '{') {
+            die 'Nested braces' if $state eq 'braced';
+            push @parts, '';
+            $state = 'braced';
+        }
+        elsif ($c eq '}') {
+            die 'Unmatched closing brace' if $state ne 'braced';
+            $state = 'spaces';
+        }
+        elsif ($c =~ /\s/) {
+            if ($state eq 'braced') {
+                $parts[-1] .= $c;
+            }
+            else {
+                $state = 'spaces';
+            }
+        }
+        else {
+            if ($state eq 'spaces') {
+                push @parts, $c;
+                $state = 'word';
+            }
+            else {
+                $parts[-1] .= $c;
+            }
+        }
+    }
+    @parts;
+}
+
 sub _run_array {
     my ($self, $cmd) = @_;
 
