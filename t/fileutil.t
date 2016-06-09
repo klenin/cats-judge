@@ -157,7 +157,7 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
     my $q = $^O eq 'MSWin32' ? '"' : "'";
     is $fu->quote_fn(' a bc'), "$q a bc$q", 'quote';
     is $fu->quote_fn(q~a "'bc~),
-        ($^O eq 'MSWin32' ? q~"a \"'bc"~ : q~'a "\'bc'~), 'escape quote';
+        ($^O eq 'MSWin32' ? q~"a \"'bc"~ : q~'a "'\''bc'~), 'escape quote';
 
     is $fu->quote_braced('abc'), 'abc', 'no braced';
     is $fu->quote_braced('abc{}'), 'abc', 'empty braced';

@@ -123,9 +123,14 @@ sub copy {
 sub quote_fn {
     my ($self, $fn) = @_;
     $fn =~ /\s/ or return $fn;
-    my $q = $^O eq 'MSWin32' ? '"' : "'";
-    $fn =~ s/$q/\\$q/g;
-    "$q$fn$q";
+    if ($^O eq 'MSWin32') {
+        $fn =~ s/"/\\"/g;
+        qq~"$fn"~;
+    }
+    else {
+        $fn =~ s/'/'\''/g;
+        "'$fn'";
+    }
 }
 
 sub quote_braced {
