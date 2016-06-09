@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 16;
+use Test::More tests => 22;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -65,6 +65,20 @@ sub dq { $fu->quote_fn($fu->quote_fn($_[0])) }
     is $ri->{terminate_reason}, $TR_OK, 'spawner def';
     is $ri->{limits}->{memory}, undef, 'spawner def limit';
     is_deeply $fu->read_lines($d->{opts}->{save_stdout}), [ '1' ], 'spawner def stdout';
+}
+
+{
+    my $fn = [ $tmpdir, 't.pl' ];
+    $fu->write_to_file($fn, "print STDOUT 'OUT';\ndie 'ERR';\n") or die;
+    my $r = $d->run(application => $perl, arguments => [ $fn ]);
+    is scalar @{$r->items}, 1, 'out+err single item';
+    my $ri = $r->items->[0];
+    is_deeply $ri->{errors}, [], 'out+err no errors';
+    is $ri->{terminate_reason}, $TR_OK, 'out+err TR';
+    like $ri->{exit_status}, qr/255/, 'out+err status';
+    is_deeply $fu->read_lines($d->{opts}->{save_stdout}), [ 'OUT' ], 'out+err stdout';
+    like $fu->read_lines($d->{opts}->{save_stderr})->[0], qr/ERR/, 'out+err stderr';
+    $fu->remove($fn) or die;
 }
 
 {
