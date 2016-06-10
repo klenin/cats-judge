@@ -1,0 +1,14 @@
+﻿cache:
+  - C:\strawberry
+
+install:
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - cd C:\projects\%APPVEYOR_PROJECT_NAME%
+  - cpanm --installdeps --notest .
+  - perl install.pl
+
+build: off
+
+test_script:
+  - prove
