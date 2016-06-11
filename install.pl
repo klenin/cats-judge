@@ -167,7 +167,7 @@ step 'Save configuration', sub {
     while (<$conf_in>) {
 
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
-        s~(\svalue=")[^"]+"~$1$sp"~ if defined $platform;
+        s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
 
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
