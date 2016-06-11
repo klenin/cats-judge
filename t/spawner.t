@@ -80,15 +80,16 @@ my $d = CATS::Spawner::Default->new({
 }
 
 {
+    my $tl = $^O eq 'MSWin32' ? 0.3 : 1.0;
     my $r = $d->run(
         application => $perl, arguments => [ '-e', '{1 while 1;}' ],
-        time_limit => 0.3);
+        time_limit => $tl);
     is scalar @{$r->items}, 1, 'spawner TL single item';
     my $ri = $r->items->[0];
     is_deeply $ri->{errors}, [], 'spawner TL no errors';
-    is 1*$ri->{limits}->{user_time}, 0.3, 'spawner TL limit';
+    is 1*$ri->{limits}->{user_time}, $tl, 'spawner TL limit';
     is $ri->{terminate_reason}, $TR_TIME_LIMIT, 'spawner TL';
-    ok abs($ri->{consumed}->{user_time} - 0.3) < 0.1, 'spawner TL consumed';
+    ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, 'spawner TL consumed';
 }
 
 $fu->remove([ $tmpdir, '*.txt' ]);
