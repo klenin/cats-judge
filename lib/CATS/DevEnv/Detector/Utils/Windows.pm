@@ -192,10 +192,11 @@ sub add_to_path {
     my ($dir) = @_;
     my $key = Win32::TieRegistry->new('HKEY_CURRENT_USER/Environment', REG_READ_WRITE) or return;
     my ($path, $type) = $key->GetValue('PATH');
+    $path = $path ? "$path;" : '';
     my $dir_re = qr/\Q$dir\E\\?$/;
     return ' (already in user path)' if grep /$dir_re/, split /;/, $path;
     return ' (already in some other path)' if grep /$dir_re/, FS->path;
-    $key->SetValue('PATH', "$path;$dir", $type // Win32::TieRegistry::REG_SZ);
+    $key->SetValue('PATH', $path . $dir, $type // Win32::TieRegistry::REG_SZ);
     return 'added';
 }
 
