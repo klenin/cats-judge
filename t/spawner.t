@@ -55,10 +55,8 @@ my $d = CATS::Spawner::Default->new({
     save_report => [ $tmpdir, 'report.txt' ],
 });
 
-sub dq { $fu->quote_fn($fu->quote_fn($_[0])) }
-
 {
-    my $r = $d->run(application => $perl, arguments => [ '-e', dq('print 1') ]);
+    my $r = $d->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
     is scalar @{$r->items}, 1, 'spawner def single item';
     my $ri = $r->items->[0];
     is_deeply $ri->{errors}, [], 'spawner def no errors';
@@ -83,7 +81,7 @@ sub dq { $fu->quote_fn($fu->quote_fn($_[0])) }
 
 {
     my $r = $d->run(
-        application => $perl, arguments => [ '-e', dq('1 while 1;') ],
+        application => $perl, arguments => [ '-e', '{1 while 1;}' ],
         time_limit => 0.3);
     is scalar @{$r->items}, 1, 'spawner TL single item';
     my $ri = $r->items->[0];
