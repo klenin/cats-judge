@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 48;
+use Test::More tests => 58;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -62,7 +62,7 @@ sub simple {
     my $r = $s->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
     my $ri = single_item_ok($r, $msg);
     is $ri->{limits}->{memory}, undef, "$msg limit";
-    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ '1' ], "msg stdout";
+    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ '1' ], "$msg stdout";
 }
 
 sub out_err {
@@ -103,6 +103,19 @@ sub memory_limit {
     ok abs($ri->{consumed}->{memory} - $ml) / $ml < 0.2, "$msg consumed";
 }
 
+sub write_limit {
+    my ($s, $msg) = @_;
+    $msg .= ' WL';
+    my $wl = 2;
+    my $r = $s->run(
+        application => $perl, arguments => [ '-e', '{ print 2 x 10_000 while 1; }' ],
+        write_limit => $wl);
+    $wl *= 1024 * 1024;
+    my $ri = single_item_ok($r, $msg, $TR_WRITE_LIMIT);
+    is 1*$ri->{limits}->{write}, $wl, "$msg limit";
+    ok abs($ri->{consumed}->{write} - $wl) / $wl < 0.1, "$msg consumed";
+}
+
 my %p = (
     logger => CATS::Logger::Die->new,
     path => $sp,
@@ -117,10 +130,12 @@ simple($dt, 'dt');
 out_err($dt, 'dt');
 time_limit($dt, 'dt');
 memory_limit($dt, 'dt');
+write_limit($dt, 'dt');
 
 simple($dj, 'dj');
 out_err($dj, 'dj');
 time_limit($dj, 'dj');
 memory_limit($dj, 'dj');
+write_limit($dj, 'dj');
 
 $fu->remove([ $tmpdir, '*.txt' ]);
