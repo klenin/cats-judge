@@ -18,6 +18,8 @@ sub _init {
 sub _run {
     my ($self, $p) = @_;
     my $run = $self->{fu}->run([ $p->application, @{$p->arguments} ]);
+    $self->{stdout} = $run->stdout;
+    $self->{stderr} = $run->stderr;
     my $report = CATS::Spawner::Report->new;
     $report->add({
         params => $p,
@@ -31,5 +33,8 @@ sub _run {
         },
     });
 }
+
+sub stdout_lines { $_[0]->{stdout} }
+sub stderr_lines { $_[0]->{stderr} }
 
 1;

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 58;
+use Test::More tests => 67;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -37,15 +37,6 @@ ok `$spq` && $? == 0, 'runs';
 ok `$spq $perl -v` && $? == 0, 'runs perl';
 
 is $TR_OK, 1, 'const';
-
-my $b = CATS::Spawner::Builtin->new({
-    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir });
-
-{
-    my $r = $b->run(application => $perl, arguments => [ '-e', '{print(1)}' ]);
-    is scalar @{$r->items}, 1, 'spawner builtin single item';
-    is $r->items->[0]->{terminate_reason}, $TR_OK, 'spawner builtin basic';
-}
 
 sub single_item_ok {
     my ($r, $msg, $tr) = @_;
@@ -116,6 +107,8 @@ sub write_limit {
     ok abs($ri->{consumed}->{write} - $wl) / $wl < 0.1, "$msg consumed";
 }
 
+my $b = CATS::Spawner::Builtin->new({
+    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir });
 my %p = (
     logger => CATS::Logger::Die->new,
     path => $sp,
@@ -125,6 +118,9 @@ my %p = (
 );
 my $dt = CATS::Spawner::Default->new({ %p });
 my $dj = CATS::Spawner::Default->new({ %p, json => 1 }); 
+
+simple($b, 'b');
+out_err($dt, 'b');
 
 simple($dt, 'dt');
 out_err($dt, 'dt');
