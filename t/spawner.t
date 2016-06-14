@@ -47,7 +47,7 @@ my $b = CATS::Spawner::Builtin->new({
     is $r->items->[0]->{terminate_reason}, $TR_OK, 'spawner builtin basic';
 }
 
-my $d = CATS::Spawner::Default->new({
+my $dt = CATS::Spawner::Default->new({
     logger => CATS::Logger::Die->new,
     path => $sp,
     save_stdout => [ $tmpdir, 'stdout.txt' ],
@@ -55,44 +55,53 @@ my $d = CATS::Spawner::Default->new({
     save_report => [ $tmpdir, 'report.txt' ],
 });
 
-{
-    my $r = $d->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
-    is scalar @{$r->items}, 1, 'spawner def single item';
+sub single_item_ok {
+    my ($r, $msg, $tr) = @_;
+    is scalar @{$r->items}, 1, "$msg single item";
     my $ri = $r->items->[0];
-    is_deeply $ri->{errors}, [], 'spawner def no errors';
-    is $ri->{terminate_reason}, $TR_OK, 'spawner def';
-    is $ri->{limits}->{memory}, undef, 'spawner def limit';
-    is_deeply $fu->read_lines($d->{opts}->{save_stdout}), [ '1' ], 'spawner def stdout';
+    is_deeply $ri->{errors}, [], "$msg no errors";
+    is $ri->{terminate_reason}, $tr // $TR_OK, "$msg TR";
+    $ri;
 }
 
-{
+sub simple {
+    my ($s, $msg) = @_;
+    $msg .= ' simple';
+    my $r = $s->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
+    my $ri = single_item_ok($r, $msg);
+    is $ri->{limits}->{memory}, undef, "$msg limit";
+    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ '1' ], "msg stdout";
+}
+
+sub out_err {
+    my ($s, $msg) = @_;
+    $msg .= ' out+err';
     my $fn = [ $tmpdir, 't.pl' ];
     $fu->write_to_file($fn, "print STDOUT 'OUT';\ndie 'ERR';\n") or die;
-    my $r = $d->run(application => $perl, arguments => [ $fn ]);
-    is scalar @{$r->items}, 1, 'out+err single item';
-    my $ri = $r->items->[0];
-    is_deeply $ri->{errors}, [], 'out+err no errors';
-    is $ri->{terminate_reason}, $TR_OK, 'out+err TR';
-    like $ri->{exit_status}, qr/255/, 'out+err status';
-    is_deeply $fu->read_lines($d->{opts}->{save_stdout}), [ 'OUT' ], 'out+err stdout';
-    like $fu->read_lines($d->{opts}->{save_stderr})->[0], qr/ERR/, 'out+err stderr';
+    my $r = $s->run(application => $perl, arguments => [ $fn ]);
+    my $ri = single_item_ok($r, $msg);
+    like $ri->{exit_status}, qr/255/, "$msg out+err status";
+    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ 'OUT' ], "$msg stdout";
+    like $fu->read_lines($s->{opts}->{save_stderr})->[0], qr/ERR/, "$msg stderr";
     $fu->remove($fn) or die;
 }
 
-{
+sub time_limit {
+    my ($s, $msg) = @_;
+    $msg .= ' TL';
     my $tl = $^O eq 'MSWin32' ? 0.3 : 1.0;
-    my $r = $d->run(
+    my $r = $s->run(
         application => $perl, arguments => [ '-e', '{1 while 1;}' ],
         time_limit => $tl);
-    is scalar @{$r->items}, 1, 'spawner TL single item';
-    my $ri = $r->items->[0];
-    is_deeply $ri->{errors}, [], 'spawner TL no errors';
-    is 1*$ri->{limits}->{user_time}, $tl, 'spawner TL limit';
-    is $ri->{terminate_reason}, $TR_TIME_LIMIT, 'spawner TL';
-    ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, 'spawner TL consumed';
+    my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
+    is 1*$ri->{limits}->{user_time}, $tl, "$msg limit";
+    ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, "$msg consumed";
 }
 
-$fu->remove([ $tmpdir, '*.txt' ]);
+simple($dt, 'dt');
+out_err($dt, 'dt');
+time_limit($dt, 'dt');
+
 
 1;
 
