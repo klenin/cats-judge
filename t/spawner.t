@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 22;
+use Test::More tests => 38;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -47,14 +47,6 @@ my $b = CATS::Spawner::Builtin->new({
     is $r->items->[0]->{terminate_reason}, $TR_OK, 'spawner builtin basic';
 }
 
-my $dt = CATS::Spawner::Default->new({
-    logger => CATS::Logger::Die->new,
-    path => $sp,
-    save_stdout => [ $tmpdir, 'stdout.txt' ],
-    save_stderr => [ $tmpdir, 'stderr.txt' ],
-    save_report => [ $tmpdir, 'report.txt' ],
-});
-
 sub single_item_ok {
     my ($r, $msg, $tr) = @_;
     is scalar @{$r->items}, 1, "$msg single item";
@@ -98,10 +90,22 @@ sub time_limit {
     ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, "$msg consumed";
 }
 
+my %p = (
+    logger => CATS::Logger::Die->new,
+    path => $sp,
+    save_stdout => [ $tmpdir, 'stdout.txt' ],
+    save_stderr => [ $tmpdir, 'stderr.txt' ],
+    save_report => [ $tmpdir, 'report.txt' ],
+);
+my $dt = CATS::Spawner::Default->new({ %p });
+my $dj = CATS::Spawner::Default->new({ %p, json => 1 }); 
+
 simple($dt, 'dt');
 out_err($dt, 'dt');
 time_limit($dt, 'dt');
 
+simple($dj, 'dj');
+out_err($dj, 'dj');
+time_limit($dj, 'dj');
 
-1;
-
+$fu->remove([ $tmpdir, '*.txt' ]);

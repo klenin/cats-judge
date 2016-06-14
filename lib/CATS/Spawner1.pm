@@ -53,7 +53,7 @@ use constant { ANY => 1, INT => 2, STR => 3, FLOAT => 4, OPT => 128 };
 my $item_schema = {
     params => ANY,
     application => STR,
-    arguments => STR,
+    arguments => [ STR ],
     method => STR,
     security => {
         level => INT,
@@ -63,14 +63,18 @@ my $item_schema = {
     limits => {
         wall_clock_time => OPT | FLOAT,
         user_time => OPT | FLOAT,
+        idle_time => OPT | FLOAT,
         memory => OPT | INT,
         write => OPT | INT,
+        load_ratio => OPT | FLOAT,
     },
     terminate_reason => INT,
     exit_status => STR,
     exit_code => INT,
     consumed => {
+        wall_clock_time => OPT | FLOAT,
         user_time => FLOAT,
+        system_time => OPT | FLOAT,
         memory => INT,
         write => INT,
     },
