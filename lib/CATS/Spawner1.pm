@@ -28,6 +28,9 @@ sub log {
     $self->{logger}->msg(@rest);
 }
 
+sub stdout_lines { [] }
+sub stderr_lines { [] }
+
 package CATS::Spawner::Params;
 
 use Carp qw(croak);

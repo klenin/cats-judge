@@ -23,6 +23,16 @@ sub _init {
 
 sub opts { $_[0]->{opts} }
 
+sub stdout_lines {
+    my ($self) = @_;
+    $self->{fu}->read_lines($self->{opts}->{stdout_file});
+}
+
+sub stderr_lines {
+    my ($self) = @_;
+    $self->{fu}->read_lines($self->{opts}->{stderr_file});
+}
+
 sub make_sp_params {
     my ($self, $p) = @_;
     my @r = (

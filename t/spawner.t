@@ -62,7 +62,7 @@ sub simple {
     my $r = $s->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
     my $ri = single_item_ok($r, $msg);
     is $ri->{limits}->{memory}, undef, "$msg limit";
-    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ '1' ], "$msg stdout";
+    is_deeply $s->stdout_lines, [ '1' ], "$msg stdout";
 }
 
 sub out_err {
@@ -73,8 +73,8 @@ sub out_err {
     my $r = $s->run(application => $perl, arguments => [ $fn ]);
     my $ri = single_item_ok($r, $msg);
     like $ri->{exit_status}, qr/255/, "$msg out+err status";
-    is_deeply $fu->read_lines($s->{opts}->{save_stdout}), [ 'OUT' ], "$msg stdout";
-    like $fu->read_lines($s->{opts}->{save_stderr})->[0], qr/ERR/, "$msg stderr";
+    is_deeply $s->stdout_lines, [ 'OUT' ], "$msg stdout";
+    like $s->stderr_lines->[0], qr/ERR/, "$msg stderr";
     $fu->remove($fn) or die;
 }
 
