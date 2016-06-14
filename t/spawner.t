@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 67;
+use Test::More tests => 79;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -81,6 +81,32 @@ sub time_limit {
     ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, "$msg consumed";
 }
 
+sub deadline {
+    my ($s, $msg) = @_;
+    $msg .= ' deadline';
+    my $dl = $^O eq 'MSWin32' ? 0.3 : 1.0;
+    my $r = $s->run(
+        application => $perl, arguments => [ '-e', '{sleep 0.01 while 1;}' ],
+        deadline => $dl);
+    my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
+    is 1*$ri->{limits}->{wall_clock_time}, $dl, "$msg limit";
+    ok $ri->{consumed}->{user_time} < 0.5 * $dl, "$msg consumed user";
+    ok abs($ri->{consumed}->{wall_clock_time} - $dl) < 0.1, "$msg consumed wall";
+}
+
+sub idle_time_limit {
+    my ($s, $msg) = @_;
+    $msg .= ' IL';
+    my $il = $^O eq 'MSWin32' ? 0.3 : 1.0;
+    my $r = $s->run(
+        application => $perl, arguments => [ '-e', '{sleep 1000;}' ],
+        idle_time_limit => $il);
+    my $ri = single_item_ok($r, $msg, $TR_IDLENESS_LIMIT);
+    is 1*$ri->{limits}->{idle_time}, $il, "$msg limit";
+    ok $ri->{consumed}->{user_time} < 0.1, "$msg consumed user";
+    ok abs($ri->{consumed}->{wall_clock_time} - $il) < 0.1, "$msg consumed wall";
+}
+
 sub memory_limit {
     my ($s, $msg) = @_;
     $msg .= ' ML';
@@ -131,6 +157,8 @@ write_limit($dt, 'dt');
 simple($dj, 'dj');
 out_err($dj, 'dj');
 time_limit($dj, 'dj');
+deadline($dj, 'dj');
+idle_time_limit($dj, 'dj');
 memory_limit($dj, 'dj');
 write_limit($dj, 'dj');
 

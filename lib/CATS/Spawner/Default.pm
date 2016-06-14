@@ -41,6 +41,8 @@ sub make_sp_params {
         sr => $self->opts->{report_file},
         hr => $self->opts->{hide_report},
         tl => $p->{time_limit},
+        y  => $p->{idle_time_limit},
+        d  => $p->{deadline},
         ml => $p->{memory_limit},
         wl => $p->{write_limit},
     );
@@ -238,9 +240,9 @@ Sample JSON report
             },
             errors => (@$e == 0 || $e->[0] eq '<none>' ? [] : $e),
             limits => {
-                wall_clock_time => $lim->{DeadLine},
+                wall_clock_time => $lim->{WallClockTime},
                 user_time => $lim->{Time},
-                idle_time => $lim->{IdleTimeLimit},
+                idle_time => $lim->{IdlenessTime},
                 memory => $lim->{Memory},
                 write => $lim->{IOBytes},
                 load_ratio => $lim->{IdlenessProcessorLoad},
