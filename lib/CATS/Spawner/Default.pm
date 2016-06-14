@@ -31,6 +31,7 @@ sub make_sp_params {
         sr => $self->opts->{report_file},
         hr => $self->opts->{hide_report},
         tl => $p->{time_limit},
+        ml => $p->{memory_limit},
     );
     ($self->opts->{json} ? '--json' : ()),
     map {
@@ -229,7 +230,7 @@ Sample JSON report
                 wall_clock_time => $lim->{DeadLine},
                 user_time => $lim->{Time},
                 idle_time => $lim->{IdleTimeLimit},
-                memory => $lim->{MemoryLimit},
+                memory => $lim->{Memory},
                 write => $lim->{WriteLimit},
                 load_ratio => $lim->{IdlenessProcessorLoad},
             },

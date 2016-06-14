@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 38;
+use Test::More tests => 48;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -90,6 +90,19 @@ sub time_limit {
     ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, "$msg consumed";
 }
 
+sub memory_limit {
+    my ($s, $msg) = @_;
+    $msg .= ' ML';
+    my $ml = 10;
+    my $r = $s->run(
+        application => $perl, arguments => [ '-e', '{ $x .= 2 x 10_000 while 1; }' ],
+        memory_limit => $ml);
+    $ml *= 1024 * 1024;
+    my $ri = single_item_ok($r, $msg, $TR_MEMORY_LIMIT);
+    is 1*$ri->{limits}->{memory}, $ml, "$msg limit";
+    ok abs($ri->{consumed}->{memory} - $ml) / $ml < 0.2, "$msg consumed";
+}
+
 my %p = (
     logger => CATS::Logger::Die->new,
     path => $sp,
@@ -103,9 +116,11 @@ my $dj = CATS::Spawner::Default->new({ %p, json => 1 });
 simple($dt, 'dt');
 out_err($dt, 'dt');
 time_limit($dt, 'dt');
+memory_limit($dt, 'dt');
 
 simple($dj, 'dj');
 out_err($dj, 'dj');
 time_limit($dj, 'dj');
+memory_limit($dj, 'dj');
 
 $fu->remove([ $tmpdir, '*.txt' ]);
