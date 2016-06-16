@@ -78,7 +78,7 @@ sub time_limit {
         time_limit => $tl);
     my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
     is 1*$ri->{limits}->{user_time}, $tl, "$msg limit";
-    ok abs($ri->{consumed}->{user_time} - $tl) < 0.1, "$msg consumed";
+    cmp_ok abs($ri->{consumed}->{user_time} - $tl), '<', 0.1, "$msg consumed";
 }
 
 sub deadline {
@@ -90,8 +90,8 @@ sub deadline {
         deadline => $dl);
     my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
     is 1*$ri->{limits}->{wall_clock_time}, $dl, "$msg limit";
-    ok $ri->{consumed}->{user_time} < 0.5 * $dl, "$msg consumed user";
-    ok abs($ri->{consumed}->{wall_clock_time} - $dl) < 0.1, "$msg consumed wall";
+    cmp_ok $ri->{consumed}->{user_time}, '<', 0.5 * $dl, "$msg consumed user";
+    cmp_ok abs($ri->{consumed}->{wall_clock_time} - $dl), '<', 0.1, "$msg consumed wall";
 }
 
 sub idle_time_limit {
@@ -103,8 +103,8 @@ sub idle_time_limit {
         idle_time_limit => $il);
     my $ri = single_item_ok($r, $msg, $TR_IDLENESS_LIMIT);
     is 1*$ri->{limits}->{idle_time}, $il, "$msg limit";
-    ok $ri->{consumed}->{user_time} < 0.1, "$msg consumed user";
-    ok abs($ri->{consumed}->{wall_clock_time} - $il) < 0.1, "$msg consumed wall";
+    cmp_ok $ri->{consumed}->{user_time}, '<', 0.1, "$msg consumed user";
+    cmp_ok abs($ri->{consumed}->{wall_clock_time} - $il), '<', 0.1, "$msg consumed wall";
 }
 
 sub memory_limit {
@@ -117,7 +117,7 @@ sub memory_limit {
     $ml *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_MEMORY_LIMIT);
     is 1*$ri->{limits}->{memory}, $ml, "$msg limit";
-    ok abs($ri->{consumed}->{memory} - $ml) / $ml < 0.2, "$msg consumed";
+    cmp_ok abs($ri->{consumed}->{memory} - $ml) / $ml, '<', 0.2, "$msg consumed";
 }
 
 sub write_limit {
@@ -130,7 +130,7 @@ sub write_limit {
     $wl *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_WRITE_LIMIT);
     is 1*$ri->{limits}->{write}, $wl, "$msg limit";
-    ok abs($ri->{consumed}->{write} - $wl) / $wl < 0.15, "$msg consumed";
+    cmp_ok abs($ri->{consumed}->{write} - $wl) / $wl, '<', 0.15, "$msg consumed";
 }
 
 my $b = CATS::Spawner::Builtin->new({
