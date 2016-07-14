@@ -59,12 +59,20 @@ sub _run {
     my @quoted = map $self->{fu}->quote_braced($_),
         $self->make_sp_params($p), $p->application, @{$p->arguments};
     my $report = CATS::Spawner::Report->new;
+    my $opts = $self->{opts};
+    {
+        open my $fstdout, '>', $opts->{stdout_file} or die "Can't open $opts->{stdout_file}"
+            if $opts->{stdout_file};
+        open my $fstderr, '>', $opts->{stderr_file} or die "Can't open $opts->{stderr_file}"
+            if $opts->{stderr_file};
+    }
     my $exit_code = system(join ' ', $self->{sp}, @quoted);
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
-    open my $file, '<', $self->opts->{report_file}
-        or return $report->error("unable to open report '$self->opts->{report_file}': $!");
-    $self->opts->{json} ?
+    open my $file, '<', $opts->{report_file}
+        or return $report->error("unable to open report '$opts->{report_file}': $!");
+
+    $opts->{json} ?
         $self->parse_json_report($report, $file) :
         $self->parse_legacy_report($report, $file);
 }
