@@ -86,7 +86,7 @@ sub deadline {
     $msg .= ' deadline';
     my $dl = $^O eq 'MSWin32' ? 0.3 : 1.0;
     my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{sleep 0.01 while 1;}' ],
+        application => $perl, arguments => [ '-e', '{sleep 1; 1 while 1;}' ],
         deadline => $dl);
     my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
     is 1*$ri->{limits}->{wall_clock_time}, $dl, "$msg limit";
@@ -110,7 +110,7 @@ sub idle_time_limit {
 sub memory_limit {
     my ($s, $msg) = @_;
     $msg .= ' ML';
-    my $ml = 10;
+    my $ml = $^O eq 'MSWin32' ? 10 : 50;
     my $r = $s->run(
         application => $perl, arguments => [ '-e', '{ $x .= 2 x 10_000 while 1; }' ],
         memory_limit => $ml);
@@ -123,14 +123,14 @@ sub memory_limit {
 sub write_limit {
     my ($s, $msg) = @_;
     $msg .= ' WL';
-    my $wl = 2;
+    my $wl = $^O eq 'MSWin32' ? 2 : 20;
     my $r = $s->run(
         application => $perl, arguments => [ '-e', '{ print 2 x 10_000 while 1; }' ],
         write_limit => $wl);
     $wl *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_WRITE_LIMIT);
     is 1*$ri->{limits}->{write}, $wl, "$msg limit";
-    ok abs($ri->{consumed}->{write} - $wl) / $wl < 0.1, "$msg consumed";
+    ok abs($ri->{consumed}->{write} - $wl) / $wl < 0.15, "$msg consumed";
 }
 
 my $b = CATS::Spawner::Builtin->new({
@@ -143,7 +143,7 @@ my %p = (
     save_report => [ $tmpdir, 'report.txt' ],
 );
 my $dt = CATS::Spawner::Default->new({ %p });
-my $dj = CATS::Spawner::Default->new({ %p, json => 1 }); 
+my $dj = CATS::Spawner::Default->new({ %p, json => 1 });
 
 simple($b, 'b');
 out_err($dt, 'b');
