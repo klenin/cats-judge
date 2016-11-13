@@ -30,7 +30,7 @@ Commands:
     #serve#
     #install# --problem <zip_or_directory_or_name> [--force-install]
     #run# --problem <zip_or_directory_or_name> [--force-install]
-        --solution <file>... [--de <de_code>] [--testset <testset>]
+        --run <file>... [--de <de_code>] [--testset <testset>]
         [--result text|html] [--result=columns <regexp>]
     #download# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
