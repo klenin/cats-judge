@@ -756,6 +756,12 @@ sub prepare_problem {
         return;
     }
 
+    if (!defined $r->{src} || $r->{src} eq '') {
+        log_msg("Empty source for problem $r->{problem_id}\n");
+        $judge->set_request_state($r, $cats::st_unhandled_error);
+        return;
+    }
+
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
@@ -874,7 +880,7 @@ sub main_loop {
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
         my ($r, $state) = prepare_problem($judge->select_request);
-        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
+        test_problem($r) if $r && $state != $cats::st_unhandled_error;
     }
 }
 
