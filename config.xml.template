@@ -29,6 +29,8 @@
 <define name="#arch_7z" de_code_autodetect="2" value="C:\Program Files\7-Zip\7z.exe" />
 <define name="#java" de_code_autodetect="403" value="C:\Program Files\Java\jdk1.7.0_03\bin" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
+<define name="#go" de_code_autodetect="404" value="C:\Go\bin\go.exe" />
+
 <define name="#ruby" de_code_autodetect="504" value="C:\Lang\Ruby\1.9.3\bin\ruby.exe" />
 <define name="#perl" de_code_autodetect="501" value="C:\Lang\Perl\5.14.2\perl\bin\perl.exe" />
 <define name="#python" de_code_autodetect="502" value="C:\Lang\Python\3.3.3\python.exe" />
@@ -39,8 +41,6 @@
 
 <define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\FreeBasic\0.23\fbc.exe" />
-
-<define name="#go" de_code_autodetect="90" value="C:\Go\bin\go.exe" />
 
 <define name="#ms_cpp" de_code_autodetect="103" value="C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\cl.exe" />
 <define name="#gnu_c" de_code_autodetect="105" value="%comspec% /C ..\gcc.cmd" />
@@ -113,18 +113,6 @@
     run=''
     generate=''
     check=''/>
-
-<!-- The Go Programming Language -->
-<de
-    code="90"
-    compile='#spawner #go build -o "%name.exe" "%full_name" '
-    run='#run "%name.exe"'
-    run_interactive='#run_interactive "%name.exe"'
-    runfile='%name.exe'
-    generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
-    check='#spawner %limits "%name.exe" %checker_args'
-    extension='go'/>
 
 <!-- Cross-platform C/C++ compiler -->
 <de
@@ -310,6 +298,18 @@
     run='#run "#java\java.exe" -Xss64m "%name"'
     generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xss64m "%name" %args'
     check='#spawner %limits "#java\java.exe" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
+
+<!-- The Go Programming Language -->
+<de
+    code="404"
+    compile='#spawner #go build -o "%name.exe" "%full_name" '
+    run='#run "%name.exe"'
+    run_interactive='#run_interactive "%name.exe"'
+    runfile='%name.exe'
+    generate='#spawner%redir %limits "%name.exe" %args'
+    validate='#spawner %limits "%name.exe" "%test_input"'
+    check='#spawner %limits "%name.exe" %checker_args'
+    extension='go'/>
 
 <!-- Perl -->
 <de

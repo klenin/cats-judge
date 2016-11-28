@@ -7,11 +7,11 @@ use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Go' }
-sub code { '90' }
+sub code { '404' }
 
 sub _detect {
     my ($self) = @_;
-    env_path($self, "$ENV{'GOROOT'}/bin/go");
+    env_path($self, "$ENV{GOROOT}/bin/go");
 }
 
 sub hello_world {
