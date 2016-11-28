@@ -12,7 +12,7 @@ use CATS::Spawner::Const ':all';
 sub _init {
     my ($self) = @_;
     $self->{fu} = CATS::FileUtil->new({
-        map { $_ => $self->{opts}->{$_} } qw(logger run_temp_dir) });
+        map { $_ => $self->{opts}->{$_} } qw(logger run_temp_dir run_method) });
 }
 
 sub _run {
@@ -23,9 +23,9 @@ sub _run {
     my $report = CATS::Spawner::Report->new;
     $report->add({
         params => $p,
-        terminate_reason => ($run->ok ? $TR_OK : $TR_ABORT),
+        terminate_reason => ($run->ok || $run->exit_code ? $TR_OK : $TR_ABORT),
         errors => [],
-        exit_status => $run->err // '',
+        exit_status => $run->exit_code,
         consumed => {
             user_time => 0,
             memory => 1,

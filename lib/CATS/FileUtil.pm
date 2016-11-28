@@ -180,7 +180,13 @@ sub _run_ipc {
     my ($self, $cmd) = @_;
     my @parts = map _split_braced(fn($_)), @$cmd;
     $self->log(join(' ', 'run_ipc:', @parts), "\n") if $self->{run_debug_log};
-    IPC::Cmd::run command => \@parts;
+    my ($ok, $err, $full, $stdout, $stderr) = IPC::Cmd::run command => \@parts;
+    my $exit_code =
+        # Optimistically, check the existence after the failed run.
+        !$ok && IPC::Cmd::can_run($parts[0]) && $err =~ /value\s(\d+)$/ ? $1 : 0;
+    CATS::RunResult->new(
+        ok => $ok, err => $err, exit_code => $exit_code,
+        full => $full, stdout => $stdout, stderr => $stderr);
 }
 
 sub _run_system {
@@ -188,38 +194,46 @@ sub _run_system {
     my $tmp = $self->{run_temp_dir}
         or confess "run: run_temp_dir is required for 'system' method";
     my @quoted = map $self->quote_braced($_), @$cmd;
+    # On Windows system('non-existing file') gets $? == 256 instead of $? == -1.
+    # Since we are forced to check existence anyway, do it early.
+    -x $quoted[0] or return
+        CATS::RunResult->new(full => [], stdout => [], stderr => []);
     $self->log(join(' ', 'run_system:', @quoted), "\n") if $self->{run_debug_log};
     -d $tmp or mkdir $tmp or return $self->log("run: mkdir: $!");
     my @redirects = map File::Spec->catfile($tmp, $_), qw(stdout.txt stderr.txt);
     my $command = join ' ', @quoted,
         map { ($_ + 1) . '>' . $self->quote_fn($redirects[$_]) } 0..1;
-    system($command) == 0 or return (0, $!, [], [], []);
-    my $redirected_data = [ map $self->read_lines($_) // [], @redirects ];
-    (1, '', [ map @$_, @$redirected_data ], @$redirected_data);
+    my $ok = system($command) == 0 ? 1 : 0;
+    my $err = $ok ? '' : $? == -1 ? $! : $? & 127 ? 'SIGNAL' : $? >> 8;
+    my @redirected_data = map $self->read_lines($_) // [], @redirects;
+    CATS::RunResult->new(
+      ok => $ok, err => $err,
+      exit_code => ($err =~ /^\d+$/ ? $err : 0),
+      full => [ map @$_, @redirected_data ],
+      stdout => $redirected_data[0], stderr => $redirected_data[1]
+    );
 }
 
-sub _run_array {
-    goto $_[0]->{run_method} eq 'ipc' ? \&_run_ipc : \&_run_system;
-}
-
-sub run { CATS::RunResult->new(_run_array @_) }
+sub run { goto $_[0]->{run_method} eq 'ipc' ? \&_run_ipc : \&_run_system; }
 
 package CATS::RunResult;
 
 sub new {
-    my ($class, @p) = @_;
-    # $ok, $err, $full_buf, $stdout_buff, $stderr_buff
-    $p[0] //= 0;
-    $p[1] //= '';
-    ref $p[$_] eq 'ARRAY' or die for 2..4;
-    bless [ @p ], $class;
+    my ($class, %p) = @_;
+    my $self = { map { $_ => $p{$_} } qw(ok err exit_code full stdout stderr) };
+    $self->{ok} //= 0;
+    $self->{err} //= '';
+    $self->{exit_code} //= 0;
+    ref $self->{$_} eq 'ARRAY' or die for qw(full stdout stderr);
+    bless $self, $class;
 }
 
-sub ok { $_[0]->[0] // 0 }
-sub err { $_[0]->[1] }
-sub full { $_[0]->[2] }
-sub stdout { $_[0]->[3] }
-sub stderr { $_[0]->[4] }
+sub ok { $_[0]->{ok} }
+sub err { $_[0]->{err} }
+sub exit_code { $_[0]->{exit_code} }
+sub full { $_[0]->{full} }
+sub stdout { $_[0]->{stdout} }
+sub stderr { $_[0]->{stderr} }
 
 sub check_err { !$_[0]->ok && $_[0]->err =~ $_[1] }
 sub check_stdout { $_[0]->ok && $_[0]->stdout_buf =~ $_[1] }

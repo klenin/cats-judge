@@ -179,17 +179,22 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 }
 
 sub test_run {
-    plan tests => 17;
+    plan tests => 27;
     my $fu = make_fu(@_);
     my $perl = "{$^X}";
 
-    is $fu->run([ $tmpdir, 'nofile' ])->ok, 0, 'run nonexistent';
+    {
+        my $r = $fu->run([ [ $tmpdir, 'nofile' ] ]);
+        is $r->ok, 0, 'run nonexistent';
+        is $r->exit_code, 0, 'run nonexistent exit_code';
+    }
     is $fu->run([ $perl, '-v' ])->ok, 1, 'run 0';
 
     {
         my $r = $fu->run([ $perl, '-e', '{print 123}' ]);
         is $r->ok, 1, 'run 1';
         is $r->err, '', 'run 1 no err';
+        is $r->exit_code, 0, 'run 1 exit_code';
         is_deeply $r->stdout, [ '123' ], 'run 1 stdout';
         is_deeply $r->stderr, [], 'run 1 stderr';
         is_deeply $r->full, [ '123' ], 'run 1 full';
@@ -199,6 +204,7 @@ sub test_run {
         my $r = $fu->run([ $perl, '-e', '{print STDERR 567}' ]);
         is $r->ok, 1, 'run 2';
         is $r->err, '', 'run 2 no err';
+        is $r->exit_code, 0, 'run 2 exit_code';
         is_deeply $r->stdout, [], 'run 2 stdout';
         is_deeply $r->stderr, [ '567' ], 'run 2 stderr';
         is_deeply $r->full, [ '567' ], 'run 2 full';
@@ -209,12 +215,26 @@ sub test_run {
         $fu->write_to_file($fn, 'print 3*3') or die;
         my $r = $fu->run([ $perl, $fn ]);
         is $r->ok, 1, 'run fn';
-        is $r->err, '', 'run fn';
+        is $r->err, '', 'run fn no err';
+        is $r->exit_code, 0, 'run fn exit_code';
         is_deeply $r->stdout, [ '9' ], 'run fn stdout';
         $fu->remove($fn) or die;
     }
 
-    is $fu->run([ $perl, '-e', '{exit 77}' ])->ok, 0, 'run exit 77';
+    {
+        my $r = $fu->run([ $perl, '-e', '{print STDOUT 768; die 876;}' ]);
+        is $r->ok, 0, 'run out+die';
+        like $r->err, qr/255/, 'run out+die exit 255';
+        is $r->exit_code, 255, 'run out+die exit_code';
+        is_deeply $r->stdout, [ '768' ], 'run out+die stdout';
+        like $r->stderr->[0], qr/876/, 'run out+die stderr';
+    }
+
+    {
+        my $r = $fu->run([ $perl, '-e', '{exit 77}' ]);
+        is $r->ok, 0, 'run exit 77 ok';
+        is $r->exit_code, 77, 'run exit 77 exit_code';
+    }
 
     ok $fu->remove([ $tmpdir, '*.txt' ]), 'run cleanup';
 }
