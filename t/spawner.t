@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 79;
+use Test::More tests => 90;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -133,8 +133,10 @@ sub write_limit {
     cmp_ok abs($ri->{consumed}->{write} - $wl) / $wl, '<', 0.15, "$msg consumed";
 }
 
-my $b = CATS::Spawner::Builtin->new({
-    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir });
+my $bi = CATS::Spawner::Builtin->new({
+    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir, run_method => 'ipc' });
+my $bs = CATS::Spawner::Builtin->new({
+    logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir, run_method => 'system' });
 my %p = (
     logger => CATS::Logger::Die->new,
     path => $sp,
@@ -145,8 +147,11 @@ my %p = (
 my $dt = CATS::Spawner::Default->new({ %p });
 my $dj = CATS::Spawner::Default->new({ %p, json => 1 });
 
-simple($b, 'b');
-out_err($dt, 'b');
+simple($bi, 'bi');
+out_err($bi, 'bi');
+
+simple($bs, 'bs');
+out_err($bs, 'bs');
 
 simple($dt, 'dt');
 out_err($dt, 'dt');
