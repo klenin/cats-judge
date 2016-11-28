@@ -104,7 +104,7 @@ sub idle_time_limit {
     my $ri = single_item_ok($r, $msg, $TR_IDLENESS_LIMIT);
     is 1*$ri->{limits}->{idle_time}, $il, "$msg limit";
     cmp_ok $ri->{consumed}->{user_time}, '<', 0.1, "$msg consumed user";
-    cmp_ok abs($ri->{consumed}->{wall_clock_time} - $il), '<', 0.1, "$msg consumed wall";
+    cmp_ok abs($ri->{consumed}->{wall_clock_time} - $il), '<', 0.2, "$msg consumed wall";
 }
 
 sub memory_limit {
