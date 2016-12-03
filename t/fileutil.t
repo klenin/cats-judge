@@ -240,6 +240,6 @@ sub test_run {
 }
 
 subtest 'run no IPC', sub { test_run(run_method => 'system', run_temp_dir => $tmpdir); };
-subtest 'run IPC',
-    IPC::Cmd->can_capture_buffer ?
-    sub { test_run(run_method => 'ipc'); } : sub { plan skip_all => 'Bad IPC' };
+subtest 'run IPC', sub { IPC::Cmd->can_capture_buffer ?
+    test_run(run_method => 'ipc') : plan skip_all => 'Bad IPC' };
+
