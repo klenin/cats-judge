@@ -13,14 +13,21 @@ use base qw(CATS::Judge::Base);
 sub auth {
     my ($self) = @_;
 
-    $self->{id} = $dbh->selectrow_array(q~
-        SELECT id FROM judges WHERE nick = ?~, {}, $self->name);
+    ($self->{id}, $self->{uid}, my $nick) = $dbh->selectrow_array(q~
+        SELECT J.id, A.id, J.nick FROM judges J INNER JOIN accounts A ON J.account_id = A.id
+        WHERE A.login = ?~, undef,
+        $self->name);
     $self->{id} or die sprintf "unknown judge name: '%s'", $self->name;
+
+    $nick eq $self->{name}
+        or die "bad judge nick: $nick != $self->{name}";
 
     for (1..20) {
         $self->{sid} = $self->make_sid;
         if ($dbh->do(q~
-            UPDATE judges SET jsid = ? WHERE id = ?~, {}, $self->{sid}, $self->{id})
+            UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP
+            WHERE id = ?~, undef,
+            $self->{sid}, $self->{uid})
         ) {
             $dbh->commit;
             return;
@@ -34,8 +41,8 @@ sub update_state {
     my ($self) = @_;
 
     (my $is_alive, $self->{lock_counter}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
-        SELECT is_alive, lock_counter, jsid, CURRENT_TIMESTAMP - alive_date
-        FROM judges WHERE id = ?~, undef,
+        SELECT J.is_alive, J.lock_counter, A.sid, CURRENT_TIMESTAMP - J.alive_date
+        FROM judges J INNER JOIN accounts A ON J.account_id = A.id WHERE J.id = ?~, undef,
         $self->{id});
 
     $current_sid eq $self->{sid}
