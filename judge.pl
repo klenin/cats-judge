@@ -19,7 +19,7 @@ use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
-use CATS::Judge::Server;
+use CATS::Judge::DirectDatabase;
 use CATS::Judge::Local;
 use CATS::Problem::Backend;
 use CATS::Problem::PolygonBackend;
@@ -915,7 +915,7 @@ $judge = $cli->command ne 'serve' ?
     CATS::Judge::Local->new(
         name => $cfg->name, modulesdir => $cfg->modulesdir, resultsdir => $cfg->resultsdir,
         logger => $log, %{$cli->opts}) :
-    CATS::Judge::Server->new(name => $cfg->name);
+    CATS::Judge::DirectDatabase->new(name => $cfg->name);
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);

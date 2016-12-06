@@ -1,4 +1,4 @@
-package CATS::Judge::Server;
+package CATS::Judge::DirectDatabase;
 
 use strict;
 use warnings;
