@@ -25,7 +25,11 @@ sub auth {
     for (1..20) {
         $self->{sid} = $self->make_sid;
         if ($dbh->do(q~
-            UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP
+            UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP,
+                last_ip = (
+                    SELECT mon$remote_address
+                    FROM mon$attachments M
+                    WHERE M.mon$attachment_id = CURRENT_CONNECTION)
             WHERE id = ?~, undef,
             $self->{sid}, $self->{uid})
         ) {
