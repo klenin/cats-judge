@@ -19,7 +19,6 @@ use CATS::Utils qw(split_fname);
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
-use CATS::Judge::DirectDatabase;
 use CATS::Judge::Local;
 use CATS::Problem::Backend;
 use CATS::Problem::PolygonBackend;
@@ -870,7 +869,7 @@ sub main_loop {
     chdir $cfg->workdir
         or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
 
-    log_msg("judge: %s\n", $judge->name);
+    log_msg("judge: %s, using api: %s\n", $judge->name, $cfg->api);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
     for (my $i = 0; ; $i++) {
@@ -911,11 +910,19 @@ CATS::DB::sql_connect({
     ib_timeformat => '%H:%M',
 }) if $cli->command eq 'serve' || defined $cli->opts->{db};
 
-$judge = $cli->command ne 'serve' ?
-    CATS::Judge::Local->new(
-        name => $cfg->name, modulesdir => $cfg->modulesdir, resultsdir => $cfg->resultsdir,
-        logger => $log, %{$cli->opts}) :
-    CATS::Judge::DirectDatabase->new(name => $cfg->name);
+my $api = $cfg->api;
+if ($cli->command ne 'serve') {
+    $judge = CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir,
+        resultsdir => $cfg->resultsdir, logger => $log, %{$cli->opts});
+}
+elsif ($api =~ /^(WebApi|DirectDatabase)$/) {
+    eval { require "CATS/Judge/$api.pm"; 1; } or die "Can't load $api module: $@";
+    no strict 'refs';
+    $judge = "CATS::Judge::$api"->new_from_cfg($cfg);
+}
+else {
+    die "Unknown api '$api'\n";
+}
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);

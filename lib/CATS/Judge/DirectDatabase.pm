@@ -10,6 +10,11 @@ use CATS::Testset;
 
 use base qw(CATS::Judge::Base);
 
+sub new_from_cfg {
+    my ($class, $cfg) = @_;
+    $class->SUPER::new(name => $cfg->name);
+}
+
 sub auth {
     my ($self) = @_;
 

@@ -16,7 +16,13 @@
     cats_url="http://imcs.dvfu.ru/cats"
     polygon_url="https://polygon.codeforces.com"
     proxy=""
+    api="DirectDatabase"
 >
+<!-- api: WebApi | DirectDatabase -->
+
+<security
+    cats_password="fox"
+/>
 
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp"/>
 <define name="#run" value='#spawner -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>

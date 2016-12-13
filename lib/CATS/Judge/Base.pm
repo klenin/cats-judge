@@ -9,8 +9,11 @@ sub new {
     my ($class) = shift;
     my $self = { @_ };
     bless $self, $class;
+    $self->init();
     $self;
 }
+
+sub init {}
 
 sub abstract { die sprintf "%s::%s is abstract", ref $_[0], (caller 1)[3] =~ /([^:]+)$/; }
 
