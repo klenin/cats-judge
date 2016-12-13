@@ -13,7 +13,7 @@
     formal_input_fname="formal.input"
     show_child_stdout="0"
     save_child_stdout="1"
-    cats_url="http://imcs.dvfu.ru/cats"
+    cats_url="https://imcs.dvfu.ru/cats"
     polygon_url="https://polygon.codeforces.com"
     proxy=""
     api="DirectDatabase"
