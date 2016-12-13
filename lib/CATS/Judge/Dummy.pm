@@ -34,7 +34,7 @@ sub set_request_state {
 }
 
 sub select_request {
-    my ($self, $supported_DEs) = @_;
+    my ($self) = @_;
     {
         id => 0,
         problem_id => 0,
@@ -47,10 +47,6 @@ sub select_request {
         src => $source,
         de_id => $de,
     };
-}
-
-sub lock_request {
-    my ($self, $req) = @_;
 }
 
 sub save_log_dump {
