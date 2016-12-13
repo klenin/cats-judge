@@ -743,10 +743,8 @@ sub clear_problem_cache {
 }
 
 sub prepare_problem {
-    my ($r) = @_;
-    $r or return;
+    my $r = $judge->select_request or return;
 
-    $judge->lock_request($r);
     $log->clear_dump;
 
     if (!defined $r->{status}) {
@@ -878,7 +876,7 @@ sub main_loop {
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;
         next if $judge->is_locked;
-        my ($r, $state) = prepare_problem($judge->select_request);
+        my ($r, $state) = prepare_problem();
         test_problem($r) if $r && $state != $cats::st_unhandled_error;
     }
 }
@@ -941,7 +939,7 @@ elsif ($cli->command =~ /^(install|run)$/) {
         my $wd = Cwd::cwd();
         $judge->{run} = $rr;
         $judge->set_def_DEs($cfg->def_DEs);
-        my ($r, $state) = prepare_problem($judge->select_request);
+        my ($r, $state) = prepare_problem();
         test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
         $judge->{rid_to_fname}->{$r->{id}} = $rr;
         chdir($wd);

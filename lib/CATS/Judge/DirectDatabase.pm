@@ -82,7 +82,7 @@ sub set_request_state {
 }
 
 sub select_request {
-    my ($self, $supported_DEs) = @_;
+    my ($self) = @_;
     my $sth = $dbh->prepare_cached(qq~
         SELECT
             R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, C.run_all_tests,
@@ -97,16 +97,16 @@ sub select_request {
             (CP.status <= ? OR CA.is_jury = 1) AND
             D.code IN ($self->{supported_DEs}) AND (judge_id IS NULL OR judge_id = ?)
         ROWS 1~);
-    $dbh->selectrow_hashref(
-        $sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready, $self->{id});
-}
+    my $req = $dbh->selectrow_hashref(
+        $sth, { Slice => {} }, $cats::st_not_processed, $cats::problem_st_ready, $self->{id}) 
+        or return;
 
-sub lock_request {
-    my ($self, $req) = @_;
     $dbh->do(q~
         UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
         $cats::st_install_processing, $self->{id}, $req->{id});
     $dbh->commit;
+
+    $req;
 }
 
 sub save_log_dump {

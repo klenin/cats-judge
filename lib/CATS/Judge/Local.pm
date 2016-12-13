@@ -44,7 +44,7 @@ sub set_request_state {
 }
 
 sub select_request {
-    my ($self, $supported_DEs) = @_;
+    my ($self) = @_;
     -f $self->{problem} || -d $self->{problem} or die "Bad problem '$self->{problem}'";
 
     my $source = -f $self->{problem} ?

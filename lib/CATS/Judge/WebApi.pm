@@ -6,6 +6,8 @@ use warnings;
 use LWP::UserAgent;
 use JSON::XS;
 use HTTP::Request::Common;
+#TODO: remove after full convesion
+use CATS::DB;
 
 use base qw(CATS::Judge::DirectDatabase);
 
@@ -47,5 +49,25 @@ sub auth {
     die "get_judge_id: $response->{error}" if $response->{error};
     $self->{id} = $response->{id};
 }
+
+sub update_state {
+    my ($self) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_update_state',
+        sid => $self->{sid},
+    ]);
+
+    die "update_state: $response->{error}" if $response->{error};
+
+    $self->{lock_counter} = $response->{lock_counter};
+
+    #TODO: remove after full conversion
+    $dbh->commit;
+
+    !$response->{is_alive};
+}
+
+sub is_locked { $_[0]->{lock_counter} }
 
 1;
