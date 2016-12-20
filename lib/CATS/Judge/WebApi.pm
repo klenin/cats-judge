@@ -70,4 +70,66 @@ sub update_state {
 
 sub is_locked { $_[0]->{lock_counter} }
 
+sub set_DEs {
+    my ($self, $cfg_de) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_des',
+        sid => $self->{sid},
+    ]);
+
+    die "set_DEs: $response->{error}" if $response->{error};
+
+    my $db_de = $response->{db_de};
+    for my $de (@$db_de) {
+        my $c = $de->{code};
+        exists $cfg_de->{$c} or next;
+        $cfg_de->{$c} = { %{$cfg_de->{$c}}, %$de };
+    }
+    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
+    $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
+}
+
+sub get_problem {
+    my ($self, $pid) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_problem',
+        pid => $pid,
+        sid => $self->{sid},
+    ]);
+
+    die "get_problem: $response->{error}" if $response->{error};
+
+    $response->{problem};
+}
+
+sub get_problem_sources {
+    my ($self, $pid) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_problem_sources',
+        pid => $pid,
+        sid => $self->{sid},
+    ]);
+
+    die "get_problem_sources: $response->{error}" if $response->{error};
+
+    $response->{sources};
+}
+
+sub get_problem_tests {
+    my ($self, $pid) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_problem_tests',
+        pid => $pid,
+        sid => $self->{sid},
+    ]);
+
+    die "get_problem_tests: $response->{error}" if $response->{error};
+
+    $response->{tests};
+}
+
 1;
