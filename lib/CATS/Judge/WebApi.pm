@@ -132,4 +132,70 @@ sub get_problem_tests {
     $response->{tests};
 }
 
+sub is_problem_uptodate {
+    my ($self, $pid, $date) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_is_problem_uptodate',
+        pid => $pid,
+        date => $date,
+        sid => $self->{sid},
+    ]);
+
+    die "is_problem_uptodate: $response->{error}" if $response->{error};
+
+    $response->{uptodate};
+}
+
+sub set_request_state {
+    my ($self, $req, $state, %p) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_set_request_state',
+        req_id => $req->{id},
+        state => $state,
+        problem_id => $p{problem_id},
+        contest_id => $p{contest_id},
+        failed_test => $p{failed_test},
+        sid => $self->{sid},
+    ]);
+
+    die "set_request_state: $response->{error}" if $response->{error};
+
+    #TODO: remove after full conversion
+    #$dbh->commit;
+}
+
+sub select_request {
+    my ($self) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_select_request',
+        sid => $self->{sid},
+        supported_DEs => $self->{supported_DEs},
+    ]);
+
+    die "select_request: $response->{error}" if $response->{error};
+
+    #TODO: remove after full conversion
+    #$dbh->commit;
+
+    $response->{request};
+}
+
+sub get_testset {
+    my ($self, $rid, $update) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_testset',
+        rid => $rid,
+        update => $update,
+        sid => $self->{sid},
+    ]);
+
+    die "get_testset: $response->{error}" if $response->{error};
+
+    %{$response->{testset}};
+}
+
 1;
