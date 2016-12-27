@@ -902,13 +902,14 @@ $fu->ensure_dir($cfg->resultsdir, 'resultsdir');
 
 $log->init($cfg->logdir);
 
+my $api = $cfg->api;
+
 CATS::DB::sql_connect({
     ib_timestampformat => $CATS::Judge::Base::timestamp_format,
     ib_dateformat => '%d-%m-%Y',
     ib_timeformat => '%H:%M',
-}) if $cli->command eq 'serve' || defined $cli->opts->{db};
+}) if $cli->command eq 'serve' && $api eq 'DirectDatabase' || defined $cli->opts->{db};
 
-my $api = $cfg->api;
 if ($cli->command ne 'serve') {
     $judge = CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir,
         resultsdir => $cfg->resultsdir, logger => $log, %{$cli->opts});

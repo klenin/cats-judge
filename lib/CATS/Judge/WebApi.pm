@@ -6,10 +6,8 @@ use warnings;
 use LWP::UserAgent;
 use JSON::XS;
 use HTTP::Request::Common;
-#TODO: remove after full convesion
-use CATS::DB;
 
-use base qw(CATS::Judge::DirectDatabase);
+use base qw(CATS::Judge::Base);
 
 sub new_from_cfg {
     my ($class, $cfg) = @_;
@@ -61,9 +59,6 @@ sub update_state {
     die "update_state: $response->{error}" if $response->{error};
 
     $self->{lock_counter} = $response->{lock_counter};
-
-    #TODO: remove after full conversion
-    $dbh->commit;
 
     !$response->{is_alive};
 }
@@ -147,6 +142,21 @@ sub is_problem_uptodate {
     $response->{uptodate};
 }
 
+sub save_log_dump {
+    my ($self, $req, $dump) = @_;
+
+    warn $dump;
+
+    my $response = $self->get_json([
+        f => 'api_judge_save_log_dump',
+        rid => $req->{id},
+        dump => $dump,
+        sid => $self->{sid},
+    ]);
+
+    die "save_log_dump: $response->{error}" if $response->{error};
+}
+
 sub set_request_state {
     my ($self, $req, $state, %p) = @_;
 
@@ -161,9 +171,6 @@ sub set_request_state {
     ]);
 
     die "set_request_state: $response->{error}" if $response->{error};
-
-    #TODO: remove after full conversion
-    #$dbh->commit;
 }
 
 sub select_request {
@@ -177,18 +184,39 @@ sub select_request {
 
     die "select_request: $response->{error}" if $response->{error};
 
-    #TODO: remove after full conversion
-    #$dbh->commit;
-
     $response->{request};
 }
 
+sub delete_req_details {
+    my ($self, $req_id) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_delete_req_details',
+        req_id => $req_id,
+        sid => $self->{sid},
+    ]);
+
+    die "delete_req_details: $response->{error}" if $response->{error};
+}
+
+sub insert_req_details {
+    my ($self, $p) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_insert_req_details',
+        params => encode_json($p),
+        sid => $self->{sid},
+    ]);
+
+    die "insert_req_details: $response->{error}" if $response->{error};
+}
+
 sub get_testset {
-    my ($self, $rid, $update) = @_;
+    my ($self, $req_id, $update) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_get_testset',
-        rid => $rid,
+        req_id => $req_id,
         update => $update,
         sid => $self->{sid},
     ]);
