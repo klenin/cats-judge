@@ -113,7 +113,8 @@ sub save_log_dump {
     my ($self, $req, $dump) = @_;
 
     my $id = $dbh->selectrow_array(q~
-        SELECT id FROM log_dumps WHERE req_id = ?~, undef, $req->{id});
+        SELECT id FROM log_dumps WHERE req_id = ?~, undef,
+        $req->{id});
     if (defined $id) {
         my $c = $dbh->prepare(q~UPDATE log_dumps SET dump = ? WHERE id = ?~);
         $c->bind_param(1, $dump, { ora_type => 113 });

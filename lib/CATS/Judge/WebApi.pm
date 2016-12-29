@@ -145,11 +145,9 @@ sub is_problem_uptodate {
 sub save_log_dump {
     my ($self, $req, $dump) = @_;
 
-    warn $dump;
-
     my $response = $self->get_json([
         f => 'api_judge_save_log_dump',
-        rid => $req->{id},
+        req_id => $req->{id},
         dump => $dump,
         sid => $self->{sid},
     ]);
