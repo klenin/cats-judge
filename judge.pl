@@ -871,7 +871,7 @@ sub main_loop {
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
     for (my $i = 0; ; $i++) {
-        sleep 2;
+        sleep $cfg->sleep_time;
         $log->rollover;
         log_msg("pong\n") if $judge->update_state;
         log_msg("...\n") if $i % 5 == 0;

@@ -3,6 +3,7 @@
     name="fox"
     report_file="report.txt"
     stdout_file="stdout.txt"
+    sleep_time="2"
     workdir=""
     cachedir="cache"
     solutionsdir="solutions"
