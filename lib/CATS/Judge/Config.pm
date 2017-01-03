@@ -7,7 +7,7 @@ use XML::Parser::Expat;
 use CATS::Config;
 
 sub dir_fields() { qw(workdir cachedir solutionsdir logdir rundir modulesdir resultsdir) }
-sub required_fields() { dir_fields, qw(name report_file stdout_file formal_input_fname cats_url polygon_url api) }
+sub required_fields() { dir_fields, qw(name sleep_time report_file stdout_file formal_input_fname cats_url polygon_url api) }
 sub optional_fields() { qw(show_child_stdout save_child_stdout proxy) }
 sub special_fields() { qw(defines DEs checkers def_DEs) }
 sub security_fields() { qw(cats_password) }
