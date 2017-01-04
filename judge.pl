@@ -753,12 +753,6 @@ sub prepare_problem {
         return;
     }
 
-    if (!defined $r->{src} || $r->{src} eq '') {
-        log_msg("Empty source for problem $r->{problem_id}\n");
-        $judge->set_request_state($r, $cats::st_unhandled_error);
-        return;
-    }
-
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
@@ -876,7 +870,14 @@ sub main_loop {
         syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];
         my ($r, $state) = prepare_problem();
         log_msg("pong\n") if $judge->was_pinged;
-        test_problem($r) if $r && $state != $cats::st_unhandled_error;
+        $r && $state != $cats::st_unhandled_error or next;
+        if (($r->{src} // '') eq '') {
+            log_msg("Empty source for problem $r->{problem_id}\n");
+            $judge->set_request_state($r, $cats::st_unhandled_error);
+        }
+        else {
+            test_problem($r);
+        }
     }
 }
 
@@ -940,7 +941,7 @@ elsif ($cli->command =~ /^(install|run)$/) {
         $judge->{run} = $rr;
         $judge->set_def_DEs($cfg->def_DEs);
         my ($r, $state) = prepare_problem();
-        test_problem($r) if $r && $r->{src} && $state != $cats::st_unhandled_error;
+        test_problem($r) if $r && ($r->{src} // '') ne '' && $state != $cats::st_unhandled_error;
         $judge->{rid_to_fname}->{$r->{id}} = $rr;
         chdir($wd);
     }
