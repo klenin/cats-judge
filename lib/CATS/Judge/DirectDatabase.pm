@@ -206,7 +206,7 @@ sub is_problem_uptodate {
 
 sub get_testset {
     my ($self, $rid, $update) = @_;
-    CATS::Testset::get_testset($rid, $update);
+    CATS::Testset::get_testset($dbh, $rid, $update);
 }
 
 sub finalize {
