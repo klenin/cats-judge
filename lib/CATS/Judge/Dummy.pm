@@ -19,11 +19,6 @@ sub auth {
     return;
 }
 
-sub update_state {
-    my ($self) = @_;
-    0;
-}
-
 sub is_locked {
     $dummy_counter = $dummy_counter + 1;
     $dummy_counter - 1;

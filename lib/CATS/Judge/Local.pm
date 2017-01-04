@@ -34,11 +34,6 @@ sub get_problem_id {
     $pid ||= Digest::MD5::md5_hex(Encode::encode_utf8($t))
 }
 
-sub update_state {
-    my ($self) = @_;
-    0;
-}
-
 sub set_request_state {
     my ($self, $req, $state, %p) = @_;
 }

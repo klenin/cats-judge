@@ -46,24 +46,6 @@ sub auth {
     die "login failed\n";
 }
 
-sub update_state {
-    my ($self) = @_;
-
-    (my $is_alive, $self->{lock_counter}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
-        SELECT J.is_alive, J.lock_counter, A.sid, CURRENT_TIMESTAMP - J.alive_date
-        FROM judges J INNER JOIN accounts A ON J.account_id = A.id WHERE J.id = ?~, undef,
-        $self->{id});
-
-    $current_sid eq $self->{sid}
-        or die "killed: $current_sid != $self->{sid}";
-
-    $dbh->do(q~
-        UPDATE judges SET is_alive = 1, alive_date = CURRENT_TIMESTAMP WHERE id = ?~, undef,
-        $self->{id}) if !$is_alive || $time_since_alive > $CATS::Config::judge_alive_interval / 24;
-    $dbh->commit;
-    !$is_alive;
-}
-
 sub is_locked { $_[0]->{lock_counter} }
 
 sub set_request_state {
@@ -83,7 +65,23 @@ sub set_request_state {
 
 sub select_request {
     my ($self) = @_;
-    my $sth = $dbh->prepare_cached(qq~
+
+    ($self->{was_pinged}, $self->{lock_counter}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
+        SELECT 1 - J.is_alive, J.lock_counter, A.sid, CURRENT_TIMESTAMP - J.alive_date
+        FROM judges J INNER JOIN accounts A ON J.account_id = A.id WHERE J.id = ?~, undef,
+        $self->{id});
+
+    $current_sid eq $self->{sid}
+        or die "killed: $current_sid != $self->{sid}";
+
+    $dbh->do(q~
+        UPDATE judges SET is_alive = 1, alive_date = CURRENT_TIMESTAMP WHERE id = ?~, undef,
+        $self->{id}) if $self->{was_pinged} || $time_since_alive > $CATS::Config::judge_alive_interval / 24;
+    $dbh->commit;
+
+    return if $self->{lock_counter};
+
+    my $sth = $dbh->prepare(qq~
         SELECT
             R.id, R.problem_id, R.contest_id, R.state, CA.is_jury, C.run_all_tests,
             CP.status, S.fname, S.src, S.de_id

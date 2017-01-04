@@ -48,21 +48,6 @@ sub auth {
     $self->{id} = $response->{id};
 }
 
-sub update_state {
-    my ($self) = @_;
-
-    my $response = $self->get_json([
-        f => 'api_judge_update_state',
-        sid => $self->{sid},
-    ]);
-
-    die "update_state: $response->{error}" if $response->{error};
-
-    $self->{lock_counter} = $response->{lock_counter};
-
-    !$response->{is_alive};
-}
-
 sub is_locked { $_[0]->{lock_counter} }
 
 sub set_DEs {
@@ -182,6 +167,8 @@ sub select_request {
 
     die "select_request: $response->{error}" if $response->{error};
 
+    $self->{lock_counter} = $response->{lock_counter};
+    $self->{was_pinged} = $response->{was_pinged};
     $response->{request};
 }
 
