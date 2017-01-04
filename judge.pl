@@ -873,7 +873,7 @@ sub main_loop {
     for (my $i = 0; ; $i++) {
         sleep $cfg->sleep_time;
         $log->rollover;
-        log_msg("...\n") if $i % 5 == 0;
+        syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];
         my ($r, $state) = prepare_problem();
         log_msg("pong\n") if $judge->was_pinged;
         test_problem($r) if $r && $state != $cats::st_unhandled_error;
