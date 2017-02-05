@@ -232,13 +232,13 @@ sub validate_test {
     my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
     my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname(FS->catfile(@$path_to_test));
 
-    my $sp_report = $spawner->execute(
-        $validate_cmd, {
+    my $sp_report = $spawner->execute($validate_cmd, {
         full_name => $fname, name => $name,
         limits => get_special_limits($validator),
-        test_input => $t_fname
-        }
-    ) or return;
+        #redir => (($validator->{input_file} // '') eq '*STDIN' ? " --in=$t_fname": ''),
+        redir => '',
+        test_input => $t_fname,
+    }) or return;
 
     $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
 }

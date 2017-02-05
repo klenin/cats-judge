@@ -25,7 +25,7 @@
     cats_password="fox"
 />
 
-<define name="#spawner" value="%workdir/spawner-bin/win32/sp"/>
+<define name="#spawner" value="%workdir/spawner-bin/win32/sp.exe"/>
 <define name="#run" value='#spawner -ho:1 -so: -tl:%time_limit -ml:%memory_limit -wl:30 -sw:0 -y:1 %deadline'/>
 <define name="#default_interactor_name" value="Interact.exe" />
 <define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin %interactor_name --// %deadline -sr= "/>
@@ -129,7 +129,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='cc'/>
 
@@ -141,7 +141,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='cxx'/>
 
@@ -153,7 +153,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='cpp'/>
 
@@ -164,7 +164,7 @@
     run='#run %comspec% /C "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
-    validate='#spawner %limits %comspec% /C "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits %comspec% /C "%name.exe" "%test_input"'
     check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
 
 <!-- GCC C only -->
@@ -175,7 +175,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='c'/>
 
@@ -185,7 +185,7 @@
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- Visual C++ 2003 compatible -->
@@ -195,7 +195,7 @@
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- BP -->
@@ -204,7 +204,7 @@
     compile='#spawner #bpc "%full_name"'
     run='#run %comspec% /C "%name.exe"'
     generate='#spawner%redir %limits %comspec% /C "%name.exe" %args'
-    validate='#spawner %limits %comspec% /C "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits %comspec% /C "%name.exe" "%test_input"'
     check='#spawner %limits %comspec% /C "%name.exe" %checker_args'/>
 
 <!-- Free Pascal -->
@@ -215,7 +215,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='lpr pas pp'/>
 
@@ -227,7 +227,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- Free Pascal in Delphi mode -->
@@ -238,7 +238,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='dpr'/>
 
@@ -250,7 +250,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'/>
 
 <!-- QBasic -->
@@ -259,6 +259,7 @@
     compile=''
     run='#run %comspec% /C "#qbasic" /run %full_name'
     generate=''
+    validate=''
     check=''
     extension='qb'/>
 
@@ -270,7 +271,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='bas'/>
 
@@ -283,6 +284,7 @@
     run_interactive='#run_interactive "#java\java.exe" -Xss64m "%name"'
     runfile='%name.class'
     generate='#spawner%redir %limits -wl:100 "#java\java.exe" -Xmx256m -Xss64m "%name" %args'
+    validate='#spawner%redir %limits "#java\java.exe" -Xmx256m -Xss64m "%name" "%test_input"'
     check='#spawner %limits "#java\java.exe" -Xss64m "%name" %checker_args'
     extension='java'/>
 
@@ -294,7 +296,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='cs'/>
 
@@ -314,7 +316,7 @@
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='go'/>
 
@@ -325,7 +327,7 @@
     run='#run "#perl" %full_name'
     run_interactive='#run_interactive "#perl" %full_name'
     generate='#spawner%redir %limits "#perl" %full_name %args'
-    validate='#spawner %limits "#perl" %full_name "%test_input"'
+    validate='#spawner%redir %limits "#perl" %full_name "%test_input"'
     check='#spawner %limits "#perl" %full_name %checker_args'
     extension='pl'/>
 
@@ -336,7 +338,7 @@
     run='#run "#python" %full_name'
     run_interactive='#run_interactive "#python" %full_name'
     generate='#spawner%redir %limits "#python" %full_name %args'
-    validate='#spawner %limits "#python" %full_name "%test_input"'
+    validate='#spawner%redir %limits "#python" %full_name "%test_input"'
     check='#spawner %limits "#python" %full_name %checker_args'
     extension='py'/>
 
@@ -347,7 +349,7 @@
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     generate='#spawner%redir %limits "%name.exe" %args'
-    validate='#spawner %limits "%name.exe" "%test_input"'
+    validate='#spawner%redir %limits "%name.exe" "%test_input"'
     check='#spawner %limits "%name.exe" %checker_args'
     extension='hs'/>
 
@@ -357,8 +359,8 @@
     compile=''
     run='#run "#ruby" %full_name'
     run_interactive='#run_interactive "#ruby" %full_name'
-    generate='#spawner%redir %limits #ruby %full_name %args'
-    validate='#spawner %limits "#ruby" %full_name "%test_input"'
+    generate='#spawner%redir %limits "#ruby" %full_name %args'
+    validate='#spawner%redir %limits "#ruby" %full_name "%test_input"'
     check='#spawner %limits "#ruby" %full_name %checker_args'
     extension='rb'/>
 
@@ -369,7 +371,7 @@
     run='#run "#php" %full_name'
     run_interactive='#run_interactive "#php" %full_name'
     generate='#spawner%redir %limits #php %full_name %args'
-    validate='#spawner %limits "#php" %full_name "%test_input"'
+    validate='#spawner%redir %limits "#php" %full_name "%test_input"'
     check='#spawner %limits "#php" %full_name %checker_args'
     extension='php'/>
 
@@ -380,6 +382,7 @@
     run='#run "#erlang" -run "%name" -run init stop'
     runfile='%name.beam'
     generate='#spawner%redir %limits "#erlang" -run "%name" %args -run init stop'
+    validate='#spawner%redir %limits "#erlang" -run "%name" "%test_input" -run init stop'
     check='#spawner %limits "#erlang" -run "%name" %checker_args -run init stop'
     extension='erl'/>
 
@@ -389,7 +392,7 @@
     compile='#spawner #nodejs -c "%full_name"'
     run='#run "#nodejs" "%full_name"'
     generate='#spawner%redir %limits "#nodejs" "%name" %args'
-    validate='#spawner %limits "#nodejs" %full_name "%test_input"'
+    validate='#spawner%redir %limits "#nodejs" %full_name "%test_input"'
     check='#spawner %limits "#nodejs" %full_name %checker_args'
     extension='js'/>
 
