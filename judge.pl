@@ -188,7 +188,7 @@ sub generate_test_group
     {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
-        $fu->copy(
+        $fu->copy_glob(
             [ $cfg->rundir, sprintf($out, $_->{rank}) ],
             [ $cfg->cachedir, $pid, "$_->{rank}.tst" ]) or return;
     }
@@ -270,7 +270,7 @@ sub prepare_tests {
             }
         }
         else {
-            log_msg("no input file defined for test #$t->{rank}\n");
+            log_msg("no input defined for test #$t->{rank}\n");
             return undef;
         }
 
