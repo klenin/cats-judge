@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 63;
+use Test::More tests => 70;
 use Test::Exception;
 
 use File::Spec;
@@ -152,6 +152,25 @@ isa_ok make_fu, 'CATS::FileUtil', 'fu';
 }
 
 {
+    my $fu = make_fu_dies;
+    $fu->ensure_dir([ $tmpdir, 'a1' ]);
+    $fu->ensure_dir([ $tmpdir, 'a2' ]);
+    $fu->write_to_file([ $tmpdir, 'a1', '01' ], '111');
+    $fu->write_to_file([ $tmpdir, 'a2', '02' ], '222');
+    my $fn1 = [ $tmpdir, '01.txt' ];
+    ok $fu->copy_glob([ $tmpdir, 'a?', '01' ], $fn1), 'copy_glob';
+    ok -f FS->catfile(@$fn1), 'copy_glob after';
+    is_deeply $fu->read_lines($fn1), [ '111' ], 'copy_glob read_lines';
+    ok $fu->remove([ $tmpdir, '01.txt' ]), 'remove after copy_glob 1';
+
+    throws_ok { $fu->copy_glob([ $tmpdir, 'a?', '*' ], 'zzz') }
+        qr/duplicate/, 'copy_glob duplicate';
+    ok !-f FS->catfile($tmpdir, 'zzz'), 'copy_glob duplicate no copy';
+
+    ok $fu->remove([ $tmpdir, 'a?' ]), 'remove after copy_glob 2';
+}
+
+{
     my $fu = make_fu;
     is $fu->quote_fn('abc'), 'abc', 'no quote';
     my $q = $^O eq 'MSWin32' ? '"' : "'";
@@ -189,7 +208,6 @@ sub test_run {
         is $r->exit_code, 0, 'run nonexistent exit_code';
     }
     is $fu->run([ $perl, '-v' ])->ok, 1, 'run 0';
-
     {
         my $r = $fu->run([ $perl, '-e', '{print 123}' ]);
         is $r->ok, 1, 'run 1';

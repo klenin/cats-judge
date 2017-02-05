@@ -120,6 +120,16 @@ sub copy {
     $self->log("copy failed: 'cp $sn $dn' '$!' " . Carp::longmess('') . "\n");
 }
 
+sub copy_glob {
+    my ($self, $src, $dest) = @_;
+    my ($sn, $dn) = map File::Spec->canonpath(fn $_), $src, $dest;
+    my (@files) = glob $sn;
+    @files == 1 or return $self->log(
+        sprintf "duplicate copy sources, '%s' for 'cp %s %s'\n", join (', ', @files), $sn, $dn);
+    return 1 if rcopy $files[0], $dn;
+    $self->log("copy failed: 'cp $sn $dn' '$!' " . Carp::longmess('') . "\n");
+}
+
 sub quote_fn {
     my ($self, $fn) = @_;
     $fn =~ /\s/ or return $fn;
