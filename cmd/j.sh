@@ -7,6 +7,7 @@ export SP_MEMORY_LIMIT=256
 export SP_DEADLINE=10
 export SP_REPORT_FILE=report.txt
 export SP_OUTPUT_FILE=stdout.txt
+export SP_ERROR_FILE=stderr.txt
 export SP_HIDE_REPORT=1
 export SP_HIDE_OUTPUT=0
 export SP_SECURITY_LEVEL=0
