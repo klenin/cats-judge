@@ -63,39 +63,23 @@ sub dump_child_stdout
 {
     my ($self, $duplicate_to) = @_;
     my $log = $self->{log};
-    unless (open(FSTDOUT, '<', $self->{cfg}->{stdout_file}))
-    {
-        $log->msg("open failed: '%s' ($!)\n", $self->{cfg}->{stdout_file});
-        return undef;
-    }
+    my $cfg = $self->{cfg};
+
+    open(my $fstdout, '<', $cfg->stdout_file)
+        or return $log->msg("open failed: '%s' ($!)\n", $cfg->stdout_file);
 
     my $eol = 0;
-    while (<FSTDOUT>)
-    {
-        if ($self->{cfg}->show_child_stdout) {
-            print STDERR $_;
-        }
-        if ($self->{cfg}->save_child_stdout) {
-            $log->dump_write($_);
-        }
-        if ($duplicate_to) {
-            $$duplicate_to .= $_;
-        }
-        $eol = (substr($_, -2, 2) eq '\n');
+    while (<$fstdout>) {
+        print STDERR $_ if $cfg->show_child_stdout;
+        $log->dump_write($_) if $cfg->save_child_stdout;
+        $$duplicate_to .= $_ if $duplicate_to;
+        $eol = substr($_, -2, 2) eq '\n';
     }
-    if ($eol)
-    {
-        if ($self->{cfg}->show_child_stdout) {
-            print STDERR "\n";
-        }
-        if ($self->{cfg}->save_child_stdout) {
-            $log->dump_write("\n");
-        }
-        if ($duplicate_to) {
-            $$duplicate_to .= $_;
-        }
+    if ($eol) {
+        print STDERR "\n" if $cfg->show_child_stdout;
+        $log->dump_write("\n") if $cfg->save_child_stdout;
+        $$duplicate_to .= "\n" if $duplicate_to;
     }
-    close FSTDOUT;
     1;
 }
 
