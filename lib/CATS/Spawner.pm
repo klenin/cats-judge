@@ -83,6 +83,22 @@ sub dump_child_stdout
     1;
 }
 
+sub dump_child_stderr
+{
+    my ($self, $duplicate_to) = @_;
+    my $log = $self->{log};
+    my $cfg = $self->{cfg};
+
+    open(my $fstderr, '<', $cfg->stderr_file)
+        or return $log->msg("open failed: '%s' ($!)\n", $cfg->stderr_file);
+
+    while (<$fstderr>) {
+        print STDERR $_ if $cfg->show_child_stderr;
+        $log->dump_write($_) if $cfg->save_child_stderr;
+    }
+    1;
+}
+
 sub execute
 {
     my ($self, $exec_str, $params, %rest) = @_;
@@ -204,6 +220,7 @@ sub execute_inplace
     my $rc = system($exec_str) >> 8;
 
     $self->dump_child_stdout($rest{duplicate_output});
+    $self->dump_child_stderr;
 
     if ($rc)
     {
