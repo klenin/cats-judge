@@ -327,7 +327,7 @@
 <!-- Perl -->
 <de
     code="501"
-    compile=''
+    compile='#spawner "#perl" -c "%full_name"'
     run='#run "#perl" %full_name'
     run_interactive='#run_interactive "#perl" %full_name'
     generate='#spawner%redir %limits "#perl" %full_name %args'
@@ -360,7 +360,7 @@
 <!-- Ruby -->
 <de
     code="504"
-    compile=''
+    compile='#spawner "#ruby" -c "%full_name"'
     run='#run "#ruby" %full_name'
     run_interactive='#run_interactive "#ruby" %full_name'
     generate='#spawner%redir %limits "#ruby" %full_name %args'
@@ -371,7 +371,7 @@
 <!-- PHP -->
 <de
     code="505"
-    compile=''
+    compile='#spawner "#php" -l "%full_name"'
     run='#run "#php" %full_name'
     run_interactive='#run_interactive "#php" %full_name'
     generate='#spawner%redir %limits #php %full_name %args'
