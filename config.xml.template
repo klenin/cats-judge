@@ -46,17 +46,17 @@
 <define name="#python" de_code_autodetect="502" value="C:\Lang\Python\3.3.3\python.exe" />
 <define name="#haskell" de_code_autodetect="503" value="C:\Lang\Haskell\2011.2.0.1\bin\ghc.exe" />
 <define name="#php" de_code_autodetect="505" value="C:\Lang\PHP\5.4.0\php.exe" />
-<define name="#erlang" de_code_autodetect="506" value="C:\Lang\Erlang\erl5.10.4\bin\erl.exe" />
+<define name="#erlang" de_code_autodetect="506" value="C:\Lang\Erlang\erl5.10.4\bin" />
 <define name="#nodejs" de_code_autodetect="507" value="C:\Lang\nodejs\node.exe" />
 
 <define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\FreeBasic\0.23\fbc.exe" />
 
 <define name="#ms_cpp" de_code_autodetect="103" value="C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\cl.exe" />
-<define name="#gnu_c" de_code_autodetect="105" value="%comspec% /C ..\gcc.cmd" />
-<define name="#gnu_cpp" de_code_autodetect="102" value="%comspec% /C ..\g++.cmd" />
+<define name="#gnu_c" de_code_autodetect="105" value="C:\Lang\GCC\5.1.0\bin\gcc.exe -m32" />
+<define name="#gnu_cpp" de_code_autodetect="102" value="C:\Lang\GCC\5.1.0\bin\g++.exe -m32" />
 <define name="#bcc" de_code_autodetect="104" value="%comspec% /C ..\bcc.cmd" />
-<define name="#clang" de_code_autodetect="106" value="C:\lang\LLVM\bin\clang.exe" />
+<define name="#clang" de_code_autodetect="106" value="C:\lang\LLVM\bin\clang++.exe" />
 
 <define name="#delphi" de_code_autodetect="203" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
 <define name="#fpc" de_code_autodetect="202" value="C:\Lang\FPC\3.0.0\bin\i386-win32\fpc.exe" />
@@ -182,6 +182,7 @@
     check='#spawner %limits "%name.exe" %checker_args'
     extension='c'/>
 
+<!-- CLang -->
 <de
     code="106"
     compile='#spawner #clang "%full_name" -o "%name.exe"'
@@ -281,7 +282,7 @@
 <!-- Java -->
 <de
     code="401"
-    compile='#spawner %comspec% /C ..\javac.cmd "%full_name"'
+    compile='#spawner "#java\javac.exe" "%full_name"'
     run='#run "#java\java.exe" -Xss64m "%name"'
     interactor_name='"#java\java.exe" -Xss64m "Interact"'
     run_interactive='#run_interactive "#java\java.exe" -Xss64m "%name"'
@@ -337,7 +338,7 @@
 <!-- Python -->
 <de
     code="502"
-    compile='#spawner %comspec% /c ..\pycompile.cmd "%full_name"'
+    compile='#spawner "#python" -m py_compile "%full_name"'
     run='#run "#python" %full_name'
     run_interactive='#run_interactive "#python" %full_name'
     generate='#spawner%redir %limits "#python" %full_name %args'
@@ -381,12 +382,12 @@
 <!-- Erlang -->
 <de
     code="506"
-    compile='#spawner %comspec% /C ..\erlc.cmd "%full_name"'
-    run='#run "#erlang" -run "%name" -run init stop'
+    compile='#spawner "#erlang\erlc.exe" "%full_name"'
+    run='#run "#erlang\erl.exe" -run "%name" -run init stop'
     runfile='%name.beam'
-    generate='#spawner%redir %limits "#erlang" -run "%name" %args -run init stop'
-    validate='#spawner%redir %limits "#erlang" -run "%name" "%test_input" -run init stop'
-    check='#spawner %limits "#erlang" -run "%name" %checker_args -run init stop'
+    generate='#spawner%redir %limits "#erlang\erl.exe" -run "%name" %args -run init stop'
+    validate='#spawner%redir %limits "#erlang\erl.exe" -run "%name" "%test_input" -run init stop'
+    check='#spawner %limits "#erlang\erl.exe" -run "%name" %checker_args -run init stop'
     extension='erl'/>
 
 <!-- NodeJS -->
