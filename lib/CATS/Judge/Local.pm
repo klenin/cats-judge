@@ -10,9 +10,9 @@ use POSIX qw(strftime);
 
 use CATS::Constants;
 use CATS::ConsoleColor;
+use CATS::Problem::ImportSource::Local;
 use CATS::Problem::Parser;
 use CATS::Problem::PolygonParser;
-use CATS::Problem::ImportSource;
 use CATS::Problem::Source::Zip;
 use CATS::Problem::Source::PlainFiles;
 
@@ -27,6 +27,14 @@ my $pid;
 sub auth {
     my ($self) = @_;
     return;
+}
+
+sub init {
+    my ($self) = @_;
+    if ($self->{db}) {
+        eval { require CATS::Problem::ImportSource::DB; 1; }
+            or die "Can't load CATS::Problem::ImportSource::DB module: $@";
+    }
 }
 
 sub get_problem_id {
@@ -51,7 +59,7 @@ sub select_request {
         CATS::Problem::ImportSource::Local->new(modulesdir => $self->{modulesdir});
 
     my %opts = (
-        id_gen => \&CATS::DB::new_id,
+        id_gen => sub { $import_source->get_new_id(@_) },
         source => $source,
         import_source => $import_source,
     );
