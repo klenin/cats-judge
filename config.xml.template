@@ -34,6 +34,7 @@
 <define name="#run_interactive" value="#spawner --separator=// -hr=1 --out=nul -wl=30 -tl=%time_limit -ml=%memory_limit -y=1 --// -sr=report.txt --in=*1.stdout --out=*1.stdin %interactor_name --// %deadline -sr= "/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
+<define name="#gcc_stack" value=" -Wl,--stack=268435456"/>
 
 <!-- This code is touched by install.pl -->
 <define name="#arch_7z" de_code_autodetect="2" value="C:\Program Files\7-Zip\7z.exe" />
@@ -127,7 +128,7 @@
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
-    compile='#spawner #gnu_cpp -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
@@ -139,7 +140,7 @@
 <!-- G++ -->
 <de
     code="102"
-    compile='#spawner #gnu_cpp -std=c++0x -Wl,--stack=268435456 -O3 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_cpp -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'
@@ -173,7 +174,7 @@
 <!-- GCC C only -->
 <de
     code="105"
-    compile='#spawner #gnu_c -x c -O2 "%full_name" -o "%name.exe"'
+    compile='#spawner #gnu_c -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='#run_interactive "%name.exe"'
     runfile='%name.exe'

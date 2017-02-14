@@ -168,6 +168,7 @@ step 'Save configuration', sub {
 
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
         s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
+        s~(\sname="#gcc_stack"\s+value=")[^"]+"~$1"~ if ($platform // '') ne 'win32';
 
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
         my ($code) = /de_code_autodetect="(\d+)"/;
