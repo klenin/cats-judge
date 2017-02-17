@@ -94,11 +94,12 @@ sub select_request {
                 SELECT 1 FROM
                 req_groups RG
                 WHERE RG.group_id = R.id AND RG.element_id = S.req_id)
-            )
-        AND DE.code NOT IN ($self->{supported_DEs}))
+            ) AND DE.code NOT IN ($self->{supported_DEs})
+        )
         AND R.state = $cats::st_not_processed
         AND (CP.status <= $cats::problem_st_ready OR CA.is_jury = 1)
-        AND (judge_id IS NULL OR judge_id = $self->{id}) ROWS 1~, undef) or return;
+        AND (judge_id IS NULL OR judge_id = ?) ROWS 1~, undef,
+        $self->{id}) or return;
 
     my $element_req_ids = $dbh->selectcol_arrayref(q~
         SELECT RG.element_id as id
@@ -136,11 +137,11 @@ sub select_request {
         $req->{src} = $element_req->{src};
         $req->{de_id} = $element_req->{de_id};
     } elsif (@{$req->{element_reqs}} > 1) {
-        die "multiple request elements are not supported at this time";
+        die 'multiple request elements are not supported at this time';
     }
 
     $dbh->do(q~
-        UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, {},
+        UPDATE reqs SET state = ?, judge_id = ? WHERE id = ?~, undef,
         $cats::st_install_processing, $self->{id}, $req->{id});
     $dbh->commit;
 
