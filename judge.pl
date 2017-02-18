@@ -46,7 +46,7 @@ END {
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
-my $fu = CATS::FileUtil->new;
+my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
 my $spawner;
@@ -393,9 +393,9 @@ sub initialize_problem
 
         for my $guided_source (@$problem_sources) {
             next if !$guided_source->{guid} || $guided_source->{is_imported};
-            my $path = File::Spec->catfile(File::Spec->rel2abs($tmp), $guided_source->{fname});
+            my $path = CATS::FileUtil::fn [ @$tmp, $guided_source->{fname} ];
             if (-e $path) {
-                CATS::SourceManager::save($guided_source, $cfg->modulesdir, $path);
+                CATS::SourceManager::save($guided_source, $cfg->modulesdir, FS->rel2abs($path));
                 log_msg("save source $guided_source->{guid}\n");
             }
         }
