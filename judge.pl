@@ -46,7 +46,7 @@ END {
 my $cfg = CATS::Judge::Config->new;
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
-my $fu = CATS::FileUtil->new;
+my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
 my $spawner;
