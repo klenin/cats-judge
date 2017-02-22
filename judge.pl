@@ -302,6 +302,7 @@ sub prepare_tests {
             my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname,
                 name => $name,
+                output_file => $output_fname,
                 time_limit => $ps->{time_limit} || $tlimit,
                 memory_limit => $ps->{memory_limit} || $mlimit,
                 deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
