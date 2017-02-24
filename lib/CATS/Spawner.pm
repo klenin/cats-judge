@@ -219,8 +219,10 @@ sub execute_inplace
     $log->msg("> %s\n", $exec_str);
     my $rc = system($exec_str) >> 8;
 
+    $log->dump_write("$cats::log_section_start_prefix$rest{section}\n") if $rest{section};
     $self->dump_child_stdout($rest{duplicate_output});
     $self->dump_child_stderr;
+    $log->dump_write("$cats::log_section_end_prefix$rest{section}\n") if $rest{section};
 
     if ($rc)
     {

@@ -620,8 +620,9 @@ sub test_solution {
 
     if ($compile_cmd ne '')
     {
-        my $sp_report = $spawner->execute($compile_cmd, { filter_hash($problem, qw/full_name name/) })
-            or return undef;
+        my $sp_report = $spawner->execute($compile_cmd,
+            { filter_hash($problem, qw/full_name name/) }, section => $cats::log_section_compile
+        ) or return undef;
         my $ok = $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
         if ($ok)
         {
