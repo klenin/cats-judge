@@ -11,7 +11,7 @@ sub code { '404' }
 
 sub _detect {
     my ($self) = @_;
-    env_path($self, "$ENV{GOROOT}/bin/go");
+    env_path($self, "$ENV{GOROOT}/bin/go") if $ENV{GOROOT};
 }
 
 sub hello_world {
