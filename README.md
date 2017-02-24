@@ -61,13 +61,14 @@ Options may start from either single or double dash.
 ### `install` command
 
 Install problem for future solving.
-Installation includes folowing steps:
+Installation includes following steps:
   * check problem cache
   * parse problem description
   * compile all sources
   * generate test files
   * run standard solution to get test answers
   * cache tests and executables
+  * export modules
 
 Options:
   * `--problem <zip_or_directory_or_name>` required
@@ -100,7 +101,7 @@ Options:
   * `--force-install` install problem even if it is already cached
   * `--testset <testset>` test only on a subset of tests. By default all tests are used.
   * `--result text|html` display results in a given format. Format `text` (default) displays ASCII table on console. Format `html` saves report in `html` file.
-  * `result-columns <regexp>` display only columns corresponding to this filter.
+  * `--result-columns <regexp>` display only columns corresponding to this filter.
 
 Examples:
 ```
@@ -184,7 +185,7 @@ Display basic usage.
      ```
      j run -p A.zip -run a.cpp -config-set rundir=./tmp
      ```
-  * `--db` import modules from databale
+  * `--db` import modules from database
   * `--format cats|polygon` use given problem format. Default is `cats`.
   * `--verbose` display additional debug info
 
