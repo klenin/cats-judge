@@ -585,6 +585,11 @@ sub test_solution {
     log_msg("Testing solution: $sid for problem: $r->{problem_id}\n");
     my $problem = $judge->get_problem($r->{problem_id});
 
+    # Override limits
+    for my $l (@cats::limits_fields) {
+        $problem->{$l} = $r->{"req_$l"} || $r->{"cp_$l"} || $problem->{$l};
+    }
+
     my $memory_handicap = $judge_de_idx{$de_id}->{memory_handicap};
 
     ($problem->{checker_id}) = map $_->{id}, grep
