@@ -65,8 +65,8 @@ sub set_request_state {
 sub select_request {
     my ($self) = @_;
 
-    ($self->{was_pinged}, $self->{lock_counter}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
-        SELECT 1 - J.is_alive, J.lock_counter, A.sid, CURRENT_TIMESTAMP - J.alive_date
+    ($self->{was_pinged}, $self->{pin_mode}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
+        SELECT 1 - J.is_alive, J.pin_mode, A.sid, CURRENT_TIMESTAMP - J.alive_date
         FROM judges J INNER JOIN accounts A ON J.account_id = A.id WHERE J.id = ?~, undef,
         $self->{id});
 
@@ -76,7 +76,7 @@ sub select_request {
     CATS::JudgeDB::select_request({
         jid              => $self->{id},
         was_pinged       => $self->{was_pinged},
-        lock_counter     => $self->{lock_counter},
+        pin_mode         => $self->{pin_mode},
         time_since_alive => $time_since_alive,
         supported_DEs    => $self->{supported_DEs},
     });
