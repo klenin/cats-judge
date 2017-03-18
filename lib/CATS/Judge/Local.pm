@@ -75,7 +75,7 @@ sub select_request {
 
     !$self->{run} or open FILE, $self->{run} or die "Couldn't open file: $!";
     {
-        id => $self->{run} ? CATS::DB::new_id($self, $self->{run}) : 0, # or cut / : \
+        id => $self->{run} ? $opts{id_gen}->($self, $self->{run}) : 0, # or cut / : \
         problem_id => $self->get_problem_id,
         contest_id => 0,
         state => 1,
