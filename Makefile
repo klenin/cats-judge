@@ -1,2 +1,2 @@
 test:
-	prove
+	prove -r t
