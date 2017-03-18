@@ -11,4 +11,4 @@ install:
 build: off
 
 test_script:
-  - prove
+  - prove -r t
