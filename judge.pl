@@ -585,6 +585,11 @@ sub test_solution {
     log_msg("Testing solution: $sid for problem: $r->{problem_id}\n");
     my $problem = $judge->get_problem($r->{problem_id});
 
+    if (@{$r->{element_reqs}} > 1) {
+        log_msg("Group requests are not supported at this time.\n Pass solution...\n");
+        return $cats::st_accepted;
+    }
+
     # Override limits
     for my $l (@cats::limits_fields) {
         $problem->{$l} = $r->{"req_$l"} || $r->{"cp_$l"} || $problem->{$l};
@@ -878,7 +883,7 @@ sub main_loop {
         my ($r, $state) = prepare_problem();
         log_msg("pong\n") if $judge->was_pinged;
         $r && $state != $cats::st_unhandled_error or next;
-        if (($r->{src} // '') eq '') {
+        if (($r->{src} // '') eq '' && @{$r->{element_reqs}} <= 1) {
             log_msg("Empty source for problem $r->{problem_id}\n");
             $judge->set_request_state($r, $cats::st_unhandled_error);
         }
