@@ -3,6 +3,7 @@ package CATS::Spawner::Builtin;
 use strict;
 use warnings;
 
+use Carp qw(croak);
 use CATS::FileUtil;
 
 use base 'CATS::Spawner1';
@@ -39,5 +40,7 @@ sub _run {
 
 sub stdout_lines { $_[0]->{stdout} }
 sub stderr_lines { $_[0]->{stderr} }
+sub stdout_lines_chomp { croak 'Not implemented' }
+sub stderr_lines_chomp { croak 'Not implemented' }
 
 1;
