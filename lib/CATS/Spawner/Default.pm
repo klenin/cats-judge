@@ -71,7 +71,7 @@ sub make_sp_params {
 sub prepare_redirect {
     my ($files, $redirect) = @_;
 
-    return unless defined $redirect;
+    $redirect or return;
 
     if ($redirect =~ /^\*/) {
         $redirect =~ /^\*\d+(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
@@ -104,8 +104,8 @@ sub _run {
     }
 
     my $opts = $self->{opts};
-    prepare_redirect(\%stdouts, $opts->{stdout});
-    prepare_redirect(\%stderrs, $opts->{stderr});
+    prepare_redirect(\%stdouts, $globals->{stdout} // $opts->{stdout});
+    prepare_redirect(\%stderrs, $globals->{stderr} // $opts->{stderr});
 
     $self->{stdouts} = [ sort keys %stdouts ];
     $self->{stderrs} = [ sort keys %stderrs ];
