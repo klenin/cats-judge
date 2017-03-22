@@ -90,6 +90,18 @@ sub get_std_checker_cmd
      $cfg->checkers->{$std_checker_name};
 }
 
+sub get_problem_source_path {
+    my ($sid, $pid) = @_;
+
+    [ $cfg->cachedir, $pid, 'temp', $sid ]
+}
+
+sub get_solution_path {
+    my ($sid) = @_;
+
+    [ $cfg->solutionsdir, $sid ]
+}
+
 sub my_safe_copy {
     my ($src, $dest, $pid) = @_;
     $fu->copy($src, $dest) and return 1;
@@ -206,17 +218,46 @@ sub input_output_redir {
     input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
 }
 
+sub get_interactor {
+    my @interactors = grep $_->{stype} == $cats::interactor, @$problem_sources;
+
+    if (!@interactors) {
+        log_msg("Interactor is not defined, try search in solution modules (legacy)\n");
+        # Suppose that interactor is the sole compilable solution module.
+        @interactors = grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}), @$problem_sources;
+        $interactors[0]->{legacy} = 1;
+    }
+    @interactors == 0 ? log_msg("Unable to find interactor\n") :
+        @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
+            $interactors[0];
+}
+
+sub prepare_solution_environment {
+    my ($pid, $solution_dir, $run_dir, $run_method) = @_;
+
+    my_safe_copy([ @$solution_dir, '*' ], $run_dir, $pid) or return;
+
+    $run_method == $cats::rm_interactive or return 1;
+
+    if ($run_method == $cats::rm_interactive) {
+        my $interactor = get_interactor() or return;
+        if (!$interactor->{legacy}) {
+            my_safe_copy([ @{get_problem_source_path($interactor->{id}, $pid)}, '*' ], $run_dir, $pid)
+                or return;
+        }
+    }
+
+    1;
+}
+
 sub interactor_params {
     my ($run_method) = @_;
+
     $run_method == $cats::rm_interactive or return {};
-    # Suppose that interactor is the sole compilable solution module.
-    my (@interactors) =
-        grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}),
-        @$problem_sources;
-    @interactors == 0 ? log_msg("Unable to find interactor\n") :
-    @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
-        { interactor_name => get_cmd('interactor_name', $interactors[0]->{de_id}) ||
-            get_cfg_define('#default_interactor_name') }
+
+    my $interactor = get_interactor() or return;
+    { interactor_name => get_cmd('interactor_name', $interactor->{de_id}) ||
+        get_cfg_define('#default_interactor_name') };
 }
 
 sub validate_test {
@@ -286,8 +327,8 @@ sub prepare_tests {
 
             clear_rundir or return undef;
 
-            $fu->copy([ $cfg->cachedir, $pid, 'temp', $t->{std_solution_id}, '*' ], $cfg->rundir)
-                or return;
+            prepare_solution_environment($pid,
+                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $run_method) or return;
 
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
                 or return;
@@ -509,7 +550,9 @@ sub run_single_test
 
     my $pid = $problem->{id};
 
-    my_safe_copy([ $cfg->solutionsdir, $p{sid}, '*' ], $cfg->rundir, $pid) or return;
+    prepare_solution_environment($pid,
+        get_solution_path($p{sid}, $pid), $cfg->rundir, $problem->{run_method}) or return;
+
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
