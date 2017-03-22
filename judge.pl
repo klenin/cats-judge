@@ -72,11 +72,11 @@ sub get_cfg_define {
 }
 
 sub get_run_cmd {
-    my ($run_method, $de_id) = @_;
+    my ($run_info, $de_id) = @_;
     return {
         $cats::rm_default => get_cmd('run', $de_id),
         $cats::rm_interactive => get_cfg_define('#run_interactive'),
-    }->{$run_method // $cats::rm_default};
+    }->{$run_info->{method} // $cats::rm_default};
 }
 
 sub get_std_checker_cmd
@@ -235,14 +235,14 @@ sub get_interactor {
 }
 
 sub prepare_solution_environment {
-    my ($pid, $solution_dir, $run_dir, $run_method) = @_;
+    my ($pid, $solution_dir, $run_dir, $run_info) = @_;
 
     my_safe_copy([ @$solution_dir, '*' ], $run_dir, $pid) or return;
 
-    $run_method == $cats::rm_interactive or return 1;
+    $run_info->{method} == $cats::rm_interactive or return 1;
 
-    if ($run_method == $cats::rm_interactive) {
-        my $interactor = get_interactor() or return;
+    if ($run_info->{method} == $cats::rm_interactive) {
+        my $interactor = $run_info->{interactor} or return;
         if (!$interactor->{legacy}) {
             my_safe_copy([ @{get_problem_source_path($interactor->{id}, $pid)}, '*' ], $run_dir, $pid)
                 or return;
@@ -253,22 +253,33 @@ sub prepare_solution_environment {
 }
 
 sub interactor_params {
-    my ($run_method, $solution_de_id, $solution_name) = @_;
+    my ($run_info, $solution_de_id, $solution_name) = @_;
 
-    $run_method == $cats::rm_interactive or return {};
+    $run_info->{method} == $cats::rm_interactive or return {};
 
-    my $interactor = get_interactor() or return;
-    my (undef, undef, undef, $interactor_name, undef) = split_fname($interactor->{fname});
+    $run_info->{interactor} or return;
+    my (undef, undef, undef, $interactor_name, undef) = split_fname($run_info->{interactor}->{fname});
 
     my $error_str = 'No run_interactive method for DE: %s\n';
 
-    my $interactor_run_cmd = get_cmd('run_interactive', $interactor->{de_id}) || return log_msg(sprintf $error_str, $interactor->{de_id});
-    my $solution_run_cmd = get_cmd('run_interactive', $solution_de_id) || return log_msg(sprintf $error_str, $solution_de_id);
+    my $interactor_run_cmd = get_cmd('run_interactive', $run_info->{interactor}->{de_id})
+        or return log_msg($error_str, $run_info->{interactor}->{de_id});
+    my $solution_run_cmd = get_cmd('run_interactive', $solution_de_id)
+        or return log_msg($error_str, $solution_de_id);
 
     {
         run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name }),
         run_solution => apply_params($solution_run_cmd, { name => $solution_name })
     };
+}
+
+sub get_run_info {
+    my ($run_method) = @_;
+
+    my %p = $run_method == $cats::rm_interactive ?
+        ( interactor => get_interactor() ) : ();
+
+    { method => $run_method, %p, }
 }
 
 sub validate_test {
@@ -303,6 +314,8 @@ sub prepare_tests {
         log_msg("no tests defined\n");
         return undef;
     }
+
+    my $run_info = get_run_info($run_method);
 
     for my $t (@$tests) {
         # Create test input file.
@@ -339,17 +352,17 @@ sub prepare_tests {
             clear_rundir or return undef;
 
             prepare_solution_environment($pid,
-                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $run_method) or return;
+                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $run_info) or return;
 
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
                 or return;
 
-            my $run_cmd = get_run_cmd($run_method, $ps->{de_id})
+            my $run_cmd = get_run_cmd($run_info, $ps->{de_id})
                 or return log_msg("No run action for DE: $ps->{code}\n");
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-            my $interactor_params = interactor_params($run_method, $ps->{de_id}, $name) or return;
+            my $interactor_params = interactor_params($run_info, $ps->{de_id}, $name) or return;
             my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname,
                 name => $name,
@@ -561,15 +574,15 @@ sub run_single_test
     my $pid = $problem->{id};
 
     prepare_solution_environment($pid,
-        get_solution_path($p{sid}, $pid), $cfg->rundir, $problem->{run_method}) or return;
+        get_solution_path($p{sid}, $pid), $cfg->rundir, $problem->{run_info}) or return;
 
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
 
-    my $run_cmd = get_run_cmd($problem->{run_method}, $p{de_id})
+    my $run_cmd = get_run_cmd($problem->{run_info}, $p{de_id})
         or return log_msg("No run action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
-    my $interactor_params = interactor_params($problem->{run_method}, $p{de_id}, $problem->{name}) or return;
+    my $interactor_params = interactor_params($problem->{run_info}, $p{de_id}, $problem->{name}) or return;
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
@@ -636,6 +649,8 @@ sub test_solution {
 
     log_msg("Testing solution: $sid for problem: $r->{problem_id}\n");
     my $problem = $judge->get_problem($r->{problem_id});
+
+    $problem->{run_info} = get_run_info($problem->{run_method});
 
     if (@{$r->{element_reqs}} > 1) {
         log_msg("Group requests are not supported at this time.\n Pass solution...\n");
