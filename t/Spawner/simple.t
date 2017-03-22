@@ -33,7 +33,8 @@ sub single_item_ok {
 sub simple {
     my ($s, $msg) = @_;
     $msg .= ' simple';
-    my $r = $s->run(application => $perl, arguments => [ '-e', '{print 1}' ]);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{print 1}' ]);
+    my $r = $s->run(undef, $app);
     my $ri = single_item_ok($r, $msg);
     is $ri->{limits}->{memory}, undef, "$msg limit";
     is_deeply $s->stdout_lines, [ '1' ], "$msg stdout";
@@ -44,7 +45,8 @@ sub out_err {
     $msg .= ' out+err';
     my $fn = [ $tmpdir, 't.pl' ];
     $fu->write_to_file($fn, "print STDOUT 'OUT';\ndie 'ERR';\n") or die;
-    my $r = $s->run(application => $perl, arguments => [ $fn ]);
+    my $app = CATS::Spawner::Program->new($perl, [ $fn ]);
+    my $r = $s->run(undef, $app);
     my $ri = single_item_ok($r, $msg);
     like $ri->{exit_status}, qr/255/, "$msg out+err status";
     is_deeply $s->stdout_lines, [ 'OUT' ], "$msg stdout";
@@ -56,9 +58,8 @@ sub time_limit {
     my ($s, $msg) = @_;
     $msg .= ' TL';
     my $tl = $^O eq 'MSWin32' ? 0.3 : 1.0;
-    my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{1 while 1;}' ],
-        time_limit => $tl);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{1 while 1;}' ]);
+    my $r = $s->run({ time_limit => $tl }, $app);
     my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
     is 1*$ri->{limits}->{user_time}, $tl, "$msg limit";
     cmp_ok abs($ri->{consumed}->{user_time} - $tl), '<', 0.1, "$msg consumed";
@@ -68,9 +69,8 @@ sub deadline {
     my ($s, $msg) = @_;
     $msg .= ' deadline';
     my $dl = $^O eq 'MSWin32' ? 0.3 : 1.0;
-    my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{sleep 1; 1 while 1;}' ],
-        deadline => $dl);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{sleep 1; 1 while 1;}' ]);
+    my $r = $s->run({ deadline => $dl }, $app);
     my $ri = single_item_ok($r, $msg, $TR_TIME_LIMIT);
     is 1*$ri->{limits}->{wall_clock_time}, $dl, "$msg limit";
     cmp_ok $ri->{consumed}->{user_time}, '<', 0.5 * $dl, "$msg consumed user";
@@ -81,9 +81,8 @@ sub idle_time_limit {
     my ($s, $msg) = @_;
     $msg .= ' IL';
     my $il = $^O eq 'MSWin32' ? 0.3 : 1.0;
-    my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{sleep 1000;}' ],
-        idle_time_limit => $il);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{sleep 1000;}' ]);
+    my $r = $s->run({ idle_time_limit => $il }, $app);
     my $ri = single_item_ok($r, $msg, $TR_IDLENESS_LIMIT);
     is 1*$ri->{limits}->{idle_time}, $il, "$msg limit";
     cmp_ok $ri->{consumed}->{user_time}, '<', 0.1, "$msg consumed user";
@@ -94,9 +93,8 @@ sub memory_limit {
     my ($s, $msg) = @_;
     $msg .= ' ML';
     my $ml = $^O eq 'MSWin32' ? 10 : 50;
-    my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{ $x .= 2 x 10_000 while 1; }' ],
-        memory_limit => $ml);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{$x .= 2 x 10_000 while 1;}' ]);
+    my $r = $s->run({ memory_limit => $ml }, $app);
     $ml *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_MEMORY_LIMIT);
     is 1*$ri->{limits}->{memory}, $ml, "$msg limit";
@@ -107,9 +105,8 @@ sub write_limit {
     my ($s, $msg) = @_;
     $msg .= ' WL';
     my $wl = $^O eq 'MSWin32' ? 2 : 20;
-    my $r = $s->run(
-        application => $perl, arguments => [ '-e', '{ print 2 x 10_000 while 1; }' ],
-        write_limit => $wl);
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{print 2 x 10_000 while 1;}' ]);
+    my $r = $s->run({ write_limit => $wl }, $app);
     $wl *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_WRITE_LIMIT);
     is 1*$ri->{limits}->{write}, $wl, "$msg limit";

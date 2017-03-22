@@ -16,13 +16,16 @@ sub _init {
 }
 
 sub _run {
-    my ($self, $p) = @_;
-    my $run = $self->{fu}->run([ $p->application, @{$p->arguments} ]);
+    my ($self, $globals, @programs) = @_;
+    die 'Programs count not equal 1' if @programs != 1;
+
+    my $program = $programs[0];
+    my $run = $self->{fu}->run([ $program->application, @{$program->arguments} ]);
     $self->{stdout} = $run->stdout;
     $self->{stderr} = $run->stderr;
     my $report = CATS::Spawner::Report->new;
     $report->add({
-        params => $p,
+        params => $globals,
         terminate_reason => ($run->ok || $run->exit_code ? $TR_OK : $TR_ABORT),
         errors => [],
         exit_status => $run->exit_code,

@@ -17,6 +17,7 @@ use lib FS->catdir($root, 'lib', 'cats-problem');
 use CATS::Spawner::Builtin;
 use CATS::Spawner::Default;
 use CATS::Spawner::Platform;
+use CATS::Spawner::Program;
 use CATS::FileUtil;
 use CATS::Loggers;
 use CATS::Judge::Config;

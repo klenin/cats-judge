@@ -18,8 +18,8 @@ sub _init {}
 sub _run { croak 'Not implemented' }
 
 sub run {
-    my ($self, %params) = @_;
-    $self->_run(CATS::Spawner::Params->new(\%params));
+    my ($self, $globals, @programs) = @_;
+    $self->_run($globals, @programs);
 }
 
 sub log {
@@ -30,22 +30,6 @@ sub log {
 
 sub stdout_lines { [] }
 sub stderr_lines { [] }
-
-package CATS::Spawner::Params;
-
-use Carp qw(croak);
-
-sub new {
-    my ($class, $opts) = @_;
-    my $self = bless { %$opts }, $class;
-    $self->application or croak 'application is required';
-    ref($self->{arguments} //= []) eq 'ARRAY' or croak 'arguments must be array';
-    $self;
-}
-
-sub application { $_[0]->{application} }
-sub arguments { $_[0]->{arguments} }
-sub limits { $_[0]->{limits} }
 
 package CATS::Spawner::Report;
 
