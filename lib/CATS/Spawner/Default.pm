@@ -16,7 +16,7 @@ sub _init {
     $self->{sp} = $fu->quote_braced($self->opts->{path} || die 'path required');
     for (qw(stdout stderr report)) {
         my $s = $self->opts->{"save_$_"} //= "$_.txt";
-        $self->opts->{$_ . '_file'}= $fu->quote_braced($s);
+        $self->opts->{$_} = $fu->quote_braced($s);
     }
     $self->opts->{hide_report} //= 1;
 }
@@ -25,52 +25,89 @@ sub opts { $_[0]->{opts} }
 
 sub stdout_lines {
     my ($self) = @_;
-    $self->{fu}->read_lines($self->{opts}->{stdout_file});
+    die if @{$self->{stdouts}} != 1;
+    $self->{fu}->read_lines($self->{stdouts}->[0]);
 }
 
 sub stderr_lines {
     my ($self) = @_;
-    $self->{fu}->read_lines($self->{opts}->{stderr_file});
+    die if @{$self->{stderrs}} != 1;
+    $self->{fu}->read_lines($self->{stderrs}->[0]);
 }
 
 sub make_sp_params {
     my ($self, $p) = @_;
     my @r = (
-        so => $self->opts->{stdout_file},
-        se => $self->opts->{stderr_file},
-        sr => $self->opts->{report_file},
-        hr => $self->opts->{hide_report},
+        i  => $p->{stdin} // $self->opts->{stdin},
+        so => $p->{stdout} // $self->opts->{stdout},
+        se => $p->{stderr} // $self->opts->{stderr},
+        sr => $p->{report} // $self->opts->{report},
+        hr => $p->{hide_report} // $self->opts->{hide_report},
         tl => $p->{time_limit},
         y  => $p->{idle_time_limit},
         d  => $p->{deadline},
         ml => $p->{memory_limit},
         wl => $p->{write_limit},
     );
-    ($self->opts->{json} ? '--json' : ()),
+    ($p->{json} // $self->opts->{json} ? '--json' : ()),
     map {
         my ($name, $value) = splice @r, 0, 2;
         defined $value ? "-$name=$value" : ();
     } 1 .. @r / 2;
 }
 
-sub _run {
-    my ($self, $p) = @_;
-    my $sp = $self->{sp};
-    my @quoted = map $self->{fu}->quote_braced($_),
-        $self->make_sp_params($p), $p->application, @{$p->arguments};
-    my $report = CATS::Spawner::Report->new;
-    my $opts = $self->{opts};
-    {
-        open my $fstdout, '>', $opts->{stdout_file} or die "Can't open $opts->{stdout_file}"
-            if $opts->{stdout_file};
-        open my $fstderr, '>', $opts->{stderr_file} or die "Can't open $opts->{stderr_file}"
-            if $opts->{stderr_file};
+sub prepare_redirect {
+    my ($files, $redirect) = @_;
+
+    return unless defined $redirect;
+
+    if ($redirect =~ /^\*/) {
+        $redirect =~ /^\*\d+(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
     }
+    elsif ($files) {
+        $files->{$redirect} = 1;
+    }
+}
+
+sub _run {
+    my ($self, $globals, @programs) = @_;
+    @programs or die;
+    my $sp = $self->{sp};
+
+    my $multi = @programs > 1;
+    $globals->{json} = 1 if $multi;
+    my @quoted = map $self->{fu}->quote_braced($_), $self->make_sp_params($globals),
+        $multi ? '--separator=//' : '';
+
+    my $separator = $multi ? '--//' : '';
+    my (%stdouts, %stderrs);
+    for my $program (@programs) {
+        my @program_quoted = map $self->{fu}->quote_braced($_), $separator,
+            $program->make_params, $program->application, @{$program->arguments};
+        push @quoted, @program_quoted;
+
+        prepare_redirect(undef, $program->opts->{stdin});
+        prepare_redirect(\%stdouts, $program->opts->{stdout});
+        prepare_redirect(\%stdouts, $program->opts->{stderr});
+    }
+
+    my $opts = $self->{opts};
+    prepare_redirect(\%stdouts, $opts->{stdout});
+    prepare_redirect(\%stderrs, $opts->{stderr});
+
+    $self->{stdouts} = [ sort keys %stdouts ];
+    $self->{stderrs} = [ sort keys %stderrs ];
+
+    for (keys %stdouts, keys %stderrs) {
+        open my $f, '>', $_ or die "Can't open redirect file: $_ ($!)";
+    }
+
+    my $report = CATS::Spawner::Report->new;
     my $exit_code = system(join ' ', $self->{sp}, @quoted);
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
-    open my $file, '<', $opts->{report_file}
-        or return $report->error("unable to open report '$opts->{report_file}': $!");
+    open my $file, '<', $opts->{report}
+        or return $report->error("unable to open report '$opts->{report}': $!");
 
     $opts->{json} ?
         $self->parse_json_report($report, $file) :

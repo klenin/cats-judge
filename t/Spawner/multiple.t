@@ -47,23 +47,21 @@ sub compile {
     my ($src, $out) = @_;
     my $fullsrc = FS->catdir($Bin, 'cpp', $src);
     $out = FS->catdir($tmpdir, $out);
-    my $r = $builtin_runner->run(application => $gcc, arguments => [
-        '-o',
-        $out,
-        $fullsrc
-    ]);
+    my $app = CATS::Spawner::Program->new($gcc, [ '-o', $out, $fullsrc ]);
+    my $r = $builtin_runner->run(undef, $app);
     items_ok($r, $src . ' compile');
     $out;
 }
 
 sub run_sp {
-    my ($app, $args) = @_;
-    my $r = $spr->run(application => $app, arguments => $args // []);
+    my ($globals, $application, $args, $opts) = @_;
+    my $app = CATS::Spawner::Program->new($application, $args, $opts);
+    my $r = $spr->run($globals, $app);
     items_ok($r, (FS->splitpath($app))[2]);
 }
 
 my $hw = compile('helloworld.cpp', 'helloworld' . $exe);
-run_sp($hw);
+run_sp(undef, $hw);
 is_deeply $spr->stdout_lines, [ 'Hello world!' ], 'helloworld stdout';
 $fu->remove($hw);
 $fu->remove([ $tmpdir, '*.txt']);
