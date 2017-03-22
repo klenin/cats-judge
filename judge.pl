@@ -56,13 +56,6 @@ my $problem_sources;
 
 sub log_msg { $log->msg(@_); }
 
-sub get_run_key {
-    return {
-        $cats::rm_default => 'run',
-        $cats::rm_interactive => 'run_interactive',
-    }->{$_[0] // $cats::rm_default};
-}
-
 sub get_cmd {
     my ($action, $de_id) = @_;
     exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
@@ -76,6 +69,14 @@ sub get_cfg_define {
         log_msg("unknown define name: $name\n");
     }
     $value;
+}
+
+sub get_run_cmd {
+    my ($run_method, $de_id) = @_;
+    return {
+        $cats::rm_default => get_cmd('run', $de_id),
+        $cats::rm_interactive => get_cfg_define('#run_interactive'),
+    }->{$run_method // $cats::rm_default};
 }
 
 sub get_std_checker_cmd
@@ -227,6 +228,7 @@ sub get_interactor {
         @interactors = grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}), @$problem_sources;
         $interactors[0]->{legacy} = 1;
     }
+
     @interactors == 0 ? log_msg("Unable to find interactor\n") :
         @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
             $interactors[0];
@@ -251,13 +253,22 @@ sub prepare_solution_environment {
 }
 
 sub interactor_params {
-    my ($run_method) = @_;
+    my ($run_method, $solution_de_id, $solution_name) = @_;
 
     $run_method == $cats::rm_interactive or return {};
 
     my $interactor = get_interactor() or return;
-    { interactor_name => get_cmd('interactor_name', $interactor->{de_id}) ||
-        get_cfg_define('#default_interactor_name') };
+    my (undef, undef, undef, $interactor_name, undef) = split_fname($interactor->{fname});
+
+    my $error_str = 'No run_interactive method for DE: %s\n';
+
+    my $interactor_run_cmd = get_cmd('run_interactive', $interactor->{de_id}) || return log_msg(sprintf $error_str, $interactor->{de_id});
+    my $solution_run_cmd = get_cmd('run_interactive', $solution_de_id) || return log_msg(sprintf $error_str, $solution_de_id);
+
+    {
+        run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name }),
+        run_solution => apply_params($solution_run_cmd, { name => $solution_name })
+    };
 }
 
 sub validate_test {
@@ -333,13 +344,12 @@ sub prepare_tests {
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
                 or return;
 
-            my $run_key = get_run_key($run_method);
-            my $run_cmd = get_cmd($run_key, $ps->{de_id})
-                or return log_msg("No '$run_key' action for DE: $ps->{code}\n");
+            my $run_cmd = get_run_cmd($run_method, $ps->{de_id})
+                or return log_msg("No run action for DE: $ps->{code}\n");
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-            my $interactor_params = interactor_params($run_method) or return;
+            my $interactor_params = interactor_params($run_method, $ps->{de_id}, $name) or return;
             my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname,
                 name => $name,
@@ -557,10 +567,9 @@ sub run_single_test
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
 
-    my $run_key = get_run_key($problem->{run_method});
-    my $run_cmd = get_cmd($run_key, $p{de_id})
-        or return log_msg("No '$run_key' action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
-    my $interactor_params = interactor_params($problem->{run_method}) or return;
+    my $run_cmd = get_run_cmd($problem->{run_method}, $p{de_id})
+        or return log_msg("No run action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
+    my $interactor_params = interactor_params($problem->{run_method}, $p{de_id}, $problem->{name}) or return;
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
