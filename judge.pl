@@ -92,15 +92,15 @@ sub get_std_checker_cmd
 }
 
 sub get_problem_source_path {
-    my ($sid, $pid) = @_;
+    my ($sid, $pid, @rest) = @_;
 
-    [ $cfg->cachedir, $pid, 'temp', $sid ]
+    [ $cfg->cachedir, $pid, 'temp', $sid, @rest ]
 }
 
 sub get_solution_path {
-    my ($sid) = @_;
+    my ($sid, @rest) = @_;
 
-    [ $cfg->solutionsdir, $sid ]
+    [ $cfg->solutionsdir, $sid, @rest ]
 }
 
 sub my_safe_copy {
@@ -152,7 +152,7 @@ sub generate_test
 
     clear_rundir or return undef;
 
-    $fu->copy([ @{get_problem_source_path($test->{generator_id}, $pid)}, '*' ], $cfg->rundir)
+    $fu->copy(get_problem_source_path($test->{generator_id}, $pid, '*'), $cfg->rundir)
         or return;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
@@ -244,7 +244,7 @@ sub prepare_solution_environment {
     if ($run_info->{method} == $cats::rm_interactive) {
         my $interactor = $run_info->{interactor} or return;
         if (!$interactor->{legacy}) {
-            my_safe_copy([ @{get_problem_source_path($interactor->{id}, $pid)}, '*' ], $run_dir, $pid)
+            my_safe_copy(get_problem_source_path($interactor->{id}, $pid, '*'), $run_dir, $pid)
                 or return;
         }
     }
@@ -288,7 +288,7 @@ sub validate_test {
     clear_rundir or return;
     my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
     $fu->copy($path_to_test, $cfg->rundir) or return;
-    $fu->copy([ @{get_problem_source_path($in_v_id, $pid)}, '*' ], $cfg->rundir) or return;
+    $fu->copy(get_problem_source_path($in_v_id, $pid, '*'), $cfg->rundir) or return;
 
     my $validate_cmd = get_cmd('validate', $validator->{de_id})
         or return log_msg("No validate cmd for: $validator->{de_id}\n");
@@ -519,7 +519,7 @@ sub run_checker
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy(
-            [ @{get_problem_source_path($problem->{checker_id}, $problem->{id})}, '*' ],
+            get_problem_source_path($problem->{checker_id}, $problem->{id}, '*'),
             $cfg->rundir, $problem->{id}) or return;
 
         (undef, undef, undef, $checker_params->{name}, undef) =
@@ -574,7 +574,7 @@ sub run_single_test
     my $pid = $problem->{id};
 
     prepare_solution_environment($pid,
-        get_solution_path($p{sid}, $pid), $cfg->rundir, $problem->{run_info}) or return;
+        get_solution_path($p{sid}), $cfg->rundir, $problem->{run_info}) or return;
 
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
