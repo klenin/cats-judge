@@ -235,16 +235,18 @@ sub get_interactor {
 }
 
 sub prepare_solution_environment {
-    my ($pid, $solution_dir, $run_dir, $run_info) = @_;
+    my ($pid, $solution_dir, $run_dir, $run_info, $safe) = @_;
 
-    my_safe_copy([ @$solution_dir, '*' ], $run_dir, $pid) or return;
+    my $copy_func = $safe ? sub { my_safe_copy(@_, $pid) } : sub { $fu->copy(@_) };
+
+    $copy_func->([ @$solution_dir, '*' ], $run_dir) or return;
 
     $run_info->{method} == $cats::rm_interactive or return 1;
 
     if ($run_info->{method} == $cats::rm_interactive) {
         my $interactor = $run_info->{interactor} or return;
         if (!$interactor->{legacy}) {
-            my_safe_copy(get_problem_source_path($interactor->{id}, $pid, '*'), $run_dir, $pid)
+            $copy_func->(get_problem_source_path($interactor->{id}, $pid, '*'), $run_dir)
                 or return;
         }
     }
@@ -575,7 +577,7 @@ sub run_single_test
     my $pid = $problem->{id};
 
     prepare_solution_environment($pid,
-        get_solution_path($p{sid}), $cfg->rundir, $problem->{run_info}) or return;
+        get_solution_path($p{sid}), $cfg->rundir, $problem->{run_info}, 1) or return;
 
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
