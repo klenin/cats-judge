@@ -152,7 +152,7 @@ sub generate_test
 
     clear_rundir or return undef;
 
-    $fu->copy([ $cfg->cachedir, $pid, 'temp', $test->{generator_id}, '*' ], $cfg->rundir)
+    $fu->copy([ @{get_problem_source_path($test->{generator_id}, $pid)}, '*' ], $cfg->rundir)
         or return;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
@@ -288,7 +288,7 @@ sub validate_test {
     clear_rundir or return;
     my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
     $fu->copy($path_to_test, $cfg->rundir) or return;
-    $fu->copy([ $cfg->cachedir, $pid, 'temp', $in_v_id, '*' ], $cfg->rundir) or return;
+    $fu->copy([ @{get_problem_source_path($in_v_id, $pid)}, '*' ], $cfg->rundir) or return;
 
     my $validate_cmd = get_cmd('validate', $validator->{de_id})
         or return log_msg("No validate cmd for: $validator->{de_id}\n");
@@ -452,7 +452,7 @@ sub initialize_problem
            $fu->write_to_file([ $cfg->rundir, $cfg->formal_input_fname ], $p->{formal_input}) or return;
         }
 
-        my $tmp = [ $cfg->cachedir, $pid, 'temp', $ps->{id} ];
+        my $tmp = get_problem_source_path($ps->{id}, $pid);
         $fu->mkdir_clean($tmp) or return;
         $fu->copy([ $cfg->rundir, '*' ], $tmp) or return;
 
@@ -519,7 +519,7 @@ sub run_checker
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy(
-            [ $cfg->cachedir, $problem->{id}, 'temp', $problem->{checker_id}, '*' ],
+            [ @{get_problem_source_path($problem->{checker_id}, $problem->{id})}, '*' ],
             $cfg->rundir, $problem->{id}) or return;
 
         (undef, undef, undef, $checker_params->{name}, undef) =
