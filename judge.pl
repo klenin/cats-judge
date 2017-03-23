@@ -253,12 +253,12 @@ sub prepare_solution_environment {
 }
 
 sub interactor_params {
-    my ($run_info, $solution_de_id, $solution_name) = @_;
+    my ($run_info, $solution_de_id, $solution_args) = @_;
 
     $run_info->{method} == $cats::rm_interactive or return {};
 
     $run_info->{interactor} or return;
-    my (undef, undef, undef, $interactor_name, undef) = split_fname($run_info->{interactor}->{fname});
+    my (undef, undef, $interactor_fname, $interactor_name, undef) = split_fname($run_info->{interactor}->{fname});
 
     my $error_str = 'No run_interactive method for DE: %s\n';
 
@@ -268,8 +268,8 @@ sub interactor_params {
         or return log_msg($error_str, $solution_de_id);
 
     {
-        run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name }),
-        run_solution => apply_params($solution_run_cmd, { name => $solution_name })
+        run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name, fname => $interactor_fname }),
+        run_solution => apply_params($solution_run_cmd, $solution_args)
     };
 }
 
@@ -362,7 +362,8 @@ sub prepare_tests {
 
             my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-            my $interactor_params = interactor_params($run_info, $ps->{de_id}, $name) or return;
+            my $interactor_params = interactor_params($run_info, $ps->{de_id},
+                { full_name => $fname, name => $name }) or return;
             my $sp_report = $spawner->execute($run_cmd, {
                 full_name => $fname,
                 name => $name,
@@ -582,7 +583,8 @@ sub run_single_test
 
     my $run_cmd = get_run_cmd($problem->{run_info}, $p{de_id})
         or return log_msg("No run action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
-    my $interactor_params = interactor_params($problem->{run_info}, $p{de_id}, $problem->{name}) or return;
+    my $interactor_params = interactor_params($problem->{run_info}, $p{de_id},
+        { name => $problem->{name}, full_name => $problem->{fname}}) or return;
 
     my $exec_params = {
         filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
