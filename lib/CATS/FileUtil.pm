@@ -217,10 +217,11 @@ sub _run_system {
     my $err = $ok ? '' : $? == -1 ? $! : $? & 127 ? 'SIGNAL' : $? >> 8;
     my @redirected_data = map $self->read_lines($_) // [], @redirects;
     CATS::RunResult->new(
-      ok => $ok, err => $err,
-      exit_code => ($err =~ /^\d+$/ ? $err : 0),
-      full => [ map @$_, @redirected_data ],
-      stdout => $redirected_data[0], stderr => $redirected_data[1]
+        ok => $ok, err => $err,
+        exit_code => ($err =~ /^\d+$/ ? $err : 0),
+        full => [ map @$_, @redirected_data ],
+        stdout => $redirected_data[0],
+        stderr => $redirected_data[1],
     );
 }
 
