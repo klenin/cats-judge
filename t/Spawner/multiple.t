@@ -15,7 +15,7 @@ use CATS::Spawner::Const ':all';
 my $is_win = ($^O eq 'MSWin32');
 
 my $exe = $is_win ? '.exe' : '';
-my $gcc = $cfg->defines->{'#gnu_cpp'};
+my ($gcc, @gcc_opts) = split ' ', $cfg->defines->{'#gnu_cpp'};
 ok -x $sp, 'sp exists';
 ok -x $gcc, 'gcc exists';
 
@@ -47,7 +47,7 @@ sub compile {
     my ($src, $out) = @_;
     my $fullsrc = FS->catdir($Bin, 'cpp', $src);
     $out = FS->catdir($tmpdir, $out);
-    my $app = CATS::Spawner::Program->new($gcc, [ '-o', $out, $fullsrc ]);
+    my $app = CATS::Spawner::Program->new($gcc, [ @gcc_opts, '-o', $out, $fullsrc ]);
     my $r = $builtin_runner->run(undef, $app);
     items_ok($r, $src . ' compile');
     $out;
