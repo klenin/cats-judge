@@ -57,7 +57,7 @@ sub run_sp {
     my ($globals, $application, $args, $opts) = @_;
     my $app = CATS::Spawner::Program->new($application, $args, $opts);
     my $r = $spr->run($globals, $app);
-    items_ok($r, (FS->splitpath($app))[2]);
+    items_ok($r, (FS->splitpath($application))[2]);
 }
 
 my $hw = compile('helloworld.cpp', 'helloworld' . $exe);
