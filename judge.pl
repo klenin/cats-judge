@@ -309,15 +309,13 @@ sub validate_test {
     my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
     my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname(FS->catfile(@$path_to_test));
 
-    my $sp_report = $spawner->execute($validate_cmd, {
-        full_name => $fname, name => $name,
-        limits => get_special_limits($validator),
-        #redir => (($validator->{input_file} // '') eq '*STDIN' ? " --in=$t_fname": ''),
-        redir => '',
-        test_input => $t_fname,
-    }) or return;
+    my $sp_report = $sp->run_single({},
+        apply_params($validate_cmd, { full_name => $fname, name => $name, test_input => $t_fname }),
+        [],
+        { get_special_limits_hash($validator) }
+    ) or return;
 
-    $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
+    $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
 }
 
 sub prepare_tests {
