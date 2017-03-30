@@ -202,7 +202,10 @@ sub _run {
         open my $f, '>', $_ or die "Can't open redirect file: $_ ($!)";
     }
 
-    my $exit_code = system(join ' ', $self->{sp}, @quoted);
+    my $exec_str = join ' ', $self->{sp}, @quoted;
+    $opts->{logger}->msg("sp> %s\n", $exec_str);
+
+    my $exit_code = system($exec_str);
 
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
