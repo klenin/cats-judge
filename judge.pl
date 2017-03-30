@@ -418,7 +418,7 @@ sub prepare_modules
         # это значит, что модуль компилировать не надо (de_code=1)
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
-        $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
+        $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
             or return undef;
     }
     1;
@@ -452,9 +452,9 @@ sub initialize_problem
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
         {
-            my $sp_report = $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
+            my $sp_report = $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
                 or return undef;
-            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+            if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
@@ -715,10 +715,10 @@ sub test_solution {
 
     if ($compile_cmd ne '')
     {
-        my $sp_report = $spawner->execute($compile_cmd,
-            { filter_hash($problem, qw/full_name name/) }, section => $cats::log_section_compile
+        my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
+            apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
         ) or return undef;
-        my $ok = $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
+        my $ok = $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
         if ($ok)
         {
             my $runfile = get_cmd('runfile', $de_id);

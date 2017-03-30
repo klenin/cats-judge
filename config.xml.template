@@ -120,7 +120,7 @@
 <!-- Special: zip code -->
 <de
     code="4"
-    compile='#spawner "#arch_7z" x "%full_name"'
+    compile='"#arch_7z" x "%full_name"'
     run=''
     generate=''
     check=''/>
@@ -128,7 +128,7 @@
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
-    compile='#spawner #gnu_cpp#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    compile='#gnu_cpp#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -140,7 +140,7 @@
 <!-- G++ -->
 <de
     code="102"
-    compile='#spawner #gnu_cpp -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
+    compile='#gnu_cpp -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -152,7 +152,7 @@
 <!-- Visual C++ -->
 <de
     code="103"
-    compile='#spawner "#ms_cpp" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    compile='"#ms_cpp" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -164,7 +164,7 @@
 <!-- BC 3.1 -->
 <de
     code="104"
-    compile='#spawner #bcc -ml "%full_name"'
+    compile='#bcc -ml "%full_name"'
     run='#run %comspec% /C "%name.exe"'
     runfile='%name.exe'
     generate='%comspec% /C "%name.exe" %args'
@@ -174,7 +174,7 @@
 <!-- GCC C only -->
 <de
     code="105"
-    compile='#spawner #gnu_c -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    compile='#gnu_c -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -186,7 +186,7 @@
 <!-- CLang -->
 <de
     code="106"
-    compile='#spawner #clang "%full_name" -o "%name.exe"'
+    compile='#clang "%full_name" -o "%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
@@ -196,7 +196,7 @@
 <!-- Visual C++ 2003 compatible -->
 <de
     code="113"
-    compile='#spawner "#ms_cpp" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    compile='"#ms_cpp" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
@@ -206,7 +206,7 @@
 <!-- BP -->
 <de
     code="201"
-    compile='#spawner #bpc "%full_name"'
+    compile='#bpc "%full_name"'
     run='#run %comspec% /C "%name.exe"'
     generate='%comspec% /C "%name.exe" %args'
     validate='%comspec% /C "%name.exe" "%test_input"'
@@ -215,7 +215,7 @@
 <!-- Free Pascal -->
 <de
     code="202"
-    compile='#spawner "#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
+    compile='"#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -227,7 +227,7 @@
 <!-- Delphi -->
 <de
     code="203"
-    compile='#spawner "#delphi" -CC "%full_name"'
+    compile='"#delphi" -CC "%full_name"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -238,7 +238,7 @@
 <!-- Free Pascal in Delphi mode -->
 <de
     code="204"
-    compile='#spawner "#fpc" -Mdelphi "%full_name" -o"%name.exe"'
+    compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -250,7 +250,7 @@
 <!-- PascalABC.NET -->
 <de
     code="205"
-    compile='#spawner "#pascalabc" "%full_name"'
+    compile='"#pascalabc" "%full_name"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -271,7 +271,7 @@
 <!-- FreeBasic -->
 <de
     code="302"
-    compile='#spawner "#freeBasic" -lang qb %full_name'
+    compile='"#freeBasic" -lang qb %full_name'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -283,7 +283,7 @@
 <!-- Java -->
 <de
     code="401"
-    compile='#spawner "#java\javac.exe" "%full_name"'
+    compile='"#java\javac.exe" "%full_name"'
     run='#run "#java\java.exe" -Xss64m "%name"'
     interactor_name='"#java\java.exe" -Xss64m "Interact"'
     run_interactive='"#java\java.exe" -Xss64m "%name"'
@@ -296,7 +296,7 @@
 <!-- C# 1.1 -->
 <de
     code="402"
-    compile='#spawner "#ms_csc" "%full_name"'
+    compile='"#ms_csc" "%full_name"'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -308,7 +308,7 @@
 <!-- Java + testlib4j.jar -->
 <de
     code="403"
-    compile='#spawner "#java\javac.exe" "%full_name" -cp testlib4j.jar'
+    compile='"#java\javac.exe" "%full_name" -cp testlib4j.jar'
     run='#run "#java\java.exe" -Xss64m "%name"'
     generate='"#java\java.exe" -Xss64m "%name" %args'
     check='"#java\java.exe" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
@@ -316,7 +316,7 @@
 <!-- The Go Programming Language -->
 <de
     code="404"
-    compile='#spawner #go build -o "%name.exe" "%full_name" '
+    compile='#go build -o "%name.exe" "%full_name" '
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -328,7 +328,7 @@
 <!-- Perl -->
 <de
     code="501"
-    compile='#spawner "#perl" -c "%full_name"'
+    compile='"#perl" -c "%full_name"'
     run='#run "#perl" %full_name'
     run_interactive='"#perl" %full_name'
     generate='"#perl" %full_name %args'
@@ -339,7 +339,7 @@
 <!-- Python -->
 <de
     code="502"
-    compile='#spawner "#python" -m py_compile "%full_name"'
+    compile='"#python" -m py_compile "%full_name"'
     run='#run "#python" %full_name'
     run_interactive='"#python" %full_name'
     generate='"#python" %full_name %args'
@@ -350,7 +350,7 @@
 <!-- Haskell -->
 <de
     code="503"
-    compile='#spawner "#haskell" %full_name'
+    compile='"#haskell" %full_name'
     run='#run "%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
@@ -361,7 +361,7 @@
 <!-- Ruby -->
 <de
     code="504"
-    compile='#spawner "#ruby" -c "%full_name"'
+    compile='"#ruby" -c "%full_name"'
     run='#run "#ruby" %full_name'
     run_interactive='"#ruby" %full_name'
     generate='"#ruby" %full_name %args'
@@ -372,7 +372,7 @@
 <!-- PHP -->
 <de
     code="505"
-    compile='#spawner "#php" -l "%full_name"'
+    compile='"#php" -l "%full_name"'
     run='#run "#php" %full_name'
     run_interactive='"#php" %full_name'
     generate='#php %full_name %args'
@@ -383,7 +383,7 @@
 <!-- Erlang -->
 <de
     code="506"
-    compile='#spawner "#erlang\erlc.exe" "%full_name"'
+    compile='"#erlang\erlc.exe" "%full_name"'
     run='#run "#erlang\erl.exe" -run "%name" -run init stop'
     runfile='%name.beam'
     generate='"#erlang\erl.exe" -run "%name" %args -run init stop'
@@ -394,7 +394,7 @@
 <!-- NodeJS -->
 <de
     code="507"
-    compile='#spawner #nodejs -c "%full_name"'
+    compile='#nodejs -c "%full_name"'
     run='#run "#nodejs" "%full_name"'
     generate='"#nodejs" "%name" %args'
     validate='"#nodejs" %full_name "%test_input"'
