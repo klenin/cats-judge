@@ -83,6 +83,44 @@ sub prepare_redirect {
     }
 }
 
+sub dump_child_stdout
+{
+    my ($self, $duplicate_to) = @_;
+    my $log = $self->opts->{logger};
+
+    open(my $fstdout, '<', $self->opts->{stdout_file})
+        or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{stdout_file});
+
+    my $eol = 0;
+    while (<$fstdout>) {
+        print STDERR $_ if $self->opts->{show_child_stdout};
+        $log->dump_write($_) if $self->opts->{save_child_stdout};
+        $$duplicate_to .= $_ if $duplicate_to;
+        $eol = substr($_, -2, 2) eq '\n';
+    }
+    if ($eol) {
+        print STDERR "\n" if $self->opts->{show_child_stdout};
+        $log->dump_write("\n") if $self->opts->{save_child_stdout};
+        $$duplicate_to .= "\n" if $duplicate_to;
+    }
+    1;
+}
+
+sub dump_child_stderr
+{
+    my ($self, $duplicate_to) = @_;
+    my $log = $self->opts->{logger};
+
+    open(my $fstderr, '<', $self->opts->{stderr_file})
+        or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{stderr_file});
+
+    while (<$fstderr>) {
+        print STDERR $_ if $self->opts->{show_child_stderr};
+        $log->dump_write($_) if $self->opts->{save_child_stderr};
+    }
+    1;
+}
+
 sub _run {
     my ($self, $globals, @programs) = @_;
     @programs or die;
@@ -128,6 +166,11 @@ sub _run {
         or return $report->error("failed to run spawner: $! ($exit_code)");
     open my $file, '<', $opts->{report}
         or return $report->error("unable to open report '$opts->{report}': $!");
+
+    $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
+    $self->dump_child_stdout($globals->{duplicate_output});
+    $self->dump_child_stderr;
+    $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n") if $globals->{section};
 
     my $parsed_report = $opts->{json} ?
         $self->parse_json_report($report, $file) :
