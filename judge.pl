@@ -25,6 +25,9 @@ use CATS::Problem::PolygonBackend;
 
 use CATS::SpawnerJson;
 use CATS::Spawner;
+use CATS::Spawner::Default;
+use CATS::Spawner::Program;
+use CATS::Spawner::Const ':all';
 
 use open IN => ':crlf', OUT => ':raw';
 
@@ -50,6 +53,7 @@ my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
 my $spawner;
+my $sp;
 my %judge_de_idx;
 
 my $problem_sources;
@@ -143,6 +147,16 @@ sub get_special_limits
 }
 
 
+sub get_special_limits_hash
+{
+    my ($ps) = @_;
+    my %res;
+    for (@cats::limits_fields) { $res{$_} = $ps->{$_} if defined $ps->{$_} };
+    $res{deadline} = $ps->{time_limit};
+    %res;
+}
+
+
 sub generate_test
 {
     my ($pid, $test, $input_fname) = @_;
@@ -159,23 +173,21 @@ sub generate_test
         or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
     my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-    my $redir = '';
+    my $redir;
     my $out = $ps->{output_file} // $input_fname;
     if ($out =~ /^\*STD(IN|OUT)$/)
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
-        $redir = " --out=nul --out=$out";
+        $redir = $out;
     }
-    my $sp_report = $spawner->execute(
-        $generate_cmd, {
-        full_name => $fname, name => $name,
-        # 'Almost unlimited' write limit for test generator.
-        limits => join(' ', '-wl:999', get_special_limits($ps)),
-        args => $test->{param} // '', redir => $redir }
+    my $sp_report = $sp->run_single({},
+        apply_params($generate_cmd, { full_name => $fname, name => $name, args => $test->{param} // ''}),
+        [],
+        { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
     ) or return undef;
 
-    if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+    if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
     {
         return undef;
     }
@@ -1013,6 +1025,13 @@ $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 $spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
+$sp = CATS::Spawner::Default->new({
+    %$cfg,
+    logger => $log,
+    path => get_cfg_define('#spawner'),
+    run_dir => $cfg->rundir,
+    json => 1,
+});
 
 if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
