@@ -74,7 +74,7 @@ sub prepare_redirect {
     $redirect or return;
 
     if ($redirect =~ /^\*/) {
-        $redirect =~ /^\*\d+(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
+        $redirect =~ /^\*\d+\.(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
     }
     elsif ($files) {
         $files->{$redirect} = 1;
