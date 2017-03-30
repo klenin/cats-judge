@@ -226,7 +226,7 @@ sub get_interactor {
         log_msg("Interactor is not defined, try search in solution modules (legacy)\n");
         # Suppose that interactor is the sole compilable solution module.
         @interactors = grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}), @$problem_sources;
-        $interactors[0]->{legacy} = 1;
+        $interactors[0]->{legacy} = 1 if @interactors;
     }
 
     @interactors == 0 ? log_msg("Unable to find interactor\n") :
