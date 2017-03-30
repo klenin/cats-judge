@@ -522,6 +522,7 @@ sub run_checker
     };
 
     my $checker_cmd;
+    my %limits;
     if (defined $problem->{std_checker})
     {
         $checker_cmd = get_std_checker_cmd($problem->{std_checker})
@@ -542,7 +543,7 @@ sub run_checker
         $checker_params->{checker_args} =
             $ps->{stype} == $cats::checker ? qq~"$a" "$o" "$i"~ : qq~"$i" "$o" "$a"~;
 
-        $checker_params->{limits} = get_special_limits($ps);
+        %limits = get_special_limits_hash($ps);
 
         $checker_cmd = get_cmd('check', $ps->{de_id})
             or return log_msg("No 'check' action for DE: $ps->{code}\n");
@@ -552,15 +553,18 @@ sub run_checker
     for my $c (\$test_run_details{checker_comment})
     {
         $$c = undef;
-        $sp_report = $spawner->execute($checker_cmd, $checker_params, duplicate_output => $c)
-            or return undef;
+        $sp_report = $sp->run_single({ duplicate_output => $c },
+            apply_params($checker_cmd, $checker_params),
+            [],
+            { %limits }
+        ) or return undef;
         #Encode::from_to($$c, 'cp866', 'utf8');
         # обрезать для надёжности, чтобы влезло в поле БД
         $$c = substr($$c, 0, 199) if defined $$c;
     }
 
     # checked only once?
-    $sp_report->{TerminateReason} eq $cats::tm_exit_process or return undef;
+    $sp_report->{terminate_reason} == $TR_OK or return undef;
 
     $sp_report;
 }
@@ -649,8 +653,8 @@ sub run_single_test
             0 => $cats::st_accepted,
             1 => $cats::st_wrong_answer,
             2 => $cats::st_presentation_error
-        }->{$sp_report->{ExitStatus}}
-            // return log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
+        }->{$sp_report->{exit_code}}
+            // return log_msg("checker error (exit code '$sp_report->{exit_code}')\n");
         log_msg("OK\n") if $result == $cats::st_accepted;
         $result;
     }
