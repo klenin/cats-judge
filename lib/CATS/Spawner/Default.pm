@@ -224,6 +224,7 @@ sub parse_legacy_report {
         },
         terminate_reason => $tr,
         exit_status => $raw_report->{ExitStatus},
+        exit_code => $raw_report->{ExitStatus},
         consumed => {
             user_time => $raw_report->{UserTime},
             memory => mb_to_bytes($raw_report->{PeakMemoryUsed}),
@@ -237,7 +238,7 @@ my @required_fields = qw(
     CreateProcessMethod
     UserName
     TerminateReason
-    ExitStatus
+    ExitCode
 );
 
 sub parse_json_report {
@@ -306,7 +307,8 @@ Sample JSON report
                 load_ratio => $lim->{IdlenessProcessorLoad},
             },
             terminate_reason => $tr,
-            exit_status => $ji->{ExitStatus} // die('ExitStatus not found'),
+            exit_status => $ji->{ExitStatus},
+            exit_code => $ji->{ExitCode} // die('ExitCode not found'),
             consumed => {
                 user_time => $res->{Time},
                 wall_clock_time => $res->{WallClockTime},
