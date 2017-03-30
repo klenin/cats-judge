@@ -22,6 +22,11 @@ sub run {
     $self->_run($globals, @programs);
 }
 
+sub run_single {
+    my ($self, $globals, @program_params) = @_;
+    $self->_run($globals, CATS::Spawner::Program->new(@program_params))->items->[0];
+}
+
 sub log {
     my ($self, @rest) = @_;
     $self->{opts}->{logger} or croak 'logger required';
