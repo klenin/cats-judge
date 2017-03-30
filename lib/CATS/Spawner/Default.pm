@@ -8,6 +8,8 @@ use JSON::XS qw(decode_json);
 use CATS::FileUtil;
 use CATS::Spawner::Const ':all';
 
+use FindBin qw($Bin);
+
 use base 'CATS::Spawner1';
 
 sub _init {
@@ -110,21 +112,30 @@ sub _run {
     $self->{stdouts} = [ sort keys %stdouts ];
     $self->{stderrs} = [ sort keys %stderrs ];
 
+    my $report = CATS::Spawner::Report->new;
+
+    my $cur_dir = $Bin;
+    my $run_dir = $globals->{run_dir} // $self->opts->{run_dir};
+    chdir($run_dir) or return $report->error("failed to change directory to: $run_dir") if $run_dir;
+
     for (keys %stdouts, keys %stderrs) {
         open my $f, '>', $_ or die "Can't open redirect file: $_ ($!)";
     }
 
-    my $report = CATS::Spawner::Report->new;
-    print join ' ', $self->{sp}, @quoted if $opts->{debug};
     my $exit_code = system(join ' ', $self->{sp}, @quoted);
+
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
     open my $file, '<', $opts->{report}
         or return $report->error("unable to open report '$opts->{report}': $!");
 
-    $opts->{json} ?
+    my $parsed_report = $opts->{json} ?
         $self->parse_json_report($report, $file) :
         $self->parse_legacy_report($report, $file);
+
+    chdir($cur_dir) or return $report->error("failed to change directory back to: $cur_dir") if $run_dir;
+
+    $parsed_report;
 }
 
 my @legacy_required_fields = qw(
