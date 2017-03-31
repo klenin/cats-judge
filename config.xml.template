@@ -104,7 +104,7 @@
 <de
     code="2"
     compile=''
-    run='#spawner -so:%output_file -ho:1 "#arch_7z" x -so "%full_name" %test_rank.out'
+    run='-so:%output_file -ho:1 "#arch_7z" x -so "%full_name" %test_rank.out'
     generate=''
     check=''
     extension='zip'/>
@@ -129,7 +129,7 @@
 <de
     code="101"
     compile='#gnu_cpp#gcc_stack -O2 "%full_name" -o "%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -141,7 +141,7 @@
 <de
     code="102"
     compile='#gnu_cpp -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -153,7 +153,7 @@
 <de
     code="103"
     compile='"#ms_cpp" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -165,7 +165,7 @@
 <de
     code="104"
     compile='#bcc -ml "%full_name"'
-    run='#run %comspec% /C "%name.exe"'
+    run='%comspec% /C "%name.exe"'
     runfile='%name.exe'
     generate='%comspec% /C "%name.exe" %args'
     validate='%comspec% /C "%name.exe" "%test_input"'
@@ -175,7 +175,7 @@
 <de
     code="105"
     compile='#gnu_c -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -187,7 +187,7 @@
 <de
     code="106"
     compile='#clang "%full_name" -o "%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
     validate='"%name.exe" "%test_input"'
@@ -197,7 +197,7 @@
 <de
     code="113"
     compile='"#ms_cpp" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
     validate='"%name.exe" "%test_input"'
@@ -207,7 +207,7 @@
 <de
     code="201"
     compile='#bpc "%full_name"'
-    run='#run %comspec% /C "%name.exe"'
+    run='%comspec% /C "%name.exe"'
     generate='%comspec% /C "%name.exe" %args'
     validate='%comspec% /C "%name.exe" "%test_input"'
     check='%comspec% /C "%name.exe" %checker_args'/>
@@ -216,7 +216,7 @@
 <de
     code="202"
     compile='"#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -228,7 +228,7 @@
 <de
     code="203"
     compile='"#delphi" -CC "%full_name"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -239,7 +239,7 @@
 <de
     code="204"
     compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -251,7 +251,7 @@
 <de
     code="205"
     compile='"#pascalabc" "%full_name"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -262,7 +262,7 @@
 <de
     code="301"
     compile=''
-    run='#run %comspec% /C "#qbasic" /run %full_name'
+    run='%comspec% /C "#qbasic" /run %full_name'
     generate=''
     validate=''
     check=''
@@ -272,7 +272,7 @@
 <de
     code="302"
     compile='"#freeBasic" -lang qb %full_name'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -284,7 +284,7 @@
 <de
     code="401"
     compile='"#java\javac.exe" "%full_name"'
-    run='#run "#java\java.exe" -Xss64m "%name"'
+    run='"#java\java.exe" -Xss64m "%name"'
     interactor_name='"#java\java.exe" -Xss64m "Interact"'
     run_interactive='"#java\java.exe" -Xss64m "%name"'
     runfile='%name.class'
@@ -297,7 +297,7 @@
 <de
     code="402"
     compile='"#ms_csc" "%full_name"'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -309,7 +309,7 @@
 <de
     code="403"
     compile='"#java\javac.exe" "%full_name" -cp testlib4j.jar'
-    run='#run "#java\java.exe" -Xss64m "%name"'
+    run='"#java\java.exe" -Xss64m "%name"'
     generate='"#java\java.exe" -Xss64m "%name" %args'
     check='"#java\java.exe" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
 
@@ -317,7 +317,7 @@
 <de
     code="404"
     compile='#go build -o "%name.exe" "%full_name" '
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
@@ -329,7 +329,7 @@
 <de
     code="501"
     compile='"#perl" -c "%full_name"'
-    run='#run "#perl" %full_name'
+    run='"#perl" %full_name'
     run_interactive='"#perl" %full_name'
     generate='"#perl" %full_name %args'
     validate='"#perl" %full_name "%test_input"'
@@ -340,7 +340,7 @@
 <de
     code="502"
     compile='"#python" -m py_compile "%full_name"'
-    run='#run "#python" %full_name'
+    run='"#python" %full_name'
     run_interactive='"#python" %full_name'
     generate='"#python" %full_name %args'
     validate='"#python" %full_name "%test_input"'
@@ -351,7 +351,7 @@
 <de
     code="503"
     compile='"#haskell" %full_name'
-    run='#run "%name.exe"'
+    run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
     validate='"%name.exe" "%test_input"'
@@ -362,7 +362,7 @@
 <de
     code="504"
     compile='"#ruby" -c "%full_name"'
-    run='#run "#ruby" %full_name'
+    run='"#ruby" %full_name'
     run_interactive='"#ruby" %full_name'
     generate='"#ruby" %full_name %args'
     validate='"#ruby" %full_name "%test_input"'
@@ -373,7 +373,7 @@
 <de
     code="505"
     compile='"#php" -l "%full_name"'
-    run='#run "#php" %full_name'
+    run='"#php" %full_name'
     run_interactive='"#php" %full_name'
     generate='#php %full_name %args'
     validate='"#php" %full_name "%test_input"'
@@ -384,7 +384,7 @@
 <de
     code="506"
     compile='"#erlang\erlc.exe" "%full_name"'
-    run='#run "#erlang\erl.exe" -run "%name" -run init stop'
+    run='"#erlang\erl.exe" -run "%name" -run init stop'
     runfile='%name.beam'
     generate='"#erlang\erl.exe" -run "%name" %args -run init stop'
     validate='"#erlang\erl.exe" -run "%name" "%test_input" -run init stop'
@@ -395,7 +395,7 @@
 <de
     code="507"
     compile='#nodejs -c "%full_name"'
-    run='#run "#nodejs" "%full_name"'
+    run='"#nodejs" "%full_name"'
     generate='"#nodejs" "%name" %args'
     validate='"#nodejs" %full_name "%test_input"'
     check='"#nodejs" %full_name %checker_args'

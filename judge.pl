@@ -76,11 +76,49 @@ sub get_cfg_define {
 }
 
 sub get_run_cmd {
-    my ($run_info, $de_id) = @_;
-    return {
-        $cats::rm_default => get_cmd('run', $de_id),
-        $cats::rm_interactive => get_cfg_define('#run_interactive'),
-    }->{$run_info->{method} // $cats::rm_default};
+    my ($de_id, $opts) = @_;
+    my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id");
+    return apply_params($run_cmd, $opts);
+}
+
+sub get_run_params {
+    my ($run_info, $ps, $limits, $other_opts, $run_cmd_opts) = @_;
+
+    my $get_names = sub {
+        my ($p) = @_;
+        $p->{fname} || $p->{full_name} && $p->{name} or return log_msg("No file names specified in get_run_params\n");
+        my (undef, undef, $fname, $name, undef) =
+            $p->{fname} ? split_fname($p->{fname}) :
+            ( undef, undef, $p->{full_name}, $p->{name}, undef );
+        { full_name => $fname, name => $name }
+    };
+
+    my $names = $get_names->($ps) or return;
+
+    my $global_opts = $run_info->{method} == $cats::rm_interactive ? $limits : {};
+    my $solution_opts = $run_info->{method} == $cats::rm_interactive ? $other_opts : { %$limits, %$other_opts };
+    my @programs;
+
+    my $run_cmd = get_run_cmd($ps->{de_id}, { %$names, %$run_cmd_opts }) or return;
+    push @programs, CATS::Spawner::Program->new(
+        $run_cmd,
+        [],
+        $solution_opts
+    );
+
+    if ($run_info->{method} == $cats::rm_interactive) {
+        $run_info->{interactor} or return log_msg('No interactor specified in get_run_params\n');
+        $names = $get_names->($run_info->{interactor}) or return;
+        $run_cmd = get_run_cmd($run_info->{interactor}->{de_id}, $names) or return;
+
+        push @programs, CATS::Spawner::Program->new(
+            $run_cmd,
+            [],
+            { stdin => '*0.stdout', stdout => '*0.stdin' }
+        );
+    }
+
+    ( $global_opts, @programs );
 }
 
 sub get_std_checker_cmd
@@ -369,27 +407,16 @@ sub prepare_tests {
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
                 or return;
 
-            my $run_cmd = get_run_cmd($run_info, $ps->{de_id})
-                or return log_msg("No run action for DE: $ps->{code}\n");
+            my @run_params = get_run_params(
+                $run_info,
+                $ps,
+                { $ps->{time_limit} || $tlimit, $ps->{memory_limit} || $mlimit, deadline => $ps->{time_limit} },
+                {},
+                { output_file => $output_fname } # input_output_redir($input_fname, $output_fname) ?
+            ) or return;
+            my $sp_report = $sp->run(@run_params) or return;
 
-            my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
-
-            my $interactor_params = interactor_params($run_info, $ps->{de_id},
-                { full_name => $fname, name => $name }) or return;
-            my $sp_report = $spawner->execute($run_cmd, {
-                full_name => $fname,
-                name => $name,
-                output_file => $output_fname,
-                time_limit => $ps->{time_limit} || $tlimit,
-                memory_limit => $ps->{memory_limit} || $mlimit,
-                deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
-                %$interactor_params,
-                input_output_redir($input_fname, $output_fname),
-            }) or return undef;
-
-            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0') {
-                return undef;
-            }
+            return if grep $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
 
             $fu->copy(output_or_default($output_fname), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
@@ -597,45 +624,44 @@ sub run_single_test
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
 
-    my $run_cmd = get_run_cmd($problem->{run_info}, $p{de_id})
-        or return log_msg("No run action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
-    my $interactor_params = interactor_params($problem->{run_info}, $p{de_id},
-        { name => $problem->{name}, full_name => $problem->{fname}}) or return;
-
-    my $exec_params = {
-        filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
-        input_output_redir(@$problem{qw(input_file output_file)}),
-        %$interactor_params,
-        test_rank => sprintf('%02d', $p{rank}),
-    };
-    $exec_params->{memory_limit} += $p{memory_handicap} || 0;
     {
-        my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
+        my %limits = get_special_limits_hash($problem);
+        $limits{memory_limit} += $p{memory_handicap} || 0;
+        my @run_params = get_run_params(
+            $problem->{run_info},
+            { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
+            { %limits },
+            {},
+            { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
+        ) or return;
 
-        $test_run_details{time_used} = $sp_report->{UserTime};
-        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed});
-        $test_run_details{disk_used} = int($sp_report->{Written});
+        my $sp_report = $sp->run(@run_params) or return;
 
-        for ($sp_report->{TerminateReason})
-        {
-            if ($_ eq $cats::tm_exit_process)
-            {
-                if ($sp_report->{ExitStatus} ne '0')
-                {
-                    $test_run_details{checker_comment} = $sp_report->{ExitStatus};
-                    return $cats::st_runtime_error;
-                }
+        my $solution_report = $sp_report->items->[0];
+
+        $test_run_details{time_used} = $solution_report->{consumed}->{user_time};
+        $test_run_details{memory_used} = $solution_report->{consumed}->{memory};
+        $test_run_details{disk_used} = $solution_report->{consumed}->{write};
+
+        if ($solution_report->{terminate_reason} == $TR_OK) {
+            if ($solution_report->{exit_code} != 0) {
+                $test_run_details{checker_comment} = $solution_report->{exit_code};
+                return $cats::st_runtime_error;
             }
-            else
-            {
-                return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
-                return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
-                return $cats::st_idleness_limit_exceeded if $_ eq $cats::tm_idleness_limit_exceeded;
-                return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
-                return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
+        } else {
+            return {
+                $TR_ABORT          => $cats::st_runtime_error,
+                $TR_TIME_LIMIT     => $cats::st_time_limit_exceeded,
+                $TR_MEMORY_LIMIT   => $cats::st_memory_limit_exceeded,
+                $TR_WRITE_LIMIT    => $cats::st_security_violation,
+                $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded
+            }->{$solution_report->{terminate_reason}} // log_msg("unknown terminate reason: $_\n");
+        }
 
-                log_msg("unknown terminate reason: $_\n");
-                return undef;
+        if ($problem->{run_info} == $cats::rm_interactive) {
+            my $interactor_report = $sp_report->items->[1];
+            if ($interactor_report->{terminate_reason} != $TR_OK || $interactor_report->{exit_code} != 0) {
+                return $cats::st_unhandled_error;
             }
         }
     }
