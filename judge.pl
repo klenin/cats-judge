@@ -173,18 +173,6 @@ sub save_problem_description {
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
-
-sub get_special_limits
-{
-    my ($ps) = @_;
-    my %limits = (
-        tl => $ps->{time_limit}, d => $ps->{time_limit},
-        ml => $ps->{memory_limit},
-    );
-    join ' ', map "-$_:$limits{$_}", grep $limits{$_}, keys %limits,
-}
-
-
 sub get_special_limits_hash
 {
     my ($ps) = @_;
@@ -302,27 +290,6 @@ sub prepare_solution_environment {
     }
 
     1;
-}
-
-sub interactor_params {
-    my ($run_info, $solution_de_id, $solution_args) = @_;
-
-    $run_info->{method} == $cats::rm_interactive or return {};
-
-    $run_info->{interactor} or return;
-    my (undef, undef, $interactor_fname, $interactor_name, undef) = split_fname($run_info->{interactor}->{fname});
-
-    my $error_str = 'No run_interactive method for DE: %s\n';
-
-    my $interactor_run_cmd = get_cmd('run_interactive', $run_info->{interactor}->{de_id})
-        or return log_msg($error_str, $run_info->{interactor}->{de_id});
-    my $solution_run_cmd = get_cmd('run_interactive', $solution_de_id)
-        or return log_msg($error_str, $solution_de_id);
-
-    {
-        run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name, fname => $interactor_fname }),
-        run_solution => apply_params($solution_run_cmd, $solution_args)
-    };
 }
 
 sub get_run_info {
