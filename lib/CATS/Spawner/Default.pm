@@ -203,7 +203,7 @@ sub _run {
     }
 
     my $exec_str = join ' ', $self->{sp}, @quoted;
-    $opts->{logger}->msg("sp> %s\n", $exec_str);
+    $opts->{logger}->msg("> %s\n", $exec_str);
 
     my $exit_code = system($exec_str);
 
