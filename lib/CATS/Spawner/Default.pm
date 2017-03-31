@@ -121,6 +121,48 @@ sub dump_child_stderr
     1;
 }
 
+sub log_report
+{
+    my ($log, $sp_report) = @_;
+
+    foreach my $report_item (@{$sp_report->items}) {
+        $log->msg("-> Process: $report_item->{application}\n");
+        if (@{$report_item->{errors}})
+        {
+            $log->msg("\tspawner error: " . join(' ', @{$report_item->{errors}}) . "\n");
+            return;
+        }
+
+        if ($report_item->{terminate_reason} == $TR_OK && $report_item->{exit_code} != 0)
+        {
+            $log->msg("process exit code: $report_item->{exit_code}\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_TIME_LIMIT)
+        {
+            $log->msg("time limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_IDLENESS_LIMIT)
+        {
+            $log->msg("idleness limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_WRITE_LIMIT)
+        {
+            $log->msg("write limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_MEMORY_LIMIT)
+        {
+            $log->msg("memory limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_ABORT)
+        {
+            $log->msg("abnormal process termination. Process exit status: $report_item->{exit_code}\n");
+        }
+        $log->msg(
+            "-> UserTime: $report_item->{consumed}->{user_time} s | MemoryUsed: $report_item->{consumed}->{memory} bytes | Written: $report_item->{consumed}->{write} bytes\n");
+    }
+    1;
+}
+
 sub _run {
     my ($self, $globals, @programs) = @_;
     @programs or die;
@@ -177,6 +219,8 @@ sub _run {
         $self->parse_legacy_report($report, $file);
 
     chdir($cur_dir) or return $report->error("failed to change directory back to: $cur_dir") if $run_dir;
+
+    log_report($opts->{logger}, $parsed_report);
 
     $parsed_report;
 }
