@@ -52,7 +52,6 @@ my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
-my $spawner;
 my $sp;
 my %judge_de_idx;
 
@@ -1019,7 +1018,6 @@ else {
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
 $sp = CATS::Spawner::Default->new({
     %$cfg,
     logger => $log,
