@@ -104,7 +104,7 @@ sub memory_limit {
 sub write_limit {
     my ($s, $msg) = @_;
     $msg .= ' WL';
-    my $wl = $^O eq 'MSWin32' ? 2 : 20;
+    my $wl = $^O eq 'MSWin32' ? 5 : 20;
     my $app = CATS::Spawner::Program->new($perl, [ '-e', '{print 2 x 10_000 while 1;}' ]);
     my $r = $s->run({ write_limit => $wl }, $app);
     $wl *= 1024 * 1024;
