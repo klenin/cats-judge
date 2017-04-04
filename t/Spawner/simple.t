@@ -118,7 +118,7 @@ my $bi = CATS::Spawner::Builtin->new({
 my $bs = CATS::Spawner::Builtin->new({
     logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir, run_method => 'system' });
 my %p = (
-    logger => CATS::Logger::Die->new,
+    logger => CATS::Logger::Count->new,
     path => $sp,
     save_stdout => [ $tmpdir, 'stdout.txt' ],
     save_stderr => [ $tmpdir, 'stderr.txt' ],
