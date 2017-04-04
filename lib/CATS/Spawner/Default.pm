@@ -8,6 +8,8 @@ use JSON::XS qw(decode_json);
 use CATS::FileUtil;
 use CATS::Spawner::Const ':all';
 
+use FindBin qw($Bin);
+
 use base 'CATS::Spawner1';
 
 sub _init {
@@ -74,11 +76,91 @@ sub prepare_redirect {
     $redirect or return;
 
     if ($redirect =~ /^\*/) {
-        $redirect =~ /^\*\d+(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
+        $redirect =~ /^\*\d+\.(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
     }
     elsif ($files) {
         $files->{$redirect} = 1;
     }
+}
+
+sub dump_child_stdout
+{
+    my ($self, $duplicate_to) = @_;
+    my $log = $self->opts->{logger};
+
+    open(my $fstdout, '<', $self->opts->{stdout_file})
+        or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{stdout_file});
+
+    my $eol = 0;
+    while (<$fstdout>) {
+        print STDERR $_ if $self->opts->{show_child_stdout};
+        $log->dump_write($_) if $self->opts->{save_child_stdout};
+        $$duplicate_to .= $_ if $duplicate_to;
+        $eol = substr($_, -2, 2) eq '\n';
+    }
+    if ($eol) {
+        print STDERR "\n" if $self->opts->{show_child_stdout};
+        $log->dump_write("\n") if $self->opts->{save_child_stdout};
+        $$duplicate_to .= "\n" if $duplicate_to;
+    }
+    1;
+}
+
+sub dump_child_stderr
+{
+    my ($self, $duplicate_to) = @_;
+    my $log = $self->opts->{logger};
+
+    open(my $fstderr, '<', $self->opts->{stderr_file})
+        or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{stderr_file});
+
+    while (<$fstderr>) {
+        print STDERR $_ if $self->opts->{show_child_stderr};
+        $log->dump_write($_) if $self->opts->{save_child_stderr};
+    }
+    1;
+}
+
+sub log_report
+{
+    my ($log, $sp_report) = @_;
+
+    foreach my $report_item (@{$sp_report->items}) {
+        $log->msg("-> Process: $report_item->{application}\n");
+        if (@{$report_item->{errors}})
+        {
+            $log->msg("\tspawner error: " . join(' ', @{$report_item->{errors}}) . "\n");
+            return;
+        }
+
+        if ($report_item->{terminate_reason} == $TR_OK && $report_item->{exit_code} != 0)
+        {
+            $log->msg("process exit code: $report_item->{exit_code}\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_TIME_LIMIT)
+        {
+            $log->msg("time limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_IDLENESS_LIMIT)
+        {
+            $log->msg("idleness limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_WRITE_LIMIT)
+        {
+            $log->msg("write limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_MEMORY_LIMIT)
+        {
+            $log->msg("memory limit exceeded\n");
+        }
+        elsif ($report_item->{terminate_reason} == $TR_ABORT)
+        {
+            $log->msg("abnormal process termination. Process exit status: $report_item->{exit_code}\n");
+        }
+        $log->msg(
+            "-> UserTime: $report_item->{consumed}->{user_time} s | MemoryUsed: $report_item->{consumed}->{memory} bytes | Written: $report_item->{consumed}->{write} bytes\n");
+    }
+    1;
 }
 
 sub _run {
@@ -110,21 +192,40 @@ sub _run {
     $self->{stdouts} = [ sort keys %stdouts ];
     $self->{stderrs} = [ sort keys %stderrs ];
 
+    my $report = CATS::Spawner::Report->new;
+
+    my $cur_dir = $Bin;
+    my $run_dir = $globals->{run_dir} // $self->opts->{run_dir};
+    chdir($run_dir) or return $report->error("failed to change directory to: $run_dir") if $run_dir;
+
     for (keys %stdouts, keys %stderrs) {
         open my $f, '>', $_ or die "Can't open redirect file: $_ ($!)";
     }
 
-    my $report = CATS::Spawner::Report->new;
-    print join ' ', $self->{sp}, @quoted if $opts->{debug};
-    my $exit_code = system(join ' ', $self->{sp}, @quoted);
+    my $exec_str = join ' ', $self->{sp}, @quoted;
+    $opts->{logger}->msg("> %s\n", $exec_str);
+
+    my $exit_code = system($exec_str);
+
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
     open my $file, '<', $opts->{report}
         or return $report->error("unable to open report '$opts->{report}': $!");
 
-    $opts->{json} ?
+    $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
+    $self->dump_child_stdout($globals->{duplicate_output});
+    $self->dump_child_stderr;
+    $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n") if $globals->{section};
+
+    my $parsed_report = $opts->{json} ?
         $self->parse_json_report($report, $file) :
         $self->parse_legacy_report($report, $file);
+
+    chdir($cur_dir) or return $report->error("failed to change directory back to: $cur_dir") if $run_dir;
+
+    log_report($opts->{logger}, $parsed_report);
+
+    $parsed_report;
 }
 
 my @legacy_required_fields = qw(
@@ -224,6 +325,7 @@ sub parse_legacy_report {
         },
         terminate_reason => $tr,
         exit_status => $raw_report->{ExitStatus},
+        exit_code => $raw_report->{ExitStatus},
         consumed => {
             user_time => $raw_report->{UserTime},
             memory => mb_to_bytes($raw_report->{PeakMemoryUsed}),
@@ -237,7 +339,7 @@ my @required_fields = qw(
     CreateProcessMethod
     UserName
     TerminateReason
-    ExitStatus
+    ExitCode
 );
 
 sub parse_json_report {
@@ -306,7 +408,8 @@ Sample JSON report
                 load_ratio => $lim->{IdlenessProcessorLoad},
             },
             terminate_reason => $tr,
-            exit_status => $ji->{ExitStatus} // die('ExitStatus not found'),
+            exit_status => $ji->{ExitStatus},
+            exit_code => $ji->{ExitCode} // die('ExitCode not found'),
             consumed => {
                 user_time => $res->{Time},
                 wall_clock_time => $res->{WallClockTime},

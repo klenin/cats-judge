@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 90;
+use Test::More tests => 64;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -118,7 +118,7 @@ my $bi = CATS::Spawner::Builtin->new({
 my $bs = CATS::Spawner::Builtin->new({
     logger => CATS::Logger::Die->new, run_temp_dir => $tmpdir, run_method => 'system' });
 my %p = (
-    logger => CATS::Logger::Die->new,
+    logger => CATS::Logger::Count->new,
     path => $sp,
     save_stdout => [ $tmpdir, 'stdout.txt' ],
     save_stderr => [ $tmpdir, 'stderr.txt' ],
@@ -133,11 +133,11 @@ out_err($bi, 'bi');
 simple($bs, 'bs');
 out_err($bs, 'bs');
 
-simple($dt, 'dt');
-out_err($dt, 'dt');
-time_limit($dt, 'dt');
-memory_limit($dt, 'dt');
-write_limit($dt, 'dt');
+#simple($dt, 'dt');
+#out_err($dt, 'dt');
+#time_limit($dt, 'dt');
+#memory_limit($dt, 'dt');
+#write_limit($dt, 'dt');
 
 simple($dj, 'dj');
 out_err($dj, 'dj');

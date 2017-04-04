@@ -25,6 +25,9 @@ use CATS::Problem::PolygonBackend;
 
 use CATS::SpawnerJson;
 use CATS::Spawner;
+use CATS::Spawner::Default;
+use CATS::Spawner::Program;
+use CATS::Spawner::Const ':all';
 
 use open IN => ':crlf', OUT => ':raw';
 
@@ -49,7 +52,7 @@ my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
-my $spawner;
+my $sp;
 my %judge_de_idx;
 
 my $problem_sources;
@@ -72,11 +75,49 @@ sub get_cfg_define {
 }
 
 sub get_run_cmd {
-    my ($run_info, $de_id) = @_;
-    return {
-        $cats::rm_default => get_cmd('run', $de_id),
-        $cats::rm_interactive => get_cfg_define('#run_interactive'),
-    }->{$run_info->{method} // $cats::rm_default};
+    my ($de_id, $opts) = @_;
+    my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id");
+    return apply_params($run_cmd, $opts);
+}
+
+sub get_run_params {
+    my ($run_info, $ps, $limits, $other_opts, $run_cmd_opts) = @_;
+
+    my $get_names = sub {
+        my ($p) = @_;
+        $p->{fname} || $p->{full_name} && $p->{name} or return log_msg("No file names specified in get_run_params\n");
+        my (undef, undef, $fname, $name, undef) =
+            $p->{fname} ? split_fname($p->{fname}) :
+            ( undef, undef, $p->{full_name}, $p->{name}, undef );
+        { full_name => $fname, name => $name }
+    };
+
+    my $names = $get_names->($ps) or return;
+
+    my $global_opts = $run_info->{method} == $cats::rm_interactive ? $limits : {};
+    my $solution_opts = $run_info->{method} == $cats::rm_interactive ? $other_opts : { %$limits, %$other_opts };
+    my @programs;
+
+    my $run_cmd = get_run_cmd($ps->{de_id}, { %$names, %$run_cmd_opts }) or return;
+    push @programs, CATS::Spawner::Program->new(
+        $run_cmd,
+        [],
+        $solution_opts
+    );
+
+    if ($run_info->{method} == $cats::rm_interactive) {
+        $run_info->{interactor} or return log_msg('No interactor specified in get_run_params\n');
+        $names = $get_names->($run_info->{interactor}) or return;
+        $run_cmd = get_run_cmd($run_info->{interactor}->{de_id}, $names) or return;
+
+        push @programs, CATS::Spawner::Program->new(
+            $run_cmd,
+            [],
+            { stdin => '*0.stdout', stdout => '*0.stdin' }
+        );
+    }
+
+    ( $global_opts, @programs );
 }
 
 sub get_std_checker_cmd
@@ -131,15 +172,13 @@ sub save_problem_description {
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
-
-sub get_special_limits
+sub get_special_limits_hash
 {
     my ($ps) = @_;
-    my %limits = (
-        tl => $ps->{time_limit}, d => $ps->{time_limit},
-        ml => $ps->{memory_limit},
-    );
-    join ' ', map "-$_:$limits{$_}", grep $limits{$_}, keys %limits,
+    my %res;
+    for (@cats::limits_fields) { $res{$_} = $ps->{$_} if defined $ps->{$_} };
+    $res{deadline} = $ps->{time_limit};
+    %res;
 }
 
 
@@ -159,23 +198,21 @@ sub generate_test
         or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
     my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
 
-    my $redir = '';
+    my $redir;
     my $out = $ps->{output_file} // $input_fname;
     if ($out =~ /^\*STD(IN|OUT)$/)
     {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
-        $redir = " --out=nul --out=$out";
+        $redir = $out;
     }
-    my $sp_report = $spawner->execute(
-        $generate_cmd, {
-        full_name => $fname, name => $name,
-        # 'Almost unlimited' write limit for test generator.
-        limits => join(' ', '-wl:999', get_special_limits($ps)),
-        args => $test->{param} // '', redir => $redir }
+    my $sp_report = $sp->run_single({},
+        apply_params($generate_cmd, { full_name => $fname, name => $name, args => $test->{param} // ''}),
+        [],
+        { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
     ) or return undef;
 
-    if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+    if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
     {
         return undef;
     }
@@ -226,7 +263,7 @@ sub get_interactor {
         log_msg("Interactor is not defined, try search in solution modules (legacy)\n");
         # Suppose that interactor is the sole compilable solution module.
         @interactors = grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}), @$problem_sources;
-        $interactors[0]->{legacy} = 1;
+        $interactors[0]->{legacy} = 1 if @interactors;
     }
 
     @interactors == 0 ? log_msg("Unable to find interactor\n") :
@@ -254,27 +291,6 @@ sub prepare_solution_environment {
     1;
 }
 
-sub interactor_params {
-    my ($run_info, $solution_de_id, $solution_args) = @_;
-
-    $run_info->{method} == $cats::rm_interactive or return {};
-
-    $run_info->{interactor} or return;
-    my (undef, undef, $interactor_fname, $interactor_name, undef) = split_fname($run_info->{interactor}->{fname});
-
-    my $error_str = 'No run_interactive method for DE: %s\n';
-
-    my $interactor_run_cmd = get_cmd('run_interactive', $run_info->{interactor}->{de_id})
-        or return log_msg($error_str, $run_info->{interactor}->{de_id});
-    my $solution_run_cmd = get_cmd('run_interactive', $solution_de_id)
-        or return log_msg($error_str, $solution_de_id);
-
-    {
-        run_interactor => apply_params($interactor_run_cmd, { name => $interactor_name, fname => $interactor_fname }),
-        run_solution => apply_params($solution_run_cmd, $solution_args)
-    };
-}
-
 sub get_run_info {
     my ($run_method) = @_;
 
@@ -297,15 +313,13 @@ sub validate_test {
     my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
     my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname(FS->catfile(@$path_to_test));
 
-    my $sp_report = $spawner->execute($validate_cmd, {
-        full_name => $fname, name => $name,
-        limits => get_special_limits($validator),
-        #redir => (($validator->{input_file} // '') eq '*STDIN' ? " --in=$t_fname": ''),
-        redir => '',
-        test_input => $t_fname,
-    }) or return;
+    my $sp_report = $sp->run_single({},
+        apply_params($validate_cmd, { full_name => $fname, name => $name, test_input => $t_fname }),
+        [],
+        { get_special_limits_hash($validator) }
+    ) or return;
 
-    $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
+    $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
 }
 
 sub prepare_tests {
@@ -359,27 +373,16 @@ sub prepare_tests {
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
                 or return;
 
-            my $run_cmd = get_run_cmd($run_info, $ps->{de_id})
-                or return log_msg("No run action for DE: $ps->{code}\n");
+            my @run_params = get_run_params(
+                $run_info,
+                $ps,
+                { $ps->{time_limit} || $tlimit, $ps->{memory_limit} || $mlimit, deadline => $ps->{time_limit} },
+                {},
+                { output_file => $output_fname } # input_output_redir($input_fname, $output_fname) ?
+            ) or return;
+            my $sp_report = $sp->run(@run_params) or return;
 
-            my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
-
-            my $interactor_params = interactor_params($run_info, $ps->{de_id},
-                { full_name => $fname, name => $name }) or return;
-            my $sp_report = $spawner->execute($run_cmd, {
-                full_name => $fname,
-                name => $name,
-                output_file => $output_fname,
-                time_limit => $ps->{time_limit} || $tlimit,
-                memory_limit => $ps->{memory_limit} || $mlimit,
-                deadline => ($ps->{time_limit} ? "-d:$ps->{time_limit}" : ''),
-                %$interactor_params,
-                input_output_redir($input_fname, $output_fname),
-            }) or return undef;
-
-            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0') {
-                return undef;
-            }
+            return if grep $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
 
             $fu->copy(output_or_default($output_fname), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
@@ -408,7 +411,7 @@ sub prepare_modules
         # это значит, что модуль компилировать не надо (de_code=1)
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
-        $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
+        $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
             or return undef;
     }
     1;
@@ -442,9 +445,9 @@ sub initialize_problem
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
         {
-            my $sp_report = $spawner->execute($compile_cmd, { full_name => $fname, name => $name })
+            my $sp_report = $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
                 or return undef;
-            if ($sp_report->{TerminateReason} ne $cats::tm_exit_process || $sp_report->{ExitStatus} ne '0')
+            if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
@@ -512,6 +515,7 @@ sub run_checker
     };
 
     my $checker_cmd;
+    my %limits;
     if (defined $problem->{std_checker})
     {
         $checker_cmd = get_std_checker_cmd($problem->{std_checker})
@@ -532,7 +536,7 @@ sub run_checker
         $checker_params->{checker_args} =
             $ps->{stype} == $cats::checker ? qq~"$a" "$o" "$i"~ : qq~"$i" "$o" "$a"~;
 
-        $checker_params->{limits} = get_special_limits($ps);
+        %limits = get_special_limits_hash($ps);
 
         $checker_cmd = get_cmd('check', $ps->{de_id})
             or return log_msg("No 'check' action for DE: $ps->{code}\n");
@@ -542,15 +546,18 @@ sub run_checker
     for my $c (\$test_run_details{checker_comment})
     {
         $$c = undef;
-        $sp_report = $spawner->execute($checker_cmd, $checker_params, duplicate_output => $c)
-            or return undef;
+        $sp_report = $sp->run_single({ duplicate_output => $c },
+            apply_params($checker_cmd, $checker_params),
+            [],
+            { %limits }
+        ) or return undef;
         #Encode::from_to($$c, 'cp866', 'utf8');
         # обрезать для надёжности, чтобы влезло в поле БД
         $$c = substr($$c, 0, 199) if defined $$c;
     }
 
     # checked only once?
-    $sp_report->{TerminateReason} eq $cats::tm_exit_process or return undef;
+    $sp_report->{terminate_reason} == $TR_OK or return undef;
 
     $sp_report;
 }
@@ -583,45 +590,44 @@ sub run_single_test
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $pid) or return;
 
-    my $run_cmd = get_run_cmd($problem->{run_info}, $p{de_id})
-        or return log_msg("No run action for DE: $judge_de_idx{$p{de_id}}->{code}\n");
-    my $interactor_params = interactor_params($problem->{run_info}, $p{de_id},
-        { name => $problem->{name}, full_name => $problem->{fname}}) or return;
-
-    my $exec_params = {
-        filter_hash($problem, qw/name full_name time_limit memory_limit output_file/),
-        input_output_redir(@$problem{qw(input_file output_file)}),
-        %$interactor_params,
-        test_rank => sprintf('%02d', $p{rank}),
-    };
-    $exec_params->{memory_limit} += $p{memory_handicap} || 0;
     {
-        my $sp_report = $spawner->execute($run_cmd, $exec_params) or return undef;
+        my %limits = get_special_limits_hash($problem);
+        $limits{memory_limit} += $p{memory_handicap} || 0;
+        my @run_params = get_run_params(
+            $problem->{run_info},
+            { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
+            { %limits },
+            {},
+            { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
+        ) or return;
 
-        $test_run_details{time_used} = $sp_report->{UserTime};
-        $test_run_details{memory_used} = int($sp_report->{PeakMemoryUsed});
-        $test_run_details{disk_used} = int($sp_report->{Written});
+        my $sp_report = $sp->run(@run_params) or return;
 
-        for ($sp_report->{TerminateReason})
-        {
-            if ($_ eq $cats::tm_exit_process)
-            {
-                if ($sp_report->{ExitStatus} ne '0')
-                {
-                    $test_run_details{checker_comment} = $sp_report->{ExitStatus};
-                    return $cats::st_runtime_error;
-                }
+        my $solution_report = $sp_report->items->[0];
+
+        $test_run_details{time_used} = $solution_report->{consumed}->{user_time};
+        $test_run_details{memory_used} = $solution_report->{consumed}->{memory};
+        $test_run_details{disk_used} = $solution_report->{consumed}->{write};
+
+        if ($solution_report->{terminate_reason} == $TR_OK) {
+            if ($solution_report->{exit_code} != 0) {
+                $test_run_details{checker_comment} = $solution_report->{exit_code};
+                return $cats::st_runtime_error;
             }
-            else
-            {
-                return $cats::st_runtime_error         if $_ eq $cats::tm_abnormal_exit_process;
-                return $cats::st_time_limit_exceeded   if $_ eq $cats::tm_time_limit_exceeded;
-                return $cats::st_idleness_limit_exceeded if $_ eq $cats::tm_idleness_limit_exceeded;
-                return $cats::st_memory_limit_exceeded if $_ eq $cats::tm_memory_limit_exceeded;
-                return $cats::st_security_violation    if $_ eq $cats::tm_write_limit_exceeded;
+        } else {
+            return {
+                $TR_ABORT          => $cats::st_runtime_error,
+                $TR_TIME_LIMIT     => $cats::st_time_limit_exceeded,
+                $TR_MEMORY_LIMIT   => $cats::st_memory_limit_exceeded,
+                $TR_WRITE_LIMIT    => $cats::st_security_violation,
+                $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded
+            }->{$solution_report->{terminate_reason}} // log_msg("unknown terminate reason: $_\n");
+        }
 
-                log_msg("unknown terminate reason: $_\n");
-                return undef;
+        if ($problem->{run_info} == $cats::rm_interactive) {
+            my $interactor_report = $sp_report->items->[1];
+            if ($interactor_report->{terminate_reason} != $TR_OK || $interactor_report->{exit_code} != 0) {
+                return $cats::st_unhandled_error;
             }
         }
     }
@@ -639,8 +645,8 @@ sub run_single_test
             0 => $cats::st_accepted,
             1 => $cats::st_wrong_answer,
             2 => $cats::st_presentation_error
-        }->{$sp_report->{ExitStatus}}
-            // return log_msg("checker error (exit code '$sp_report->{ExitStatus}')\n");
+        }->{$sp_report->{exit_code}}
+            // return log_msg("checker error (exit code '$sp_report->{exit_code}')\n");
         log_msg("OK\n") if $result == $cats::st_accepted;
         $result;
     }
@@ -701,10 +707,10 @@ sub test_solution {
 
     if ($compile_cmd ne '')
     {
-        my $sp_report = $spawner->execute($compile_cmd,
-            { filter_hash($problem, qw/full_name name/) }, section => $cats::log_section_compile
+        my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
+            apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
         ) or return undef;
-        my $ok = $sp_report->{TerminateReason} eq $cats::tm_exit_process && $sp_report->{ExitStatus} eq '0';
+        my $ok = $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
         if ($ok)
         {
             my $runfile = get_cmd('runfile', $de_id);
@@ -1012,7 +1018,13 @@ else {
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$spawner = CATS::SpawnerJson->new(cfg => $cfg, log => $log);
+$sp = CATS::Spawner::Default->new({
+    %$cfg,
+    logger => $log,
+    path => get_cfg_define('#spawner'),
+    run_dir => $cfg->rundir,
+    json => 1,
+});
 
 if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);

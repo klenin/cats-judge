@@ -26,7 +26,7 @@ my $builtin_runner = CATS::Spawner::Builtin->new({
 });
 
 my $spr = CATS::Spawner::Default->new({
-    logger => CATS::Logger::Die->new,
+    logger => CATS::Logger::Count->new,
     path => $sp,
     save_stdout => [ $tmpdir, 'stdout.txt' ],
     save_stderr => [ $tmpdir, 'stderr.txt' ],
