@@ -30,6 +30,8 @@ sub log {
 
 sub stdout_lines { [] }
 sub stderr_lines { [] }
+sub stdout_lines_chomp { [] }
+sub stderr_lines_chomp { [] }
 
 package CATS::Spawner::Report;
 

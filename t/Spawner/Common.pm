@@ -33,7 +33,7 @@ BEGIN {
 END { -d $tmpdir and rmdir $tmpdir }
 
 our $cfg = CATS::Judge::Config->new;
-our $fu = CATS::FileUtil->new;
+our $fu = CATS::FileUtil->new({ logger => CATS::Logger::Die->new });
 our $perl = $fu->quote_fn($^X);
 our $sp = FS->catdir($root, CATS::Spawner::Platform::get_path);
 

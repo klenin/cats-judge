@@ -35,6 +35,18 @@ sub stderr_lines {
     $self->{fu}->read_lines($self->{stderrs}->[0]);
 }
 
+sub stdout_lines_chomp {
+    my ($self) = @_;
+    die if @{$self->{stdouts}} != 1;
+    $self->{fu}->read_lines_chomp($self->{stdouts}->[0]);
+}
+
+sub stderr_lines_chomp {
+    my ($self) = @_;
+    die if @{$self->{stderrs}} != 1;
+    $self->{fu}->read_lines_chomp($self->{stderrs}->[0]);
+}
+
 sub make_sp_params {
     my ($self, $p) = @_;
     my @r = (
@@ -59,7 +71,7 @@ sub make_sp_params {
 sub prepare_redirect {
     my ($files, $redirect) = @_;
 
-    return unless defined $redirect;
+    $redirect or return;
 
     if ($redirect =~ /^\*/) {
         $redirect =~ /^\*\d+(stdin|stdout|stderr)$/ or die "Bad redirect: $redirect"
@@ -92,8 +104,8 @@ sub _run {
     }
 
     my $opts = $self->{opts};
-    prepare_redirect(\%stdouts, $opts->{stdout});
-    prepare_redirect(\%stderrs, $opts->{stderr});
+    prepare_redirect(\%stdouts, $globals->{stdout} // $opts->{stdout});
+    prepare_redirect(\%stderrs, $globals->{stderr} // $opts->{stderr});
 
     $self->{stdouts} = [ sort keys %stdouts ];
     $self->{stderrs} = [ sort keys %stderrs ];
@@ -103,6 +115,7 @@ sub _run {
     }
 
     my $report = CATS::Spawner::Report->new;
+    print join ' ', $self->{sp}, @quoted if $opts->{debug};
     my $exit_code = system(join ' ', $self->{sp}, @quoted);
     $exit_code == 0
         or return $report->error("failed to run spawner: $! ($exit_code)");
