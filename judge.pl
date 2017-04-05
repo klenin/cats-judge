@@ -94,7 +94,7 @@ sub get_run_params {
 
     my $names = $get_names->($ps) or return;
 
-    my $global_opts = $run_info->{method} == $cats::rm_interactive ? { %$limits, idle_time_limit => 1 }  : {};
+    my $global_opts = { ($run_info->{method} == $cats::rm_interactive ? ( %$limits, idle_time_limit => 1 ) : ()), stdout => 'nul' };
     my $solution_opts = $run_info->{method} == $cats::rm_interactive ? $other_opts : { %$limits, %$other_opts };
     my @programs;
 
