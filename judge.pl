@@ -591,7 +591,7 @@ sub run_single_test
         input_or_default($problem->{input_file}), $pid) or return;
 
     {
-        my %limits = get_special_limits_hash($problem);
+        my %limits = filter_hash($problem, @cats::limits_fields);
         $limits{memory_limit} += $p{memory_handicap} || 0;
         my @run_params = get_run_params(
             $problem->{run_info},
