@@ -212,7 +212,7 @@ sub generate_test
         { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
     ) or return undef;
 
-    if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
+    if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
     {
         return undef;
     }
@@ -319,7 +319,7 @@ sub validate_test {
         { get_special_limits_hash($validator) }
     ) or return;
 
-    $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
+    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
 }
 
 sub prepare_tests {
@@ -382,7 +382,7 @@ sub prepare_tests {
             ) or return;
             my $sp_report = $sp->run(@run_params) or return;
 
-            return if grep $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
+            return if grep @{$_->{errors}} || $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
 
             $fu->copy(output_or_default($output_fname), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
@@ -447,7 +447,7 @@ sub initialize_problem
         {
             my $sp_report = $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
                 or return undef;
-            if ($sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
+            if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
             {
                 log_msg("*** compilation error ***\n");
                 return undef;
@@ -557,7 +557,7 @@ sub run_checker
     }
 
     # checked only once?
-    $sp_report->{terminate_reason} == $TR_OK or return undef;
+    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK or return undef;
 
     $sp_report;
 }
@@ -605,6 +605,8 @@ sub run_single_test
 
         my $solution_report = $sp_report->items->[0];
 
+        return if @{$solution_report->{errors}};
+
         $test_run_details{time_used} = $solution_report->{consumed}->{user_time};
         $test_run_details{memory_used} = $solution_report->{consumed}->{memory};
         $test_run_details{disk_used} = $solution_report->{consumed}->{write};
@@ -626,7 +628,7 @@ sub run_single_test
 
         if ($problem->{run_info} == $cats::rm_interactive) {
             my $interactor_report = $sp_report->items->[1];
-            if ($interactor_report->{terminate_reason} != $TR_OK || $interactor_report->{exit_code} != 0) {
+            if (@{$interactor_report->{errors}} || $interactor_report->{terminate_reason} != $TR_OK || $interactor_report->{exit_code} != 0) {
                 return $cats::st_unhandled_error;
             }
         }
@@ -710,7 +712,7 @@ sub test_solution {
         my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
             apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
         ) or return undef;
-        my $ok = $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
+        my $ok = @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
         if ($ok)
         {
             my $runfile = get_cmd('runfile', $de_id);
