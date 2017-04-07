@@ -126,10 +126,10 @@ sub log_report
     my ($log, $sp_report) = @_;
 
     foreach my $report_item (@{$sp_report->items}) {
-        $log->msg("-> Process: $report_item->{application}\n");
+        $log->msg("-> Process: %s\n", $report_item->{application});
         if (@{$report_item->{errors}})
         {
-            $log->msg("\tspawner error: " . join(' ', @{$report_item->{errors}}) . "\n");
+            $log->msg("\tspawner error: %s\n", join(' ', @{$report_item->{errors}}));
             return $sp_report;
         }
 
