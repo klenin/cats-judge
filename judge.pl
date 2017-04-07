@@ -1020,13 +1020,18 @@ else {
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
-$sp = CATS::Spawner::Default->new({
-    %$cfg,
-    logger => $log,
-    path => get_cfg_define('#spawner'),
-    run_dir => $cfg->rundir,
-    json => 1,
-});
+
+{
+    my $cfg_dirs = {};
+    $cfg_dirs->{$_} = $cfg->{$_} for $cfg->dir_fields;
+    $sp = CATS::Spawner::Default->new({
+        %$cfg,
+        logger => $log,
+        path => apply_params(get_cfg_define('#spawner'), $cfg_dirs),
+        run_dir => $cfg->rundir,
+        json => 1,
+    });
+}
 
 if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
