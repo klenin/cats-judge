@@ -30,7 +30,7 @@
 
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp.exe"/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
-<define name="#move" value="#spawner C:\WINDOWS\system32\cmd.exe /c move /y"/>
+<define name="#move" value="C:\WINDOWS\system32\cmd.exe /c move /y"/>
 <define name="#gcc_stack" value=" -Wl,--stack=268435456"/>
 
 <!-- This code is touched by install.pl -->
