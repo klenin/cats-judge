@@ -65,27 +65,27 @@
 <!-- standart checkers -->
 <checker
     name="nums"
-    exec='#spawner "..\check\nums.exe" #checker_args'/>
+    exec='"..\check\nums.exe" #checker_args'/>
 
 <checker
     name="strs"
-    exec='#spawner "..\check\strs.exe" #checker_args'/>
+    exec='"..\check\strs.exe" #checker_args'/>
 
 <checker
     name="longstrs"
-    exec='#spawner "..\check\longstrs.exe" #checker_args'/>
+    exec='"..\check\longstrs.exe" #checker_args'/>
 
 <checker
     name="longnums"
-    exec='#spawner "..\check\longnums.exe" #checker_args'/>
+    exec='"..\check\longnums.exe" #checker_args'/>
 
 <checker
     name="floats2"
-    exec='#spawner "..\check\floats2.exe" #checker_args'/>
+    exec='"..\check\floats2.exe" #checker_args'/>
 
 <checker
     name="text"
-    exec='#spawner "..\check\text.exe" #checker_args'/>
+    exec='"..\check\text.exe" #checker_args'/>
 
 
 <!-- development environments (de) -->

@@ -130,7 +130,7 @@ sub log_report
         if (@{$report_item->{errors}})
         {
             $log->msg("\tspawner error: " . join(' ', @{$report_item->{errors}}) . "\n");
-            return;
+            return $sp_report;
         }
 
         if ($report_item->{terminate_reason} == $TR_OK && $report_item->{exit_code} != 0)
@@ -160,7 +160,7 @@ sub log_report
         $log->msg(
             "-> UserTime: $report_item->{consumed}->{user_time} s | MemoryUsed: $report_item->{consumed}->{memory} bytes | Written: $report_item->{consumed}->{write} bytes\n");
     }
-    1;
+    $sp_report;
 }
 
 sub _run {
@@ -207,10 +207,8 @@ sub _run {
 
     my $exit_code = system($exec_str);
 
-    $exit_code == 0
-        or return $report->error("failed to run spawner: $! ($exit_code)");
     open my $file, '<', $opts->{report}
-        or return $report->error("unable to open report '$opts->{report}': $!");
+        or return log_report($opts->{logger}, $report->error("unable to open report '$opts->{report}': $!"));
 
     $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
     $self->dump_child_stdout($globals->{duplicate_output});
@@ -223,9 +221,7 @@ sub _run {
 
     chdir($cur_dir) or return $report->error("failed to change directory back to: $cur_dir") if $run_dir;
 
-    log_report($opts->{logger}, $parsed_report);
-
-    $parsed_report;
+    log_report($opts->{logger}, $parsed_report)
 }
 
 my @legacy_required_fields = qw(
