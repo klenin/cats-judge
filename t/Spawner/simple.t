@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 64;
+use Test::More tests => 90;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -133,11 +133,11 @@ out_err($bi, 'bi');
 simple($bs, 'bs');
 out_err($bs, 'bs');
 
-#simple($dt, 'dt');
-#out_err($dt, 'dt');
-#time_limit($dt, 'dt');
-#memory_limit($dt, 'dt');
-#write_limit($dt, 'dt');
+simple($dt, 'dt');
+out_err($dt, 'dt');
+time_limit($dt, 'dt');
+memory_limit($dt, 'dt');
+write_limit($dt, 'dt');
 
 simple($dj, 'dj');
 out_err($dj, 'dj');
