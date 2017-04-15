@@ -801,16 +801,14 @@ sub test_solution {
 }
 
 
-sub problem_ready
-{
+sub problem_ready {
     my ($pid) = @_;
 
-    open my $pdesc, '<', $cfg->cachedir . "/$pid.des" or return 0;
+    open my $pdesc, '<', CATS::FileUtil::fn([ $cfg->cachedir, "$pid.des" ]) or return 0;
 
     my $title = <$pdesc>;
     my $date = <$pdesc>;
     my $state = <$pdesc>;
-    close $pdesc;
 
     $state eq 'state:ready' or return 0;
 
@@ -821,16 +819,16 @@ sub problem_ready
 }
 
 sub clear_problem_cache {
-    my ($r) = @_;
-    $r or return;
+    my ($problem_id) = @_;
+    $problem_id or return;
     for (CATS::SourceManager::get_guids_by_regexp('*', $cfg->{modulesdir})) {
-        my $m = CATS::SourceManager::load($_, $cfg->{modulesdir});
+        my $m = eval { CATS::SourceManager::load($_, $cfg->{modulesdir}); } or next;
         $log->warning("Orphaned module: $_")
-            if $m->{path} =~ m~[\/\\]\Q$r->{problem_id}\E[\/\\]~;
+            if $m->{path} =~ m~[\/\\]\Q$problem_id\E[\/\\]~;
     }
     $log->clear_dump;
-    $fu->remove([ $cfg->cachedir, "$r->{problem_id}*" ]) or return;
-    log_msg("problem '$r->{problem_id}' cache removed\n");
+    $fu->remove([ $cfg->cachedir, "$problem_id*" ]) or return; # Both file and directory.
+    log_msg("problem '$problem_id' cache removed\n");
 }
 
 sub prepare_problem {
@@ -1037,8 +1035,9 @@ if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
 }
 elsif ($cli->command =~ /^(clear-cache)$/) {
-    $judge->{run} = $_;
-    clear_problem_cache($judge->select_request);
+    my $pd = CATS::FileUtil::fn([ $cfg->{cachedir}, $judge->{problem} ]);
+    clear_problem_cache(
+        -f "$pd.des" || -d $pd ? $judge->{problem} : $judge->select_request->{problem_id});
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for my $rr (@{$cli->opts->{run} || [ '' ]}) {
