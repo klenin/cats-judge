@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 70;
+use Test::More tests => 71;
 use Test::Exception;
 
 use File::Spec;
@@ -27,6 +27,8 @@ sub make_fu { CATS::FileUtil->new({ logger => CATS::Logger::Count->new, @_ }) }
 sub make_fu_dies { CATS::FileUtil->new({ logger => CATS::Logger::Die->new, @_ }) }
 
 isa_ok make_fu, 'CATS::FileUtil', 'fu';
+
+like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
 
 {
     my $fu = make_fu;
