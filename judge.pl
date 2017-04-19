@@ -731,6 +731,11 @@ sub test_solution {
         }
     }
 
+    if ($r->{status} == $cats::problem_st_compile) {
+        log_msg("accept compiled solution\n");
+        return $cats::st_accepted;
+    }
+
     $fu->mkdir_clean([ $cfg->solutionsdir, $sid ]) or return;
     $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $sid ]) or return;
 
