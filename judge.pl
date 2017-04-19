@@ -172,11 +172,20 @@ sub save_problem_description {
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
-sub get_special_limits_hash
+sub get_limits_hash
 {
     my ($ps) = @_;
     my %res;
     for (@cats::limits_fields) { $res{$_} = $ps->{$_} if defined $ps->{$_} };
+    $res{memory_limit} += $ps->{memory_handicap} || 0 if $res{memory_limit};
+    $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
+    %res;
+}
+
+sub get_special_limits_hash
+{
+    my ($ps) = @_;
+    my %res = get_limits_hash($ps);
     $res{deadline} = $ps->{time_limit};
     %res;
 }
@@ -376,7 +385,7 @@ sub prepare_tests {
             my @run_params = get_run_params(
                 $run_info,
                 $ps,
-                { $ps->{time_limit} || $problem->{time_limit}, $ps->{memory_limit} || $problem->{memory_limit}, deadline => $ps->{time_limit} },
+                { get_limits_hash({ map { $_ => $ps->{$_} || $problem->{$_} } @cats::limits_fields }), deadline => $ps->{time_limit} },
                 {},
                 { output_file => $problem->{output_file} } # input_output_redir($problem->{input_file}, $problem->{output_file}) ?
             ) or return;
@@ -590,8 +599,7 @@ sub run_single_test
         input_or_default($problem->{input_file}), $pid) or return;
 
     {
-        my %limits = filter_hash($problem, @cats::limits_fields);
-        $limits{memory_limit} += $p{memory_handicap} || 0;
+        my %limits = get_limits_hash({ %p, %$problem });
         my @run_params = get_run_params(
             $problem->{run_info},
             { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
