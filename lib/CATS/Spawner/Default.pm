@@ -205,7 +205,7 @@ sub _run {
     my $exec_str = join ' ', $self->{sp}, @quoted;
     $opts->{logger}->msg("> %s\n", $exec_str);
 
-    my $exit_code = system($exec_str);
+    $report->exit_code(system($exec_str));
 
     open my $file, '<', $opts->{report}
         or return log_report($opts->{logger}, $report->error("unable to open report '$opts->{report}': $!"));

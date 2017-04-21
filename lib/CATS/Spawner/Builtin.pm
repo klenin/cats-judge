@@ -25,6 +25,7 @@ sub _run {
     $self->{stdout} = $run->stdout;
     $self->{stderr} = $run->stderr;
     my $report = CATS::Spawner::Report->new;
+    $report->exit_code($run->exit_code);
     $report->add({
         params => $globals,
         terminate_reason => ($run->ok || $run->exit_code ? $TR_OK : $TR_ABORT),
