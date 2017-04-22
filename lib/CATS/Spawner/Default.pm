@@ -205,7 +205,7 @@ sub _run {
     my $exec_str = join ' ', $self->{sp}, @quoted;
     $opts->{logger}->msg("> %s\n", $exec_str);
 
-    my $exit_code = system($exec_str);
+    $report->exit_code(system($exec_str));
 
     open my $file, '<', $opts->{report}
         or return log_report($opts->{logger}, $report->error("unable to open report '$opts->{report}': $!"));
@@ -238,6 +238,7 @@ my @legacy_required_fields = qw(
     PeakMemoryUsed
     Written
     TerminateReason
+    ExitCode
     ExitStatus
     SpawnerError
 );
@@ -273,7 +274,8 @@ sub parse_legacy_report {
     #PeakMemoryUsed:        20.140625 (Mb)
     #Written:               0.000000 (Mb)
     #TerminateReason:       TimeLimitExceeded
-    #ExitStatus:            0
+    #ExitCode               0
+    #ExitStatus:            SIGKILL
     #----------------------------------------------
     #SpawnerError:          <none>
 
@@ -320,8 +322,8 @@ sub parse_legacy_report {
             write => mb_to_bytes($raw_report->{WriteLimit}),
         },
         terminate_reason => $tr,
+        exit_code => $raw_report->{ExitCode},
         exit_status => $raw_report->{ExitStatus},
-        exit_code => $raw_report->{ExitStatus},
         consumed => {
             user_time => $raw_report->{UserTime},
             memory => mb_to_bytes($raw_report->{PeakMemoryUsed}),

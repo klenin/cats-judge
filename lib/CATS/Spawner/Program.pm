@@ -33,4 +33,6 @@ sub arguments { $_[0]->{args} }
 
 sub opts { $_[0]->{opts} }
 
+sub set_expected_tr { $_[0]->{tr} = $_[1]; $_[0]; }
+
 1;

@@ -75,8 +75,8 @@ my $item_schema = {
 };
 
 sub new {
-    my ($class, $opts) = @_;
-    my $self = bless { items => [], opts => $opts }, $class;
+    my ($class, $opts, $exit_code) = @_;
+    my $self = bless { items => [], opts => $opts, exit_code => $exit_code }, $class;
     $self;
 }
 
@@ -88,6 +88,8 @@ sub add {
     push @{$self->{items}}, $item;
     $self;
 }
+
+sub exit_code { defined $_[1] ? $_[0]->{exit_code} = $_[1] : $_[0]->{exit_code} }
 
 sub error { $_[0]->add({ errors => [ $_[1] ] }) }
 
