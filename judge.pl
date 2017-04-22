@@ -172,11 +172,20 @@ sub save_problem_description {
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
-sub get_special_limits_hash
+sub get_limits_hash
 {
     my ($ps) = @_;
     my %res;
     for (@cats::limits_fields) { $res{$_} = $ps->{$_} if defined $ps->{$_} };
+    $res{memory_limit} += $ps->{memory_handicap} || 0 if $res{memory_limit};
+    $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
+    %res;
+}
+
+sub get_special_limits_hash
+{
+    my ($ps) = @_;
+    my %res = get_limits_hash($ps);
     $res{deadline} = $ps->{time_limit};
     %res;
 }
@@ -323,7 +332,7 @@ sub validate_test {
 }
 
 sub prepare_tests {
-    my ($pid, $input_fname, $output_fname, $tlimit, $mlimit, $run_method) = @_;
+    my ($pid, $problem) = @_;
     my $tests = $judge->get_problem_tests($pid);
 
     if (!@$tests) {
@@ -331,7 +340,7 @@ sub prepare_tests {
         return undef;
     }
 
-    my $run_info = get_run_info($run_method);
+    my $run_info = get_run_info($problem->{run_method});
 
     for my $t (@$tests) {
         # Create test input file.
@@ -344,7 +353,7 @@ sub prepare_tests {
                     or return undef;
             }
             else {
-                my $out = generate_test($pid, $t, $input_fname)
+                my $out = generate_test($pid, $t, $problem->{input_file})
                     or return undef;
                 $fu->copy([ $cfg->rundir, $out ], [ $cfg->cachedir, $pid, "$t->{rank}.tst" ])
                     or return;
@@ -370,21 +379,21 @@ sub prepare_tests {
             prepare_solution_environment($pid,
                 get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $run_info) or return;
 
-            $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($input_fname))
+            $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($problem->{input_file}))
                 or return;
 
             my @run_params = get_run_params(
                 $run_info,
                 $ps,
-                { $ps->{time_limit} || $tlimit, $ps->{memory_limit} || $mlimit, deadline => $ps->{time_limit} },
+                { get_limits_hash({ map { $_ => $ps->{$_} || $problem->{$_} } @cats::limits_fields }), deadline => $ps->{time_limit} },
                 {},
-                { output_file => $output_fname } # input_output_redir($input_fname, $output_fname) ?
+                { output_file => $problem->{output_file} } # input_output_redir($problem->{input_file}, $problem->{output_file}) ?
             ) or return;
             my $sp_report = $sp->run(@run_params) or return;
 
             return if grep @{$_->{errors}} || $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
 
-            $fu->copy(output_or_default($output_fname), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
+            $fu->copy(output_or_default($problem->{output_file}), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
         }
         else {
@@ -471,8 +480,7 @@ sub initialize_problem
             }
         }
     }
-    prepare_tests($pid, $p->{input_file}, $p->{output_file}, $p->{time_limit},
-        $p->{memory_limit}, $p->{run_method})
+    prepare_tests($pid, $p)
         or return undef;
 
     save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
@@ -591,8 +599,7 @@ sub run_single_test
         input_or_default($problem->{input_file}), $pid) or return;
 
     {
-        my %limits = filter_hash($problem, @cats::limits_fields);
-        $limits{memory_limit} += $p{memory_handicap} || 0;
+        my %limits = get_limits_hash({ %p, %$problem });
         my @run_params = get_run_params(
             $problem->{run_info},
             { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
