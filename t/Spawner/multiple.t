@@ -63,7 +63,7 @@ sub compile {
     my ($src, $out, $skip) = @_;
     my $fullsrc = FS->catdir($Bin, 'cpp', $src);
     $out = FS->catdir($tmpdir, $out);
-    my $app = program($gcc, [ '-O0', '-o', $out, $fullsrc ]);
+    my $app = program($gcc, [ @gcc_opts, '-O0', '-o', $out, $fullsrc ]);
     my $r = $builtin_runner->run(undef, $app);
     items_ok($r, [ $app ], "$src compile");
     my $compile_success = 1;
