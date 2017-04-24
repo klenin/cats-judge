@@ -85,16 +85,19 @@ sub get_run_params {
 
     my $get_names = sub {
         my ($p) = @_;
-        $p->{fname} || $p->{full_name} && $p->{name} or return log_msg("No file names specified in get_run_params\n");
+        $p->{fname} || $p->{full_name} && $p->{name}
+            or return log_msg("No file names specified in get_run_params\n");
         my (undef, undef, $fname, $name, undef) =
-            $p->{fname} ? split_fname($p->{fname}) :
-            ( undef, undef, $p->{full_name}, $p->{name}, undef );
+            $p->{fname} ? split_fname($p->{fname}) : (undef, undef, $p->{full_name}, $p->{name}, undef);
         { full_name => $fname, name => $name }
     };
 
     my $names = $get_names->($ps) or return;
 
-    my $global_opts = { ($run_info->{method} == $cats::rm_interactive ? ( %$limits, idle_time_limit => 1 ) : ()), stdout => 'nul' };
+    my $global_opts = {
+        ($run_info->{method} == $cats::rm_interactive ? ( %$limits, idle_time_limit => 1 ) : ()),
+        stdout => 'nul'
+    };
     my $solution_opts = $run_info->{method} == $cats::rm_interactive ? $other_opts : { %$limits, %$other_opts };
     my @programs;
 
@@ -117,11 +120,10 @@ sub get_run_params {
         );
     }
 
-    ( $global_opts, @programs );
+    ($global_opts, @programs);
 }
 
-sub get_std_checker_cmd
-{
+sub get_std_checker_cmd {
     my $std_checker_name = shift;
 
     if (!defined $cfg->checkers->{$std_checker_name}) {
@@ -191,8 +193,7 @@ sub get_special_limits_hash
 }
 
 
-sub generate_test
-{
+sub generate_test {
     my ($pid, $test, $input_fname) = @_;
     die 'generated' if $test->{generated};
 
@@ -205,12 +206,11 @@ sub generate_test
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
         or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
-    my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
+    my (undef, undef, $fname, $name, undef) = split_fname($ps->{fname});
 
     my $redir;
     my $out = $ps->{output_file} // $input_fname;
-    if ($out =~ /^\*STD(IN|OUT)$/)
-    {
+    if ($out =~ /^\*STD(IN|OUT)$/) {
         $test->{gen_group} and return undef;
         $out = 'stdout1.txt';
         $redir = $out;
@@ -221,8 +221,7 @@ sub generate_test
         { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
     ) or return undef;
 
-    if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
-    {
+    if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0) {
         return undef;
     }
     $out;
