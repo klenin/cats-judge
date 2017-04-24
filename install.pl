@@ -109,7 +109,7 @@ step 'Verify optional modules', sub {
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
-step 'Clone sumbodules', sub {
+step 'Clone submodules', sub {
     system('git submodule update --init');
     $? and maybe_die "Failed: $?, $!";
 };
