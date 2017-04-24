@@ -215,7 +215,7 @@ sub generate_test {
         $out = 'stdout1.txt';
         $redir = $out;
     }
-    my $sp_report = $sp->run_single({},
+    my $sp_report = $sp->run_single({ ($redir ? (stdout => 'nul') : ()) },
         apply_params($generate_cmd, { full_name => $fname, name => $name, args => $test->{param} // ''}),
         [],
         { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
