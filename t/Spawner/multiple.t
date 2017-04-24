@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -202,6 +202,12 @@ run_subtest 'Open stdin file inside program', $compile_plan + items_ok_plan(1) +
     my $fopen = compile('fopen.cpp', "fopen$exe", $_[0]);
     run_sp({ stdin => $input }, $fopen, [ $input ]);
     is_deeply $spr->stdout_lines_chomp, [ 'aabbcc' ], 'merged stdout';
+    clear_tmpdir;
+};
+
+run_subtest 'Many lines to stdout', $compile_plan + items_ok_plan(1), sub {
+    my $many_lines = compile('many_lines.cpp', "many_lines$exe", $_[0]);
+    run_sp({ deadline => 2 }, $many_lines);
     clear_tmpdir;
 };
 
