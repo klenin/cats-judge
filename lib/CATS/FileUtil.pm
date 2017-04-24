@@ -72,9 +72,9 @@ sub remove_file {
     for my $retry (0..9) {
         unlink $fn or return $self->log("remove_file: unlink '$fn' failed ($!)\n");
         -f $fn || -l $fn or return 1;
-        $retry or next;
-        sleep 1;
-        $self->log("remove_file: '$fn' retry $retry\n");
+        sleep 1; # Might be delayed stat update.
+        -f $fn || -l $fn or return 1;
+        $self->log("remove_file: '$fn' retry $retry\n") if $retry;
     }
 }
 
