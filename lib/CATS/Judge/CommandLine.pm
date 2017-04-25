@@ -78,6 +78,7 @@ my %commands = (
         'result-columns=s',
         '!run=s@',
         'testset=s',
+        'use-plan=s',
     ],
     serve => [],
     upload => [
@@ -119,6 +120,10 @@ sub get_options {
     for ($self->opts->{result}) {
         $_ //= 'text';
         /^(text|html|none)$/ or usage(q~Option --result must be either 'text', 'html' or 'none'~);
+    }
+    for ($self->opts->{'use-plan'}) {
+        $_ //= 'all';
+        /^(all|acm)$/ or usage(q~Option --plan must be either 'all', or 'acm'~);
     }
 }
 

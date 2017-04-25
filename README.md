@@ -102,6 +102,7 @@ Options:
   * `--testset <testset>` test only on a subset of tests. By default all tests are used.
   * `--result text|html|none` display results in a given format. Format `text` (default) displays ASCII table on console. Format `html` saves report in `html` file. Format `none` does not display results.
   * `--result-columns <regexp>` display only columns corresponding to this filter.
+  * `--use-plan all|acm` choose order and subset of tests according to a given plan.
 
 Examples:
 ```

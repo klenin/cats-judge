@@ -79,7 +79,7 @@ sub select_request {
         contest_id => 0,
         state => 1,
         is_jury => 0,
-        run_all_tests => 1,
+        run_all_tests => ($self->{'use-plan'} eq 'all' ? 1 : 0),
         status => $cats::problem_st_ready,
         fname => $self->{run},
         src => '',
