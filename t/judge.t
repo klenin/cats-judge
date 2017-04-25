@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 88;
+use Test::More tests => 97;
 
 use File::Spec;
 
@@ -53,6 +53,21 @@ like run_judge('cached minimal', qw(install -p), $p_minimal)->stdout->[-1],
 
 like run_judge_sol('run minimal', $p_minimal, 'ok.cpp')->stdout->[-1],
     qr/accepted/, 'run minimal accepted';
+
+{
+    my $tmpdir = [ $path, 'tmp' ];
+    $fu->ensure_dir($tmpdir);
+    like run_judge_sol('minimal html',
+        $p_minimal, 'ok.cpp', result => 'html',
+        'config-set' => 'resultsdir=' . FS->rel2abs(CATS::FileUtil::fn($tmpdir))
+    )->stdout->[-1],
+        qr/accepted/, 'minimal html accepted';
+    is scalar @{[ glob(FS->catfile(@$tmpdir, '*')) ]}, 1, 'minimal html exists';
+    $fu->remove($tmpdir);
+}
+
+like run_judge_sol('no tests', $p_minimal, 'ok.cpp', t => 99)->stdout->[-1],
+    qr/ignore submit/, 'no tests ignored';
 
 my $p_verdicts = FS->catfile($path, 'p_verdicts');
 
