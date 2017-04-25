@@ -85,6 +85,7 @@ sub select_request {
         fname => $self->{run},
         src => $self->{run} ? (join '', <FILE>) : '',
         de_id => $self->{de},
+        element_reqs => [],
     };
 }
 
