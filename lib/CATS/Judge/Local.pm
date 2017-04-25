@@ -88,7 +88,9 @@ sub select_request {
     };
     $self->{run} or return $req;
 
-    $req->{id} = $opts{id_gen}->($self, $self->{run}); # or cut / : \
+    my $r = $self->{run};
+    $r =~ tr{:/\\}{~};
+    $req->{id} = $opts{id_gen}->($self, $r);
     open my $run_file, $self->{run} or die "Couldn't open file '$self->{run}': $!";
     $req->{src} = join '', <$run_file>;
     $req;
