@@ -705,7 +705,7 @@ sub test_solution {
 
     for (0..1)
     {
-    my $r = eval
+    my $er = eval
     {
     clear_rundir or return undef;
 
@@ -774,7 +774,7 @@ sub test_solution {
     }
     else
     {
-        return $r unless ($r || '') eq 'FALL';
+        return $er unless ($er || '') eq 'FALL';
         last;
     }
     } # for
