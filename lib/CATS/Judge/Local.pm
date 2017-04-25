@@ -73,9 +73,8 @@ sub select_request {
     eval { $self->{parser}->parse; };
     die "Problem parsing failed: $@" if $@;
 
-    !$self->{run} or open FILE, $self->{run} or die "Couldn't open file: $!";
-    {
-        id => $self->{run} ? $opts{id_gen}->($self, $self->{run}) : 0, # or cut / : \
+    my $req = {
+        id => 0,
         problem_id => $self->get_problem_id,
         contest_id => 0,
         state => 1,
@@ -83,10 +82,16 @@ sub select_request {
         run_all_tests => 1,
         status => $cats::problem_st_ready,
         fname => $self->{run},
-        src => $self->{run} ? (join '', <FILE>) : '',
+        src => '',
         de_id => $self->{de},
         element_reqs => [],
     };
+    $self->{run} or return $req;
+
+    $req->{id} = $opts{id_gen}->($self, $self->{run}); # or cut / : \
+    open my $run_file, $self->{run} or die "Couldn't open file '$self->{run}': $!";
+    $req->{src} = join '', <$run_file>;
+    $req;
 }
 
 sub save_log_dump {
