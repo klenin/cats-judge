@@ -29,6 +29,8 @@ use CATS::Spawner::Default;
 use CATS::Spawner::Program;
 use CATS::Spawner::Const ':all';
 
+use CATS::TestPlan;
+
 use open IN => ':crlf', OUT => ':raw';
 
 my $lh;
@@ -745,51 +747,23 @@ sub test_solution {
     $fu->mkdir_clean([ $cfg->solutionsdir, $sid ]) or return;
     $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $sid ]) or return;
 
-    # сначале тестируем в случайном порядке,
-    # если найдена ошибка -- подряд до первого ошибочного теста
-    for my $pass (1..2)
-    {
-        my %tests = $judge->get_testset($sid, 1);
-        my @tests = sort { $a <=> $b } keys %tests;
-
-        if (!@tests)
-        {
-            log_msg("no tests defined\n");
-            return $cats::st_unhandled_error;
-        }
-
-        # получаем случайный порядок тестов
-        if ($pass == 1 && !$r->{run_all_tests}) {
-            for (@tests) {
-                my $r = \$tests[rand @tests];
-                ($_, $$r) = ($$r, $_);
-            }
-        }
-
-        for my $rank (@tests)
-        {
-            if (!$inserted_details{$rank})
-            {
-                $res = run_single_test(
-                    problem => $problem, sid => $sid, rank => $rank,
-                    de_id => $de_id, memory_handicap => $memory_handicap
-                ) or return undef;
-                insert_test_run_details(result => $res);
-            }
-            else
-            {
-                $res = $inserted_details{$rank};
-            }
-            if ($res != $cats::st_accepted)
-            {
-                if (!$failed_test || $rank < $failed_test)
-                {
-                    $failed_test = $rank;
-                }
-                $r->{run_all_tests} or last;
-            }
-        }
-        last if $res == $cats::st_accepted || $r->{run_all_tests};
+    my %tests = $judge->get_testset($sid, 1) or do {
+        log_msg("no tests defined\n");
+        return $cats::st_unhandled_error;
+    };
+    my %tp_params = (tests => \%tests);
+    my $tp = $r->{run_all_tests} ?
+        CATS::TestPlan::All->new(%tp_params) :
+        CATS::TestPlan::ACM->new(%tp_params);
+    for ($tp->start; $tp->current; ) {
+        $res = run_single_test(
+            problem => $problem, sid => $sid, rank => $tp->current,
+            de_id => $de_id, memory_handicap => $memory_handicap
+        ) or return undef;
+        insert_test_run_details(result => $res);
+        $inserted_details{$tp->current} = $res;
+        $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
+        $failed_test = $tp->first_failed;
     }
     'FALL';
     };
@@ -804,7 +778,7 @@ sub test_solution {
         last;
     }
     } # for
-    if ($r->{run_all_tests} && $failed_test) {
+    if ($failed_test) {
         $res = $inserted_details{$failed_test};
     }
     $r->{failed_test} = $failed_test;
