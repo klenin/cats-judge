@@ -34,25 +34,16 @@ sub run_judge_sol {
 
 my $p_minimal = FS->catfile($path, 'p_minimal');
 
-{
-    my $r = run_judge('usage');
-    like join('', @{$r->stdout}), qr/Usage/, 'usage';
-}
+like join('', @{run_judge('usage')->stdout}), qr/Usage/, 'usage';
 
-{
-    my $r = run_judge('minimal', qw(install --force-install -p), $p_minimal);
-    like $r->stdout->[-1], qr/problem.*installed/, 'minimal installed';
-}
+like run_judge('minimal', qw(install --force-install -p), $p_minimal)->stdout->[-1],
+    qr/problem.*installed/, 'minimal installed';
 
-{
-    my $r = run_judge('cached minimal', qw(install -p), $p_minimal);
-    like $r->stdout->[-1], qr/problem.*cached/, 'cached minimal';
-}
+like run_judge('cached minimal', qw(install -p), $p_minimal)->stdout->[-1],
+    qr/problem.*cached/, 'cached minimal';
 
-{
-    my $r = run_judge_sol('run minimal', $p_minimal, 'ok.cpp');
-    like $r->stdout->[-1], qr/accepted/, 'run minimal accepted';
-}
+like run_judge_sol('run minimal', $p_minimal, 'ok.cpp')->stdout->[-1],
+    qr/accepted/, 'run minimal accepted';
 
 my $p_verdicts = FS->catfile($path, 'p_verdicts');
 
