@@ -967,7 +967,6 @@ $fu->ensure_dir($cfg->cachedir, 'cachedir');
 $fu->ensure_dir($cfg->solutionsdir, 'solutions');
 $fu->ensure_dir($cfg->logdir, 'logdir');
 $fu->ensure_dir($cfg->rundir, 'rundir');
-$fu->ensure_dir($cfg->resultsdir, 'resultsdir');
 
 $log->init($cfg->logdir);
 
@@ -983,7 +982,8 @@ if ($cli->command eq 'serve' && $api eq 'DirectDatabase' || defined $cli->opts->
 }
 
 if ($cli->command ne 'serve') {
-    $judge = CATS::Judge::Local->new(name => $cfg->name, modulesdir => $cfg->modulesdir,
+    $judge = CATS::Judge::Local->new(
+        name => $cfg->name, modulesdir => $cfg->modulesdir,
         resultsdir => $cfg->resultsdir, logger => $log, %{$cli->opts});
 }
 elsif ($api =~ /^(WebApi|DirectDatabase)$/) {

@@ -10,6 +10,7 @@ use POSIX qw(strftime);
 
 use CATS::Constants;
 use CATS::ConsoleColor;
+use CATS::FileUtil;
 use CATS::Problem::ImportSource::Local;
 use CATS::Problem::Parser;
 use CATS::Problem::PolygonParser;
@@ -301,6 +302,8 @@ sub html_result {
     my @headers = $self->filtered_headers or return;
     my $rf = $self->{rid_to_fname};
     my @runs = sort { $rf->{$a} cmp $rf->{$b} } keys %{$self->{results}} or return;
+    my $fu = CATS::FileUtil->new({ logger => $self->{logger} });
+    $fu->ensure_dir($self->{resultsdir}, 'resultsdir');
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
     $html_name = "$self->{resultsdir}/$html_name.html";
