@@ -80,8 +80,11 @@ like run_judge_sol('verdicts RE', $p_verdicts, 'return99.cpp')->stdout->[-1],
 like run_judge_sol('verdicts TL', $p_verdicts, 'hang.cpp')->stdout->[-1],
     qr/time limit exceeded/, 'verdicts TL';
 
-like run_judge_sol('verdicts ML', $p_verdicts, 'allocate.cpp')->stdout->[-1],
-    qr/memory limit exceeded/, 'verdicts ML';
+SKIP: {
+    skip 'ML under linux is unstable', 4 if $^O ne 'MSWin32';
+    like run_judge_sol('verdicts ML', $p_verdicts, 'allocate.cpp')->stdout->[-1],
+        qr/memory limit exceeded/, 'verdicts ML';
+}
 
 my $p_generator = FS->catfile($path, 'p_generator');
 
