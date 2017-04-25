@@ -167,13 +167,19 @@ sub get_problem_sources {
         );
     }
 
-    for(@{$problem->{generators}}) {
+    for (@{$problem->{generators}}) {
         push @$problem_sources, $self->pack_problem_source(
             source_object => $_, source_type => $cats::generator,
         );
     }
 
-    for(@{$problem->{solutions}}) {
+    if (my $i = $problem->{interactor}) {
+        push @$problem_sources, $self->pack_problem_source(
+            source_object => $i, source_type => $cats::interactor,
+        );
+    }
+
+    for (@{$problem->{solutions}}) {
         push @$problem_sources, $self->pack_problem_source(
             source_object => $_, source_type => $_->{checkup} ? $cats::adv_solution : $cats::solution,
         );
