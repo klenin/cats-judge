@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Generators" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="cmp.cpp" type="checker" de_code="102" style="testlib" />
+<Solution name="sol_copy" src="sol_copy.cpp" de_code="102" />
+<Generator name="gen_copy" src="gen_copy.cpp" de_code="102" />
+<Generator name="gen_group" src="gen_group.cpp" outputFile="%n.in" de_code="102" />
+<Generator name="gen_stdout" src="gen_stdout.cpp" outputFile="*STDOUT" de_code="102" />
+
+<Test rank="1"><In src="%n.in" /></Test>
+<Test rank="2"><In use="gen_copy" param="2" /></Test>
+<Test rank="3"><In use="gen_copy" param="3" /></Test>
+<Test rank="4-6"><In use="gen_group" genAll="1" /></Test>
+<Test rank="7"><In use="gen_stdout" param="7" /></Test>
+<Test rank="1-7"><Out src="%n.out" /></Test>
+
+</Problem>
+</CATS>

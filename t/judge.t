@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 52;
+use Test::More tests => 56;
 
 use File::Spec;
 
@@ -82,5 +82,10 @@ like run_judge_sol('verdicts TL', $p_verdicts, 'hang.cpp')->stdout->[-1],
 
 like run_judge_sol('verdicts ML', $p_verdicts, 'allocate.cpp')->stdout->[-1],
     qr/memory limit exceeded/, 'verdicts ML';
+
+my $p_generator = FS->catfile($path, 'p_generator');
+
+like run_judge_sol('generator', $p_generator, 'sol_copy.cpp')->stdout->[-1],
+    qr/accepted/, 'generator';
 
 1;
