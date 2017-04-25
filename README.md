@@ -100,7 +100,7 @@ Options:
   * `--de <de_code>` enforce development environment. By default development environment is detected by file extension.
   * `--force-install` install problem even if it is already cached
   * `--testset <testset>` test only on a subset of tests. By default all tests are used.
-  * `--result text|html` display results in a given format. Format `text` (default) displays ASCII table on console. Format `html` saves report in `html` file.
+  * `--result text|html|none` display results in a given format. Format `text` (default) displays ASCII table on console. Format `html` saves report in `html` file. Format `none` does not display results.
   * `--result-columns <regexp>` display only columns corresponding to this filter.
 
 Examples:

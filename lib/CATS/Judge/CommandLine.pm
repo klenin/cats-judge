@@ -31,7 +31,7 @@ Commands:
     #install# --problem <zip_or_directory_or_name> [--force-install]
     #run# --problem <zip_or_directory_or_name> [--force-install]
         --run <file>... [--de <de_code>] [--testset <testset>]
-        [--result text|html] [--result=columns <regexp>]
+        [--result text|html|none] [--result=columns <regexp>]
     #download# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
     #upload# --problem <zip_or_directory_or_name> --url <url>

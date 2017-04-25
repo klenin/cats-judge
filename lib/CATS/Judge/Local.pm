@@ -380,7 +380,11 @@ sub ascii_result {
 sub finalize {
     my $self = shift;
     $self->{run} or return;
-    $self->{result} && $self->{result} eq 'html' ? $self->html_result : $self->ascii_result;
+    my $r = $self->{result} // 'none';
+    $r eq 'text' ? $self->ascii_result :
+    $r eq 'html' ? $self->html_result :
+    $r eq 'none' ? 0 :
+    die 'Unknown value for --result';
 }
 
 1;
