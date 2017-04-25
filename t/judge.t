@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 80;
+use Test::More tests => 88;
 
 use File::Spec;
 
@@ -31,10 +31,17 @@ sub run_judge_sol {
     my ($name, $problem, $sol, %opt) = @_;
     $opt{de} //= 102;
     $opt{result} //= 'none';
-    run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ], map { +"--$_" => $opt{$_} } sort keys %opt);
+    run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ],
+        map { +"--$_" => $opt{$_} } sort keys %opt);
 }
 
 like join('', @{run_judge('usage')->stdout}), qr/Usage/, 'usage';
+
+like run_judge('config print', qw(config --print sleep_time))->stdout->[0],
+    qr/sleep_time = \d+/, 'config print';
+
+like run_judge('config set', qw(config --print sleep_time --config-set sleep_time=99))->stdout->[0],
+    qr/sleep_time = 99/, 'config set';
 
 my $p_minimal = FS->catfile($path, 'p_minimal');
 
