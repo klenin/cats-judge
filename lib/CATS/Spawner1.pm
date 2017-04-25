@@ -38,6 +38,17 @@ sub stderr_lines { [] }
 sub stdout_lines_chomp { [] }
 sub stderr_lines_chomp { [] }
 
+package CATS::Spawner::ReportItem;
+
+use CATS::Spawner::Const ':all';
+
+sub new {
+    my ($class, $self) = @_;
+    bless $self, $class;
+}
+
+sub ok { !@{$_[0]->{errors}} && $_[0]->{terminate_reason} == $TR_OK && $_[0]->{exit_code} == 0 }
+
 package CATS::Spawner::Report;
 
 use Carp qw(croak);
@@ -85,7 +96,7 @@ sub items { $_[0]->{items} }
 sub add {
     my ($self, $item) = @_;
     check_item($item, $item_schema, '.');
-    push @{$self->{items}}, $item;
+    push @{$self->{items}}, CATS::Spawner::ReportItem->new($item);
     $self;
 }
 

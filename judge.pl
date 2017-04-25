@@ -223,10 +223,7 @@ sub generate_test {
         { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
     ) or return undef;
 
-    if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0) {
-        return undef;
-    }
-    $out;
+    $sp_report->ok ? $out : undef;
 }
 
 
@@ -329,7 +326,7 @@ sub validate_test {
         { get_special_limits_hash($validator) }
     ) or return;
 
-    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
+    $sp_report->ok;
 }
 
 sub prepare_tests {
@@ -392,7 +389,7 @@ sub prepare_tests {
             ) or return;
             my $sp_report = $sp->run(@run_params) or return;
 
-            return if grep @{$_->{errors}} || $_->{terminate_reason} != $TR_OK || $_->{exit_code} != 0, @{$sp_report->items};
+            return if grep !$_->ok, @{$sp_report->items};
 
             $fu->copy(output_or_default($problem->{output_file}), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
@@ -443,8 +440,7 @@ sub initialize_problem
     my %main_source_types;
     $main_source_types{$_} = 1 for keys %cats::source_modules;
 
-    for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources)
-    {
+    for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources) {
         clear_rundir or return undef;
 
         prepare_modules($cats::source_modules{$ps->{stype}} || 0)
@@ -453,12 +449,10 @@ sub initialize_problem
         my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
         $fu->write_to_file([ $cfg->rundir, $fname ], $ps->{src}) or return;
 
-        if (my $compile_cmd = get_cmd('compile', $ps->{de_id}))
-        {
+        if (my $compile_cmd = get_cmd('compile', $ps->{de_id})) {
             my $sp_report = $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
                 or return undef;
-            if (@{$sp_report->{errors}} || $sp_report->{terminate_reason} != $TR_OK || $sp_report->{exit_code} != 0)
-            {
+            if (!$sp_report->ok) {
                 log_msg("*** compilation error ***\n");
                 return undef;
             }
@@ -631,12 +625,13 @@ sub run_single_test
                 $TR_MEMORY_LIMIT   => $cats::st_memory_limit_exceeded,
                 $TR_WRITE_LIMIT    => $cats::st_security_violation,
                 $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded
-            }->{$solution_report->{terminate_reason}} // log_msg("unknown terminate reason: $solution_report->{terminate_reason}\n");
+            }->{$solution_report->{terminate_reason}} //
+                log_msg("unknown terminate reason: $solution_report->{terminate_reason}\n");
         }
 
         if ($problem->{run_info} == $cats::rm_interactive) {
             my $interactor_report = $sp_report->items->[1];
-            if (@{$interactor_report->{errors}} || $interactor_report->{terminate_reason} != $TR_OK || $interactor_report->{exit_code} != 0) {
+            if (!$interactor_report->ok) {
                 return $cats::st_unhandled_error;
             }
         }
@@ -715,14 +710,12 @@ sub test_solution {
     my $compile_cmd = get_cmd('compile', $de_id);
     defined $compile_cmd or return undef;
 
-    if ($compile_cmd ne '')
-    {
+    if ($compile_cmd ne '') {
         my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
             apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
         ) or return undef;
-        my $ok = @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK && $sp_report->{exit_code} == 0;
-        if ($ok)
-        {
+        my $ok = $sp_report->ok;
+        if ($ok) {
             my $runfile = get_cmd('runfile', $de_id);
             $runfile = apply_params($runfile, $problem) if $runfile;
             if ($runfile && !(-f $cfg->rundir . "/$runfile"))
@@ -731,8 +724,7 @@ sub test_solution {
                 log_msg("Runfile '$runfile' not created\n");
             }
         }
-        if (!$ok)
-        {
+        if (!$ok) {
             insert_test_run_details(result => $cats::st_compilation_error);
             log_msg("compilation error\n");
             return $cats::st_compilation_error;
