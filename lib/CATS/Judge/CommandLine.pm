@@ -113,7 +113,12 @@ sub get_options {
 
     for (@{$commands{$command}}) {
         m/^!([a-z\-]+)/ or next;
-        defined $self->opts->{$1} or die "Command $command requires --$1 option";
+        defined $self->opts->{$1} or usage("Command $command requires --$1 option");
+    }
+
+    for ($self->opts->{result}) {
+        $_ //= 'text';
+        /^(text|html|none)$/ or usage(q~Option --result must be either 'text', 'html' or 'none'~);
     }
 }
 
