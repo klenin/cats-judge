@@ -246,9 +246,10 @@ sub get_problem {
         write_limit => $p->{write_limit},
         input_file => $p->{input_file},
         output_file => $p->{output_file},
+        save_output_prefix => $p->{save_output_prefix},
         std_checker => $p->{std_checker},
         run_method => $self->{parser}{problem}{run_method},
-        contest_id => 0
+        contest_id => 0,
     };
 }
 
@@ -277,6 +278,7 @@ use constant headers => (
     { c => 'Memory' , n => 'memory_used',     a => 'right'  },
     { c => 'Disk'   , n => 'disk_used',       a => 'right'  },
     { c => 'Comment', n => 'checker_comment', a => 'left'   },
+    { c => 'Output' , n => 'output',          a => 'left'   },
 );
 
 use constant state_styles => {

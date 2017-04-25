@@ -637,8 +637,10 @@ sub run_single_test
             }
         }
     }
-    ($test_run_details{output}, $test_run_details{output_size}) = $fu->load_file([ $cfg->rundir, $problem->{output_file} ], $problem->{save_output_prefix})
-        if $problem->{save_output_prefix};
+    ($test_run_details{output}, $test_run_details{output_size}) =
+        $fu->load_file([ $cfg->rundir, $problem->{output_file} ], $problem->{save_output_prefix})
+            if $problem->{save_output_prefix};
+
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
         input_or_default($problem->{input_file}), $problem->{id}) or return;
