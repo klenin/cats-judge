@@ -263,7 +263,7 @@ sub input_or_default { FS->catfile($cfg->rundir, input_or($_[0], $_[0])) }
 sub output_or_default { FS->catfile($cfg->rundir, output_or($_[0], $_[0])) }
 
 sub input_output_redir {
-    input_redir => input_or($_[0], ''), output_redir => output_or($_[1], ''),
+    stdin => input_or($_[0], undef), stdout => output_or($_[1], undef),
 }
 
 sub get_interactor {
@@ -387,8 +387,8 @@ sub prepare_tests {
                 $run_info,
                 $ps,
                 { get_limits_hash({ map { $_ => $ps->{$_} || $problem->{$_} } @cats::limits_fields }), deadline => $ps->{time_limit} },
+                { input_output_redir($problem->{input_file}, $problem->{output_file}) },
                 {},
-                { output_file => $problem->{output_file} } # input_output_redir($problem->{input_file}, $problem->{output_file}) ?
             ) or return;
             my $sp_report = $sp->run(@run_params) or return;
 
@@ -605,7 +605,7 @@ sub run_single_test
             $problem->{run_info},
             { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
             { %limits },
-            {},
+            { input_output_redir($problem->{input_file}, $problem->{output_file}) },
             { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
         ) or return;
 
