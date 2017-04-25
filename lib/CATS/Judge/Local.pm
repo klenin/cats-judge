@@ -306,7 +306,7 @@ sub html_result {
     $fu->ensure_dir($self->{resultsdir}, 'resultsdir');
     my $html_name = strftime($CATS::Judge::Base::timestamp_format, localtime);
     $html_name =~ tr/:/\./;
-    $html_name = "$self->{resultsdir}/$html_name.html";
+    $html_name = CATS::FileUtil::fn([ $self->{resultsdir}, "$html_name.html" ]);
     open my $html, '>', $html_name or die "Can't open '$html_name': $!";
     print $html join "\n",
         '<!DOCTYPE html>',
@@ -398,15 +398,15 @@ sub ascii_result {
 sub finalize {
     my $self = shift;
     $self->{run} or return;
+    my $r = $self->{result} // 'none';
+    return if $r eq 'none';
 
     for (values %{$self->{results}}) {
         $_ = [ sort { $a->{test_rank} <=> $b->{test_rank} } @$_ ];
     }
 
-    my $r = $self->{result} // 'none';
     $r eq 'text' ? $self->ascii_result :
     $r eq 'html' ? $self->html_result :
-    $r eq 'none' ? 0 :
     die 'Unknown value for --result';
 }
 
