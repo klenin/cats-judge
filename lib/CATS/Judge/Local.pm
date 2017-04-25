@@ -393,6 +393,11 @@ sub ascii_result {
 sub finalize {
     my $self = shift;
     $self->{run} or return;
+
+    for (values %{$self->{results}}) {
+        $_ = [ sort { $a->{test_rank} <=> $b->{test_rank} } @$_ ];
+    }
+
     my $r = $self->{result} // 'none';
     $r eq 'text' ? $self->ascii_result :
     $r eq 'html' ? $self->html_result :
