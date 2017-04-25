@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Verdicts" lang="en"
+  tlimit="1" mlimit="256" inputFile="*STDIN" outputFile="*STDOUT">
+
+<Checker src="out_verdict.cpp" type="checker" de_code="102" style="testlib" />
+<Solution name="sol" src="print0.cpp" de_code="102" />
+
+<Test rank="1-2"><In src="%n.in" /><Out use="sol" /></Test>
+
+</Problem>
+</CATS>
