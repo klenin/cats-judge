@@ -748,8 +748,8 @@ sub test_solution {
     $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $sid ]) or return;
 
     my %tests = $judge->get_testset($sid, 1) or do {
-        log_msg("no tests defined\n");
-        return $cats::st_unhandled_error;
+        log_msg("no tests found\n");
+        return $cats::st_ignore_submit;
     };
     my %tp_params = (tests => \%tests);
     my $tp = $r->{run_all_tests} ?
