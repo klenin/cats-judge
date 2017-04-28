@@ -753,7 +753,7 @@ sub test_solution {
     };
     my %tp_params = (tests => \%tests);
     my $tp = $r->{run_all_tests} ?
-        CATS::TestPlan::All->new(%tp_params) :
+        CATS::TestPlan::ScoringGroups->new(%tp_params) :
         CATS::TestPlan::ACM->new(%tp_params);
     for ($tp->start; $tp->current; ) {
         $res = run_single_test(

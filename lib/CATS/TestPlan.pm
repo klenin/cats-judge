@@ -3,6 +3,8 @@ use warnings;
 
 package CATS::TestPlan;
 
+use CATS::Testset;
+
 sub new {
     my ($class, %p) = @_;
     my $self = {
@@ -41,6 +43,7 @@ use base qw(CATS::TestPlan);
 
 sub start {
     my ($self) = @_;
+    $self->{state} = {};
     $self->{plan} = [ sort { $a <=> $b } keys %{$self->{tests}} ];
     $self->_get_next;
 }
@@ -58,6 +61,7 @@ use base qw(CATS::TestPlan);
 
 sub start {
     my ($self) = @_;
+    $self->{state} = {};
     my $p = $self->{plan} = [ keys %{$self->{tests}} ]; # Randomized by language.
     for (my $i = 0; $i < $#$p; ++$i) {
         my $j = $i + int(rand(@$p - $i - 1)) + 1;
@@ -77,6 +81,33 @@ sub set_test_result {
             sort { $a <=> $b }
             grep $_ < $self->current && !exists $self->{state}->{$_},
             keys %{$self->{tests}}
+        ];
+    }
+    $self->_get_next;
+}
+
+# Run tests sequentially, after first fail on each scoring group ignore the rest of it.
+package CATS::TestPlan::ScoringGroups;
+
+use base qw(CATS::TestPlan);
+
+sub start {
+    my ($self) = @_;
+    $self->{state} = {};
+    $self->{plan} = [ sort { $a <=> $b } keys %{$self->{tests}} ];
+    $self->_get_next;
+}
+
+sub set_test_result {
+    my ($self, $result) = @_;
+    $self->SUPER::set_test_result($result);
+    my $failed = $self->{tests}->{$self->current};
+    if (!$result && $failed && CATS::Testset::is_scoring_group($failed)) {
+        $self->{plan} = [
+            grep {
+                my $t = $self->{tests}->{$_};
+                !$t || $t->{name} ne $failed->{name};
+            } @{$self->{plan}}
         ];
     }
     $self->_get_next;
