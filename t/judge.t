@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 56;
+use Test::More tests => 64;
 
 use File::Spec;
 
@@ -28,8 +28,10 @@ sub run_judge {
 }
 
 sub run_judge_sol {
-    my ($name, $problem, $sol) = @_;
-    run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ], qw(--de 102 --result none));
+    my ($name, $problem, $sol, %opt) = @_;
+    $opt{de} //= 102;
+    $opt{result} //= 'none';
+    run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ], map { +"--$_" => $opt{$_} } sort keys %opt);
 }
 
 my $p_minimal = FS->catfile($path, 'p_minimal');
@@ -81,5 +83,11 @@ my $p_generator = FS->catfile($path, 'p_generator');
 
 like run_judge_sol('generator', $p_generator, 'sol_copy.cpp')->stdout->[-1],
     qr/accepted/, 'generator';
+
+like run_judge_sol('answer text', $p_generator, '2.out', de => 3, t => 2)->stdout->[-1],
+    qr/accepted/, 'answer text';
+
+like run_judge_sol('answer text WA', $p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
+    qr/wrong answer on test 3/, 'answer text WA';
 
 1;
