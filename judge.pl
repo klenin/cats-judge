@@ -23,8 +23,6 @@ use CATS::Judge::Local;
 use CATS::Problem::Backend;
 use CATS::Problem::PolygonBackend;
 
-use CATS::SpawnerJson;
-use CATS::Spawner;
 use CATS::Spawner::Default;
 use CATS::Spawner::Program;
 use CATS::Spawner::Const ':all';
