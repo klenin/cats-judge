@@ -352,17 +352,20 @@ sub get_cell {
     $color ? CATS::ConsoleColor::colored($cell, $color) : $cell;
 }
 
+sub preprocess_row {
+    my ($row) = @_;
+    my $st = state_styles->{$row->{result}};
+    $row->{result} = $st->{r};
+    $row->{result__color} = $st->{t};
+    chomp $row->{checker_comment} if $row->{checker_comment};
+}
+
 sub ascii_result {
     my ($self) = @_;
     my $rf = $self->{rid_to_fname};
     my @runs = sort { $rf->{$a} cmp $rf->{$b} } keys %{$self->{results}} or return;
     for my $req_results (values %{$self->{results}}) {
-        for (@$req_results) {
-            my $st = state_styles->{$_->{result}};
-            $_->{result} = $st->{r};
-            $_->{result__color} = $st->{t};
-            chomp $_->{checker_comment} if $_->{checker_comment};
-        }
+        preprocess_row($_) for @$req_results;
     }
     my @headers = map {
         my $k = $_;
