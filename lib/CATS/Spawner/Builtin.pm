@@ -6,7 +6,7 @@ use warnings;
 use Carp qw(croak);
 use CATS::FileUtil;
 
-use base 'CATS::Spawner1';
+use base 'CATS::Spawner';
 
 use CATS::Spawner::Const ':all';
 

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package CATS::Spawner1;
+package CATS::Spawner;
 
 use Carp qw(croak);
 

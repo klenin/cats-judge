@@ -10,7 +10,7 @@ use CATS::Spawner::Const ':all';
 
 use FindBin qw($Bin);
 
-use base 'CATS::Spawner1';
+use base 'CATS::Spawner';
 
 sub _init {
     my ($self) = @_;
