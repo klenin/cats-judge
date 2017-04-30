@@ -147,9 +147,9 @@ sub write_to_log {
     my ($self, $log) = @_;
 
     for my $item (@{$self->items}) {
-        $log->msg("-> Process: %s", $item->{application});
+        $log->msg("-> Process: %s | ", $item->{application});
         if (@{$item->{errors}}) {
-            $log->msg(" | spawner error: %s\n", join(' ', @{$item->{errors}}));
+            $log->msg("spawner error: %s\n", join(' ', @{$item->{errors}}));
             next;
         }
 
@@ -165,14 +165,14 @@ sub write_to_log {
             $log->msg($msg);
         }
         elsif ($reason == $TR_OK && $item->{exit_code} != 0) {
-            $log->msg("process exit code: $item->{exit_code}\n");
+            $log->msg("exit code: $item->{exit_code}\n");
         }
         elsif ($reason == $TR_ABORT) {
             $log->msg("abnormal termination. code: $item->{exit_code}, status: $item->{exit_code}\n");
         }
         my $c = $item->{consumed};
         $log->msg(sprintf
-            " | User: %.2f s | Wall: %.2f s | Memory: %s b | Written: %s b\n",
+            "User: %.2f s | Wall: %.2f s | Memory: %s b | Written: %s b\n",
             $c->{user_time}, $c->{wall_clock_time}, map group_digits($c->{$_}, '_'), qw(memory write)
         );
     }
