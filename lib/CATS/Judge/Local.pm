@@ -333,7 +333,7 @@ sub html_result {
             "</tr>\n";
         for my $res (@{$self->{results}->{$run_id}}) {
             $res->{result} = state_styles->{$res->{result}}->{r};
-            $res->{$_} = group_digits($res->{$_}, '&nbsp;') for qw(memory_used disk_used);
+            $res->{$_} = group_digits($res->{$_} // '', '&nbsp;') for qw(memory_used disk_used);
             print $html join '',
                 sprintf('<tr class="%s">', $res->{result}),
                 map(sprintf('<td class="%s">%s</td>',
@@ -359,7 +359,7 @@ sub preprocess_row {
     $row->{result} = $st->{r};
     $row->{result__color} = $st->{t};
     chomp $row->{checker_comment} if $row->{checker_comment};
-    $row->{$_} = group_digits($row->{$_}) for qw(memory_used disk_used);
+    $row->{$_} = group_digits($row->{$_} // '') for qw(memory_used disk_used);
 }
 
 sub ascii_result {
