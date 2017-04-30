@@ -344,6 +344,7 @@ sub prepare_tests {
     $problem->{run_info} = get_run_info($problem->{run_method});
 
     for my $t (@$tests) {
+        log_msg("[prepare $t->{rank}]\n");
         # Create test input file.
         if (defined $t->{in_file}) {
             $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], $t->{in_file}) or return;
