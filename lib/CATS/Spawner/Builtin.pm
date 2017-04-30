@@ -32,6 +32,7 @@ sub _run {
         errors => [],
         exit_status => $run->exit_code,
         consumed => {
+            wall_clock_time => 0,
             user_time => 0,
             memory => 1,
             write => 1,
