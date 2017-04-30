@@ -401,15 +401,13 @@ sub prepare_tests {
 
 sub prepare_modules {
     my ($stype) = @_;
-    # выбрать модули *в порядке заливки*
-    for my $m (grep $_->{stype} == $stype, @$problem_sources)
-    {
+    # Select modules in order they are listed in problem definition xml.
+    for my $m (grep $_->{stype} == $stype, @$problem_sources) {
         my (undef, undef, $fname, $name, undef) = split_fname($m->{fname});
         log_msg("module: $fname\n");
         $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
 
-        # в данном случае ничего страшного, если compile_cmd нету,
-        # это значит, что модуль компилировать не надо (de_code=1)
+        # If compile_cmd is absent, module does not need compilation (de_code=1).
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
         $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
@@ -426,7 +424,7 @@ sub initialize_problem {
     save_problem_description($pid, $p->{title}, $p->{upload_date}, 'not ready')
         or return undef;
 
-    # компилируем вспомогательные программы (эталонные решения, генераторы тестов, программы проверки)
+    # Compile all source files in package (solutions, generators, checkers etc).
     $fu->mkdir_clean([ $cfg->cachedir, $pid ]) or return;
     $fu->mkdir_clean([ $cfg->cachedir, $pid, 'temp' ]) or return;
 
@@ -544,7 +542,7 @@ sub run_checker {
             { %limits }
         ) or return undef;
         #Encode::from_to($$c, 'cp866', 'utf8');
-        # обрезать для надёжности, чтобы влезло в поле БД
+        # Cut to make sure comment fits in database field.
         $$c = substr($$c, 0, 199) if defined $$c;
     }
 
