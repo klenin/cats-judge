@@ -54,6 +54,7 @@ package CATS::Spawner::Report;
 use Carp qw(croak);
 
 use CATS::Spawner::Const ':all';
+use CATS::Utils qw(group_digits);
 
 use constant { ANY => 1, INT => 2, STR => 3, FLOAT => 4, OPT => 128 };
 
@@ -172,7 +173,7 @@ sub write_to_log {
         my $c = $item->{consumed};
         $log->msg(sprintf
             " | User: %.2f s | Wall: %.2f s | Memory: %s b | Written: %s b\n",
-            $c->{user_time}, $c->{wall_clock_time}, map $c->{$_}, qw(memory write)
+            $c->{user_time}, $c->{wall_clock_time}, map group_digits($c->{$_}, '_'), qw(memory write)
         );
     }
     $self;
