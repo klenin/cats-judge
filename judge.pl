@@ -164,9 +164,7 @@ sub my_safe_copy {
 
 sub clear_rundir { $fu->remove([ $cfg->rundir, '*' ]); }
 
-
-sub apply_params
-{
+sub apply_params {
     my ($str, $params) = @_;
     $str =~ s/%$_/$params->{$_}/g
         for sort { length $b <=> length $a } keys %$params;
@@ -179,8 +177,7 @@ sub save_problem_description {
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
-sub get_limits_hash
-{
+sub get_limits_hash {
     my ($ps) = @_;
     my %res;
     for (@cats::limits_fields) { $res{$_} = $ps->{$_} if defined $ps->{$_} };
@@ -189,14 +186,12 @@ sub get_limits_hash
     %res;
 }
 
-sub get_special_limits_hash
-{
+sub get_special_limits_hash {
     my ($ps) = @_;
     my %res = get_limits_hash($ps);
     $res{deadline} = $ps->{time_limit};
     %res;
 }
-
 
 sub generate_test {
     my ($pid, $test, $input_fname) = @_;
@@ -229,7 +224,6 @@ sub generate_test {
     $sp_report->ok ? $out : undef;
 }
 
-
 sub generate_test_group
 {
     my ($pid, $test, $tests) = @_;
@@ -254,7 +248,6 @@ sub generate_test_group
     }
     1;
 }
-
 
 sub input_or { $_[0] eq '*STDIN' ? 'input.txt' : $_[1] }
 sub output_or { $_[0] eq '*STDOUT' ? 'output.txt' : $_[1] }
@@ -406,9 +399,7 @@ sub prepare_tests {
     1;
 }
 
-
-sub prepare_modules
-{
+sub prepare_modules {
     my ($stype) = @_;
     # выбрать модули *в порядке заливки*
     for my $m (grep $_->{stype} == $stype, @$problem_sources)
@@ -427,8 +418,7 @@ sub prepare_modules
     1;
 }
 
-sub initialize_problem
-{
+sub initialize_problem {
     my $pid = shift;
 
     my $p = $judge->get_problem($pid);
@@ -487,12 +477,10 @@ sub initialize_problem
     1;
 }
 
-
 my %inserted_details;
 my %test_run_details;
 
-sub insert_test_run_details
-{
+sub insert_test_run_details {
     my %p = (%test_run_details, @_);
     for ($inserted_details{ $p{test_rank} })
     {
@@ -502,9 +490,7 @@ sub insert_test_run_details
     $judge->insert_req_details(\%p);
 }
 
-
-sub run_checker
-{
+sub run_checker {
     my %p = @_;
 
     my $problem = $p{problem};
@@ -568,16 +554,12 @@ sub run_checker
     $sp_report;
 }
 
-
-sub filter_hash
-{
+sub filter_hash {
     my $hash = shift;
     map { $_ => $hash->{$_} } @_;
 }
 
-
-sub run_single_test
-{
+sub run_single_test {
     my %p = @_;
     my $problem = $p{problem};
 
@@ -662,7 +644,6 @@ sub run_single_test
         $result;
     }
 }
-
 
 sub test_solution {
     my ($r) = @_;
@@ -782,7 +763,6 @@ sub test_solution {
     $r->{failed_test} = $failed_test;
     return $res;
 }
-
 
 sub problem_ready {
     my ($pid) = @_;
@@ -1037,7 +1017,7 @@ elsif ($cli->command eq 'serve') {
     main_loop;
 }
 else {
-  die $cli->command;
+    die $cli->command;
 }
 
 $judge->finalize;
