@@ -49,6 +49,15 @@ sub read_lines {
     [ map $_, <$f> ];
 }
 
+sub load_file {
+    my ($self, $file_name, $limit) = @_;
+    my $fn = fn($file_name);
+    open my $f, '<', $fn or return $self->log("load_file failed: '$fn' ($!)\n");
+    my $res;
+    read($f, $res, $limit);
+    $res, -s $f;
+}
+
 sub read_lines_chomp {
     my ($self, $file_name) = @_;
     my $fn = fn($file_name);
