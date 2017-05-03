@@ -20,6 +20,8 @@ our @EXPORT = qw(
 );
 
 use constant REGISTRY_PREFIX => qw(
+    HKEY_CURRENT_USER/Software/
+    HKEY_CURRENT_USER/Software/Wow6432Node/
     HKEY_LOCAL_MACHINE/SOFTWARE/
     HKEY_LOCAL_MACHINE/SOFTWARE/Wow6432Node/
 );
