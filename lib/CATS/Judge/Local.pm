@@ -242,6 +242,7 @@ sub get_problem {
             $CATS::Judge::Base::timestamp_format, localtime $self->{parser}->{source}->last_modified),
         time_limit => $p->{time_limit},
         memory_limit => $p->{memory_limit},
+        write_limit => $p->{write_limit},
         input_file => $p->{input_file},
         output_file => $p->{output_file},
         std_checker => $p->{std_checker},
