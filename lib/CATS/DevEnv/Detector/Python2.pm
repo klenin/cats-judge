@@ -17,7 +17,7 @@ sub _detect {
     drives($self, 'python', 'python');
     folder($self, '/usr/bin/', 'python');
     registry_glob($self,
-        'Python/PythonCore/*/InstallPath/', '', 'python');
+        'Python/PythonCore/2*/InstallPath/', '', 'python');
 }
 
 sub hello_world {

@@ -4,18 +4,19 @@ use strict;
 use warnings;
 
 use CATS::DevEnv::Detector::Utils;
-use parent qw(CATS::DevEnv::Detector::Python2);
+use parent qw(CATS::DevEnv::Detector::Base);
 
 sub name { 'Python 3' }
 sub code { '502' }
 
 sub _detect {
     my ($self) = @_;
-    $self->SUPER::_detect();
     env_path($self, 'python3');
     which($self, 'python3');
     drives($self, 'python3', 'python3');
     folder($self, '/usr/bin/', 'python3');
+    registry_glob($self,
+        'Python/PythonCore/3*/InstallPath/', '', 'python');
 }
 
 sub hello_world {
