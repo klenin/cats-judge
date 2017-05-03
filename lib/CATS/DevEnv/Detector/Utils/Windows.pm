@@ -88,8 +88,18 @@ sub _registry_rec {
         folder($detector, FS->catdir($folder, $local_path), $file);
         return;
     }
-    my @names = $key eq '*' ? SubKeyNames_fixup($parent) : $key;
+
+    my $prefix = '';
+    my @names;
+    if ($key =~ /^(.*)\*$/) {
+        $prefix = $1;
+        @names = SubKeyNames_fixup($parent);
+    }
+    else {
+        @names = $key;
+    }
     for my $subkey (@names) {
+        $subkey =~ /^\Q$prefix\E/ or next;
         my $subreg = $parent->Open($subkey, REG_READONLY) or next;
         debug_log('_registry_rec: ', $parent->Path(), $subkey);
         _registry_rec($detector, $subreg, $local_path, $file, @rest)
