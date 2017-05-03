@@ -285,6 +285,7 @@ use constant state_styles => {
     $cats::st_time_limit_exceeded     => { r => 'TL', c => '#FFFFFF', t => 'cyan bold' },
     $cats::st_runtime_error           => { r => 'RE', c => '#FFA0A0', t => 'magenta' },
     $cats::st_memory_limit_exceeded   => { r => 'ML', c => '#FFA0A0', t => 'cyan bold' },
+    $cats::st_write_limit_exceeded    => { r => 'WL', c => '#FFA0A0', t => 'cyan bold' },
     $cats::st_idleness_limit_exceeded => { r => 'IL', c => '#FFA0A0', t => 'cyan bold' },
     $cats::st_unhandled_error         => { r => 'UH', c => '#FFA0A0', t => 'on_red' },
     $cats::st_compilation_error       => { r => 'CE', c => '#FFA0A0', t => 'red' },
