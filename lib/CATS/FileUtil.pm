@@ -53,8 +53,7 @@ sub load_file {
     my ($self, $file_name, $limit) = @_;
     my $fn = fn($file_name);
     open my $f, '<', $fn or return $self->log("load_file failed: '$fn' ($!)\n");
-    my $res;
-    read($f, $res, $limit);
+    read($f, my $res, $limit);
     $res, -s $f;
 }
 

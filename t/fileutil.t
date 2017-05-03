@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 71;
+use Test::More tests => 72;
 use Test::Exception;
 
 use File::Spec;
@@ -55,6 +55,7 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
     my $fn = FS->catfile(@$p);
     ok -f $fn, 'write_to_file exists';
     is -s $fn, length $data, 'write_to_file size';
+    is_deeply [ $fu->load_file($fn, 2) ], [ 'ab', 4 ], 'load_file';
     is_deeply $fu->read_lines($fn), [ "abc\n" ], 'write_to_file read_lines';
     is_deeply $fu->read_lines_chomp($fn), [ 'abc' ], 'write_to_file read_lines_chomp';
     unlink $fn;
