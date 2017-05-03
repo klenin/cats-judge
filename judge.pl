@@ -623,7 +623,7 @@ sub run_single_test
                 $TR_ABORT          => $cats::st_runtime_error,
                 $TR_TIME_LIMIT     => $cats::st_time_limit_exceeded,
                 $TR_MEMORY_LIMIT   => $cats::st_memory_limit_exceeded,
-                $TR_WRITE_LIMIT    => $cats::st_security_violation,
+                $TR_WRITE_LIMIT    => $cats::st_write_limit_exceeded,
                 $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded
             }->{$solution_report->{terminate_reason}} //
                 log_msg("unknown terminate reason: $solution_report->{terminate_reason}\n");
