@@ -83,7 +83,8 @@ sub get_run_cmd {
 }
 
 sub get_run_params {
-    my ($run_info, $ps, $limits, $other_opts, $run_cmd_opts) = @_;
+    my ($problem, $ps, $limits, $run_cmd_opts) = @_;
+    my $run_info = $problem->{run_info};
 
     my $get_names = sub {
         my ($p) = @_;
@@ -100,7 +101,9 @@ sub get_run_params {
         ($run_info->{method} == $cats::rm_interactive ? ( %$limits, idle_time_limit => 1 ) : ()),
         stdout => 'nul'
     };
-    my $solution_opts = $run_info->{method} == $cats::rm_interactive ? $other_opts : { %$limits, %$other_opts };
+    my $solution_opts = $run_info->{method} == $cats::rm_interactive ?
+        {} :
+        { %$limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
     my @programs;
 
     my $run_cmd = get_run_cmd($ps->{de_id}, { %$names, %$run_cmd_opts }) or return;
@@ -338,7 +341,7 @@ sub prepare_tests {
         return undef;
     }
 
-    my $run_info = get_run_info($problem->{run_method});
+    $problem->{run_info} = get_run_info($problem->{run_method});
 
     for my $t (@$tests) {
         # Create test input file.
@@ -375,16 +378,15 @@ sub prepare_tests {
             clear_rundir or return undef;
 
             prepare_solution_environment($pid,
-                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $run_info) or return;
+                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $problem->{run_info}) or return;
 
             $fu->copy([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], input_or_default($problem->{input_file}))
                 or return;
 
             my @run_params = get_run_params(
-                $run_info,
+                $problem,
                 $ps,
                 { get_limits_hash({ map { $_ => $ps->{$_} || $problem->{$_} } @cats::limits_fields }), deadline => $ps->{time_limit} },
-                { input_output_redir($problem->{input_file}, $problem->{output_file}) },
                 {},
             ) or return;
             my $sp_report = $sp->run(@run_params) or return;
@@ -596,10 +598,9 @@ sub run_single_test
     {
         my %limits = get_limits_hash({ %p, %$problem });
         my @run_params = get_run_params(
-            $problem->{run_info},
+            $problem,
             { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
             { %limits },
-            { input_output_redir($problem->{input_file}, $problem->{output_file}) },
             { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
         ) or return;
 
