@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.9">
+<Problem title="Interactive" lang="en"
+  tlimit="1" mlimit="256" inputFile="*STDIN" outputFile="*STDOUT">
+
+<Run method="interactive" />
+<Checker src="cmp.cpp" type="checker" de_code="102" style="testlib" />
+<Solution name="sol_echo" src="sol_echo.cpp" de_code="102" />
+<Interactor name="inter" src="inter.cpp" de_code="102" />
+
+<Test rank="1-3"><In src="%n.in" /><Out use="sol_echo" /></Test>
+
+</Problem>
+</CATS>

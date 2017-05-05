@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 68;
+use Test::More tests => 80;
 
 use File::Spec;
 
@@ -34,9 +34,9 @@ sub run_judge_sol {
     run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ], map { +"--$_" => $opt{$_} } sort keys %opt);
 }
 
-my $p_minimal = FS->catfile($path, 'p_minimal');
-
 like join('', @{run_judge('usage')->stdout}), qr/Usage/, 'usage';
+
+my $p_minimal = FS->catfile($path, 'p_minimal');
 
 like run_judge('minimal', qw(install --force-install -p), $p_minimal)->stdout->[-1],
     qr/problem.*installed/, 'minimal installed';
@@ -92,5 +92,16 @@ like run_judge_sol('answer text', $p_generator, '2.out', de => 3, t => 2)->stdou
 
 like run_judge_sol('answer text WA', $p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
     qr/wrong answer on test 3/, 'answer text WA';
+
+my $p_interactive = FS->catfile($path, 'p_interactive');
+
+like run_judge_sol('interactive OK', $p_interactive, 'sol_echo.cpp')->stdout->[-1],
+    qr/accepted/, 'interactive OK';
+
+like run_judge_sol('interactive empty', $p_interactive, 'empty.cpp')->stdout->[-1],
+    qr/wrong answer/, 'interactive empty';
+
+like run_judge_sol('interactive IL', $p_interactive, 'read.cpp')->stdout->[-1],
+    qr/idleness limit exceeded/, 'interactive IL';
 
 1;
