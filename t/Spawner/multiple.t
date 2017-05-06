@@ -236,7 +236,7 @@ run_subtest 'Terminate reasons', 5 * $compile_plan + 10, sub {
             check_plan => 2,
             check => sub {
                 my ($r, $i, $params) = @_;
-                cmp_ok $r->{consumed}->{user_time}, '>=', $params->{tl_min}, "while $i min user time";
+                cmp_ok $r->{consumed}->{user_time}, '>=', $params->{tl_min} - 0.01, "while $i min user time";
                 cmp_ok $r->{consumed}->{user_time}, '<=', $params->{tl_max}, "while $i max user time";
             }
         },
