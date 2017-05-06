@@ -200,7 +200,7 @@ sub save_input_test_data {
     my ($self, $problem_id, $test_rank, $input, $input_size) = @_;
 
     my $response = $self->get_json([
-        f => 'api_judge_save_test_data',
+        f => 'api_judge_save_input_test_data',
         problem_id => $problem_id,
         test_rank => $test_rank,
         input => $input,
@@ -208,14 +208,14 @@ sub save_input_test_data {
         sid => $self->{sid},
     ]);
 
-    die "save_test_data: $response->{error}" if $response->{error};
+    die "save_input_test_data: $response->{error}" if $response->{error};
 }
 
 sub save_answer_test_data {
     my ($self, $problem_id, $test_rank, $answer, $answer_size) = @_;
 
     my $response = $self->get_json([
-        f => 'api_judge_save_test_data',
+        f => 'api_judge_save_answer_test_data',
         problem_id => $problem_id,
         test_rank => $test_rank,
         answer => $answer,
@@ -223,7 +223,7 @@ sub save_answer_test_data {
         sid => $self->{sid},
     ]);
 
-    die "save_test_data: $response->{error}" if $response->{error};
+    die "save_answer_test_data: $response->{error}" if $response->{error};
 }
 
 sub get_testset {

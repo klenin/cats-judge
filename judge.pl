@@ -224,7 +224,7 @@ sub generate_test {
 
 sub generate_test_group
 {
-    my ($pid, $test, $tests) = @_;
+    my ($pid, $test, $tests, $save_input_prefix) = @_;
     $test->{gen_group} or die 'gen_group';
     return 1 if $test->{generated};
     my $out = generate_test($pid, $test, 'in');
@@ -243,6 +243,11 @@ sub generate_test_group
         $fu->copy_glob(
             [ $cfg->rundir, sprintf($out, $_->{rank}) ],
             [ $cfg->cachedir, $pid, "$_->{rank}.tst" ]) or return;
+
+        $judge->save_input_test_data(
+            $pid, $test->{rank},
+            $fu->load_file([ $cfg->cachedir, $pid, "$test->{rank}.tst" ], $save_input_prefix)
+        ) if $save_input_prefix && !defined $test->{in_file};
     }
     1;
 }
@@ -337,12 +342,12 @@ sub prepare_tests {
     for my $t (@$tests) {
         log_msg("[prepare $t->{rank}]\n");
         # Create test input file.
-        if (defined $t->{in_file}) {
+        if (defined $t->{in_file} && !defined $t->{in_file_size}) {
             $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], $t->{in_file}) or return;
         }
         elsif (defined $t->{generator_id}) {
             if ($t->{gen_group}) {
-                generate_test_group($pid, $t, $tests)
+                generate_test_group($pid, $t, $tests, $problem->{save_input_prefix})
                     or return undef;
             }
             else {
@@ -350,6 +355,11 @@ sub prepare_tests {
                     or return undef;
                 $fu->copy([ $cfg->rundir, $out ], [ $cfg->cachedir, $pid, "$t->{rank}.tst" ])
                     or return;
+
+                $judge->save_input_test_data(
+                    $pid, $t->{rank},
+                    $fu->load_file([ $cfg->cachedir, $pid, "$t->{rank}.tst" ], $problem->{save_input_prefix})
+                ) if $problem->{save_input_prefix} && !defined $t->{in_file};
             }
         }
         else {
@@ -361,7 +371,7 @@ sub prepare_tests {
             return log_msg("input validation failed: #$t->{rank}\n");
 
         # Create test output file.
-        if (defined $t->{out_file}) {
+        if (defined $t->{out_file} && !defined $t->{out_file_size}) {
             $fu->write_to_file([ $cfg->cachedir, $pid, "$t->{rank}.ans" ], $t->{out_file}) or return;
         }
         elsif (defined $t->{std_solution_id}) {
@@ -387,6 +397,11 @@ sub prepare_tests {
 
             $fu->copy(output_or_default($problem->{output_file}), [ $cfg->cachedir, $pid, "$t->{rank}.ans" ])
                 or return;
+
+            $judge->save_answer_test_data(
+                $pid, $t->{rank},
+                $fu->load_file([ $cfg->cachedir, $pid, "$t->{rank}.ans" ], $problem->{save_answer_prefix})
+            ) if $problem->{save_answer_prefix} && !defined $t->{out_file};
         }
         else {
             log_msg("no output file defined for test #$t->{rank}\n");
