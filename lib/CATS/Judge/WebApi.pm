@@ -196,6 +196,36 @@ sub insert_req_details {
     die "insert_req_details: $response->{error}" if $response->{error};
 }
 
+sub save_input_test_data {
+    my ($self, $problem_id, $test_rank, $input, $input_size) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_save_test_data',
+        problem_id => $problem_id,
+        test_rank => $test_rank,
+        input => $input,
+        input_size => $input_size,
+        sid => $self->{sid},
+    ]);
+
+    die "save_test_data: $response->{error}" if $response->{error};
+}
+
+sub save_answer_test_data {
+    my ($self, $problem_id, $test_rank, $answer, $answer_size) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_save_test_data',
+        problem_id => $problem_id,
+        test_rank => $test_rank,
+        answer => $answer,
+        answer_size => $answer_size,
+        sid => $self->{sid},
+    ]);
+
+    die "save_test_data: $response->{error}" if $response->{error};
+}
+
 sub get_testset {
     my ($self, $req_id, $update) = @_;
 
