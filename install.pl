@@ -105,7 +105,14 @@ step 'Verify required modules', sub {
 
 step 'Verify optional modules', sub {
     my @bad = grep !eval "require $_; 1;", qw(
-        FormalInput DBI HTTP::Request::Common IPC::Run LWP::UserAgent Term::ReadKey WWW:Mechanize);
+        FormalInput
+        DBI
+        HTTP::Request::Common
+        IPC::Run
+        LWP::Protocol::https
+        LWP::UserAgent
+        Term::ReadKey
+        WWW:Mechanize);
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
