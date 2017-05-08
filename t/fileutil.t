@@ -201,7 +201,7 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
 }
 
 sub test_run {
-    plan tests => 27;
+    plan tests => 33;
     my $fu = make_fu(@_);
     my $perl = "{$^X}";
 
@@ -219,6 +219,16 @@ sub test_run {
         is_deeply $r->stdout, [ '123' ], 'run 1 stdout';
         is_deeply $r->stderr, [], 'run 1 stderr';
         is_deeply $r->full, [ '123' ], 'run 1 full';
+    }
+
+    {
+        my $r = $fu->run([ $perl, '-e', '{print qq~5\n~ x 10}' ]);
+        is $r->ok, 1, 'run lines';
+        is $r->err, '', 'run lines no err';
+        is $r->exit_code, 0, 'run lines exit_code';
+        is_deeply $r->stdout, [ ("5\n") x 10 ], 'run lines stdout';
+        is_deeply $r->stderr, [], 'run lines stderr';
+        is_deeply $r->full, [ ("5\n") x 10 ], 'run 1 full';
     }
 
     {

@@ -194,14 +194,18 @@ sub _split_braced {
     @parts;
 }
 
+sub _split_lines { open my $f, '<:crlf', \$_[0]; <$f>; }
+
 sub _run_ipc {
     my ($self, $cmd) = @_;
     my @parts = map _split_braced(fn($_)), @$cmd;
     $self->log(join(' ', 'run_ipc:', @parts), "\n") if $self->{run_debug_log};
-    my ($ok, $err, $full, $stdout, $stderr) = IPC::Cmd::run command => \@parts;
+    my ($ok, $err, @outputs) = IPC::Cmd::run command => \@parts;
     my $exit_code =
         # Optimistically, check the existence after the failed run.
         !$ok && IPC::Cmd::can_run($parts[0]) && $err =~ /value\s(\d+)$/ ? $1 : 0;
+    # Unlike IPC::Cmd, we guarantee that outputs are split per-line.
+    my ($full, $stdout, $stderr) = map [ map _split_lines($_), @$_ ], @outputs;
     CATS::RunResult->new(
         ok => $ok, err => $err, exit_code => $exit_code,
         full => $full, stdout => $stdout, stderr => $stderr);
