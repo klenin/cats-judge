@@ -283,6 +283,7 @@ sub parse_legacy_report {
         exit_code => $raw_report->{ExitCode},
         exit_status => $raw_report->{ExitStatus},
         consumed => {
+            wall_clock_time => $raw_report->{UserTime}, # Approximation.
             user_time => $raw_report->{UserTime},
             memory => mb_to_bytes($raw_report->{PeakMemoryUsed}),
             write => mb_to_bytes($raw_report->{Written}),
