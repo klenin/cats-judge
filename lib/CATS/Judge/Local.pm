@@ -271,14 +271,14 @@ sub get_testset {
     map { exists $tests{$_} ? ($_ => $tests{$_}) : () } @all_tests;
 }
 
-use constant headers => (
-    { c => 'Test'   , n => 'test_rank',       a => 'right'  },
-    { c => 'Result' , n => 'result',          a => 'center' },
-    { c => 'Time'   , n => 'time_used',       a => 'left'   },
-    { c => 'Memory' , n => 'memory_used',     a => 'right'  },
-    { c => 'Disk'   , n => 'disk_used',       a => 'right'  },
-    { c => 'Comment', n => 'checker_comment', a => 'left'   },
-    { c => 'Output' , n => 'output',          a => 'left'   },
+my %header_defs = (
+    R => { c => 'Rank'   , n => 'test_rank',       a => 'right'  },
+    V => { c => 'Verdict', n => 'result',          a => 'center' },
+    T => { c => 'Time'   , n => 'time_used',       a => 'left'   },
+    M => { c => 'Memory' , n => 'memory_used',     a => 'right'  },
+    W => { c => 'Written', n => 'disk_used',       a => 'right'  },
+    C => { c => 'Comment', n => 'checker_comment', a => 'left'   },
+    O => { c => 'Output' , n => 'output',          a => 'left'   },
 );
 
 use constant state_styles => {
@@ -296,7 +296,8 @@ use constant state_styles => {
 
 sub filtered_headers {
     my ($self) = @_;
-    grep !$self->{'result-columns'} || $_->{c} =~ m/$self->{'result-columns'}/, headers;
+    my @cols = split '', $self->{columns} || 'RVTMWCO';
+    grep $_, map $header_defs{$_}, @cols;
 }
 
 sub html_result {

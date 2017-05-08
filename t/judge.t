@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 97;
+use Test::More tests => 107;
 
 use File::Spec;
 
@@ -16,7 +16,7 @@ use CATS::Loggers;
 
 my $perl = "{$^X}";
 my $judge = FS->catfile($path, '..', 'judge.pl');
-my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Count->new });
+my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Count->new, run_temp_dir => '.' });
 
 sub run_judge {
     my ($name, @args) = @_;
@@ -44,6 +44,22 @@ like run_judge('config set', qw(config --print sleep_time --config-set sleep_tim
     qr/sleep_time = 99/, 'config set';
 
 my $p_minimal = FS->catfile($path, 'p_minimal');
+
+{
+    my $s = run_judge_sol('columns R', $p_minimal, 'ok.cpp',
+        c => 'columns=R', t => 1, result => 'text')->stdout;
+    like $s->[-1], qr/^\-+$/, 'columns R last row';
+    like $s->[-4], qr/^\s*Rank\s*$/, 'columns Rank';
+}
+
+{
+    my $s = run_judge_sol('columns OCRVVTMOW', $p_minimal, 'ok.cpp',
+        c => 'columns=OCRVVTMOW', t => 1, result => 'text')->stdout;
+    like $s->[-1], qr/^(\-+\+)+\-+$/, 'columns OCRVVTMOW last row';
+    is_deeply [ split /\W+/, $s->[-4] ],
+        [ '', qw(Output Comment Rank Verdict Verdict Time Memory Output Written) ],
+        'columns OCRVVTMOW';
+}
 
 like run_judge('minimal', qw(install --force-install -p), $p_minimal)->stdout->[-1],
     qr/problem.*installed/, 'minimal installed';

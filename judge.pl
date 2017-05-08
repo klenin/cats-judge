@@ -963,7 +963,7 @@ if ($cli->command eq 'serve' && $api eq 'DirectDatabase' || defined $cli->opts->
 if ($cli->command ne 'serve') {
     $judge = CATS::Judge::Local->new(
         name => $cfg->name, modulesdir => $cfg->modulesdir,
-        resultsdir => $cfg->resultsdir, logger => $log, %{$cli->opts});
+        resultsdir => $cfg->resultsdir, columns => $cfg->columns, logger => $log, %{$cli->opts});
 }
 elsif ($api =~ /^(WebApi|DirectDatabase)$/) {
     eval { require "CATS/Judge/$api.pm"; 1; } or die "Can't load $api module: $@";

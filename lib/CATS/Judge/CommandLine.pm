@@ -75,7 +75,6 @@ my %commands = (
         'force-install',
         '!problem=s',
         'result=s',
-        'result-columns=s',
         '!run=s@',
         'testset=s',
         'use-plan=s',

@@ -101,8 +101,10 @@ Options:
   * `--force-install` install problem even if it is already cached
   * `--testset <testset>` test only on a subset of tests. By default all tests are used.
   * `--result text|html|none` display results in a given format. Format `text` (default) displays ASCII table on console. Format `html` saves report in `html` file. Format `none` does not display results.
-  * `--result-columns <regexp>` display only columns corresponding to this filter.
   * `--use-plan all|acm` choose order and subset of tests according to a given plan.
+
+Config variables:
+  * `columns` a string of `R`, `V`, `T`, `M`, `W`, `C`, `O` characters, representing a subset and order of columns in result.
 
 Examples:
 ```
@@ -111,10 +113,10 @@ j run A.zip -run mysolution.py
 Test solution `mysolution.cpp` for problem `A.zip`.
 Solution is probably written in Python.
 ```
-j run . -run good.cpp -run bad.cpp -result-columns="Test|Result"
+j run . -run good.cpp -run bad.cpp -c columns=RV
 ```
 Test two solutions for a problem located in the current directory,
-display only test number and test result code for each test.
+display only test number and judge verdict for each test.
 ```
 j run B.zip -run sol.pas -t 1,3,12-15 -format=polygon
 ```

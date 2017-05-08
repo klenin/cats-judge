@@ -25,6 +25,7 @@ sub optional_fields() { qw(
     show_child_stderr
     save_child_stderr
     proxy
+    columns
 ) }
 sub special_fields() { qw(defines DEs checkers def_DEs) }
 sub security_fields() { qw(cats_password) }

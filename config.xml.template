@@ -21,6 +21,7 @@
     polygon_url="https://polygon.codeforces.com"
     proxy=""
     api="DirectDatabase"
+    columns="RVTMWCO"
 >
 <!-- api: WebApi | DirectDatabase -->
 
