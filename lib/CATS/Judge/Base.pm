@@ -42,6 +42,10 @@ sub delete_req_details {}
 
 sub insert_req_details {}
 
+sub save_input_test_data {}
+
+sub save_answer_test_data {}
+
 sub get_problem_tests { [] }
 
 sub get_problem { {} }

@@ -114,6 +114,14 @@ sub insert_req_details {
     CATS::JudgeDB::insert_req_details(%$p);
 }
 
+sub save_input_test_data {
+    CATS::JudgeDB::save_input_test_data(@_);
+}
+
+sub save_answer_test_data {
+    CATS::JudgeDB::save_answer_test_data(@_);
+}
+
 sub get_problem_tests {
     my ($self, $pid) = @_;
     CATS::JudgeDB::get_problem_tests($pid);
