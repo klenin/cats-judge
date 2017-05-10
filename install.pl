@@ -164,10 +164,11 @@ step 'Detect platform', sub {
 
 step 'Prepare spawner binary', sub {
     $platform or maybe_die "\nDetect platform first";
-    my $dir = 'spawner-bin/' . $platform;
+    my $dir = File::Spec->catdir('spawner-bin', $platform);
     my $make_type = $opts{bin} // 'download';
-    my $build_fail = 0;
-    -e $dir ? (-d $dir or maybe_die "\n$dir is not a directory") : make_path $dir or maybe_die "\nCan't create directory $dir";
+    -e $dir ?
+        (-d $dir or maybe_die "\n$dir is not a directory") :
+        make_path $dir or maybe_die "\nCan't create directory $dir";
     if ($make_type =~ qr~^download(:(v(\d+\.)+\d+)(:(\w+)\/(\w+))?)?$~) {
         print "\n";
         my $version = '';
@@ -190,12 +191,18 @@ step 'Prepare spawner binary', sub {
         # File::Fetch does not understand https protocol name but redirect works.
         my $uri = "http://github.com/$repo_own/$remote_repo/releases/download/$version/$file";
         print "    Link: $uri\n";
+        if ($proxy) {
+            $ENV{http_proxy} = $ENV{https_proxy} = $proxy;
+        }
         my $ff = File::Fetch->new(uri => $uri);
         my $bins = -e $file ? $file : $ff->fetch() or maybe_die "Can't download bin files from $uri";
         my $sp = $^O eq 'MSWin32' ? 'sp.exe' : 'sp';
         unzip($bins => "$dir/$sp", Name => $sp, BinModeOut => 1) or maybe_die "Can't unzip $bins";
-        `chmod +x $dir/$sp` if $^O eq 'linux';
+        chmod 0744, File::Spec->($dir, $sp) if $^O ne 'MSWin32';
         unlink $bins;
+    }
+    else {
+        maybe_die 'Unknown --bin value';
     }
 };
 
