@@ -115,11 +115,13 @@ sub insert_req_details {
 }
 
 sub save_input_test_data {
-    CATS::JudgeDB::save_input_test_data(@_);
+    my ($self, @rest) = @_;
+    CATS::JudgeDB::save_input_test_data(@rest);
 }
 
 sub save_answer_test_data {
-    CATS::JudgeDB::save_answer_test_data(@_);
+    my ($self, @rest) = @_;
+    CATS::JudgeDB::save_answer_test_data(@rest);
 }
 
 sub get_problem_tests {
