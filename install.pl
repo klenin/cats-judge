@@ -197,8 +197,9 @@ step 'Prepare spawner binary', sub {
         my $ff = File::Fetch->new(uri => $uri);
         my $bins = -e $file ? $file : $ff->fetch() or maybe_die "Can't download bin files from $uri";
         my $sp = $^O eq 'MSWin32' ? 'sp.exe' : 'sp';
-        unzip($bins => "$dir/$sp", Name => $sp, BinModeOut => 1) or maybe_die "Can't unzip $bins";
-        chmod 0744, File::Spec->($dir, $sp) if $^O ne 'MSWin32';
+        my $sp_path = File::Spec->catfile($dir, $sp);
+        unzip($bins => $sp_path, Name => $sp, BinModeOut => 1) or maybe_die "Can't unzip $bins";
+        chmod 0744, $sp_path if $^O ne 'MSWin32';
         unlink $bins;
     }
     else {
