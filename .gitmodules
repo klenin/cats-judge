@@ -4,3 +4,6 @@
 [submodule "lib/cats-modules"]
 	path = lib/cats-modules
 	url = https://github.com/klenin/cats-modules
+[submodule "Spawner"]
+	path = Spawner
+	url = https://github.com/klenin/Spawner

@@ -2,7 +2,10 @@ use v5.10;
 use strict;
 use warnings;
 
+use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use File::Copy qw(copy);
+use File::Fetch;
+use File::Path qw(make_path);
 use File::Spec;
 use Getopt::Long;
 use IPC::Cmd;
@@ -24,6 +27,7 @@ sub usage
 Usage:
     $cmd
     $cmd --step <num> ...
+        [--bin <spawner bin mode: download[:version[:remote-repository]]|build>]
         [--devenv <devenv-filter>] [--modules <modules-filter>]
         [--verbose] [--force]
     $cmd --help|-?
@@ -34,6 +38,7 @@ USAGE
 GetOptions(
     \my %opts,
     'step=i@',
+    'bin=s',
     'devenv=s',
     'modules=s',
     'verbose',
@@ -155,6 +160,43 @@ my $platform;
 step 'Detect platform', sub {
     $platform = CATS::Spawner::Platform::get or maybe_die "Unsupported platform: $^O";
     print " $platform" if $platform;
+};
+
+step 'Prepare spawner binary', sub {
+    $platform or maybe_die "\nDetect platform first";
+    my $dir = 'spawner-bin/' . $platform;
+    my $make_type = $opts{bin} // 'download';
+    my $build_fail = 0;
+    -e $dir ? (-d $dir or maybe_die "\n$dir is not a directory") : make_path $dir or maybe_die "\nCan't create directory $dir";
+    if ($make_type =~ qr~^download(:(v(\d+\.)+\d+)(:(\w+)\/(\w+))?)?$~) {
+        print "\n";
+        my $version = '';
+        my $repo_own = 'klenin';
+        my $remote_repo = 'Spawner';
+        if ($1) {
+            $version = $2;
+            $repo_own = $5 if $4;
+            $remote_repo = $6 if $4;
+        }
+        else {
+            my $tag = `cd Spawner && git describe --tag --match "v[0-9]*"`;
+            $tag =~ s/(\n|\r)//g;
+            $tag =~ /^v(\d+\.)+\d+$/ or maybe_die "Submodule Spawner does not have valid version tag: $tag";
+            $version = $tag;
+        }
+        print "    Download spawner binary $version...\n";
+        my $file = $platform . '.zip';
+        unlink $file unless -s $file;
+        # File::Fetch does not understand https protocol name but redirect works.
+        my $uri = "http://github.com/$repo_own/$remote_repo/releases/download/$version/$file";
+        print "    Link: $uri\n";
+        my $ff = File::Fetch->new(uri => $uri);
+        my $bins = -e $file ? $file : $ff->fetch() or maybe_die "Can't download bin files from $uri";
+        my $sp = $^O eq 'MSWin32' ? 'sp.exe' : 'sp';
+        unzip($bins => "$dir/$sp", Name => $sp, BinModeOut => 1) or maybe_die "Can't unzip $bins";
+        `chmod +x $dir/$sp` if $^O eq 'linux';
+        unlink $bins;
+    }
 };
 
 my @p = qw(lib cats-problem CATS);
