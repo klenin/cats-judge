@@ -33,6 +33,7 @@
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#move" value="C:\WINDOWS\system32\cmd.exe /c move /y"/>
 <define name="#gcc_stack" value=" -Wl,--stack=268435456"/>
+<define name="#formal" value="%workdir/lib/cats-problem/CATS/Formal/Formal.pl"/>
 
 <!-- This code is touched by install.pl -->
 <define name="#arch_7z" de_code_autodetect="2" value="C:\Program Files\7-Zip\7z.exe" />
@@ -121,6 +122,15 @@
     compile='"#arch_7z" x "%full_name"'
     run=''
     generate=''
+    check=''/>
+
+<!-- Special: CATS::Formal code -->
+<de
+    code="5"
+    compile=''
+    run=''
+    generate=''
+    validate='#perl #formal -from INPUT="%full_name" -validate INPUT="%test_input"'
     check=''/>
 
 <!-- Cross-platform C/C++ compiler -->
