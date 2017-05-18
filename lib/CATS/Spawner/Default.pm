@@ -76,7 +76,10 @@ sub prepare_redirect {
     $redirect or return;
 
     if ($redirect =~ /^\*/) {
-        $redirect =~ /^\*(:?\d+\.(?:stdin|stdout|stderr)|std)$/ or die "Bad redirect: $redirect"
+        my $flag_rx = '(?:(?:-?(?:f|e))*:)';
+        my $pipe_rx = "$flag_rx?(?:\\d+\\.(?:stdin|stdout|stderr)|std|null)";
+        my $file_rx = "$flag_rx.*";
+        $redirect =~ /^\*(?:$pipe_rx|$file_rx)$/ or die "Bad redirect: $redirect"
     }
     elsif ($files) {
         $files->{$redirect} = 1;

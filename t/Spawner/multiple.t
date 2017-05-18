@@ -242,7 +242,7 @@ run_subtest 'Terminate reasons', 5 * $compile_plan + 10, sub {
         },
         $TR_WRITE_LIMIT => {
             program => sub {
-                program($write, undef, { write_limit => $_[0]->{wl} })->set_expected_tr($TR_WRITE_LIMIT)
+                program($write, undef, { stdout => '*f:' . FS->catfile($tmpdir, 'stdout.txt'), write_limit => $_[0]->{wl} })->set_expected_tr($TR_WRITE_LIMIT)
             },
             check_plan => 2,
             check => sub {
@@ -479,7 +479,7 @@ SKIP: {
     my $gcc_test = $builtin_runner->run(undef, $gcc_prog);
     skip('bad -m32 option support', 3) if $gcc_test->exit_code != 0;
 
-    run_subtest 'Win32 compliant stack segment', $compile_plan + 2, sub {    
+    run_subtest 'Win32 compliant stack segment', $compile_plan + 2, sub {
         my $app = compile('helloworld.cpp', "stackseg_good$exe", $_[0], [ '-Wl,--stack=0x40000000', '-m32' ]);
         run_subtest 'lesser than ML', items_ok_plan(1) + 1, sub {
             run_sp(undef, $app);
