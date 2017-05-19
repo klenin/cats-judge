@@ -301,7 +301,8 @@ run_subtest 'Terminate reasons', 5 * $compile_plan + 10, sub {
     $run_tr_test->('Run 3 with different time limits (TR_TIME_LIMIT)', [
         { tr => $TR_TIME_LIMIT, params => { tl => 0.3, tl_min => 0.3, tl_max => 0.5 }},
         { tr => $TR_TIME_LIMIT, params => { tl => 0.4, tl_min => 0.4, tl_max => 0.6 }},
-        { tr => $TR_TIME_LIMIT, params => { tl => 0.5, tl_min => 0.5, tl_max => 0.7 }},
+        # TODO: Investigate reasons for occasional lateness on Windows
+        { tr => $TR_TIME_LIMIT, params => { tl => 0.5, tl_min => 0.5, tl_max => 0.8 }},
     ]);
 
     $run_tr_test->('TR_OK, TR_TIME_LIMIT', [
