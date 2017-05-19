@@ -117,7 +117,7 @@ step 'Verify optional modules', sub {
         LWP::Protocol::https
         LWP::UserAgent
         Term::ReadKey
-        WWW:Mechanize);
+        WWW::Mechanize);
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
