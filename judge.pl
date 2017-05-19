@@ -97,7 +97,7 @@ sub get_run_params {
 
     my $global_opts = {
         ($run_info->{method} == $cats::rm_interactive ? ( %$limits, idle_time_limit => 1 ) : ()),
-        stdout => 'nul'
+        stdout => '*null'
     };
     my $solution_opts = $run_info->{method} == $cats::rm_interactive ?
         {} :
@@ -226,7 +226,7 @@ sub generate_test {
         $out = 'stdout1.txt';
         $redir = $out;
     }
-    my $sp_report = $sp->run_single({ ($redir ? (stdout => 'nul') : ()) },
+    my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
         apply_params($generate_cmd, { full_name => $fname, name => $name, args => $test->{param} // ''}),
         [],
         { get_special_limits_hash($ps), write_limit => 999, stdout => $redir }
