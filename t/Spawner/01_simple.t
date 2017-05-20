@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 90;
+use Test::More tests => 87;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -11,13 +11,6 @@ use FindBin qw($Bin);
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
 use CATS::Spawner::Const ':all';
-
-ok -x $sp, 'exists';
-
-my $spq = $fu->quote_fn($sp);
-
-ok `$spq` && $? == 0, 'runs';
-ok `$spq $perl -v` && $? == 0, 'runs perl';
 
 is $TR_OK, 1, 'const';
 
