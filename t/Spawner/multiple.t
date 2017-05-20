@@ -15,14 +15,14 @@ use CATS::Spawner::Const ':all';
 ok -x $sp, 'sp exists' or exit;
 ok -x $gcc, 'gcc exists' or exit;
 
-run_subtest 'HelloWorld', $compile_plan + items_ok_plan(1) + 1, sub {
+run_subtest 'HelloWorld', compile_plan + items_ok_plan(1) + 1, sub {
     my $hw = compile('helloworld.cpp', 'helloworld' . $exe, $_[0]);
     run_sp(undef, $hw);
     is_deeply $spr->stdout_lines, [ 'Hello world!' ], 'helloworld stdout';
     clear_tmpdir;
 };
 
-run_subtest 'Pipe', $compile_plan + 8, sub {
+run_subtest 'Pipe', compile_plan + 8, sub {
     my $pipe = compile('pipe.cpp', 'pipe' . $exe, $_[0]);
 
     run_subtest 'Pipe input', (items_ok_plan(1) + 1) * 2, sub {
@@ -100,7 +100,7 @@ run_subtest 'Pipe', $compile_plan + 8, sub {
     clear_tmpdir;
 };
 
-run_subtest 'Open stdin file inside program', $compile_plan + items_ok_plan(1) + 1, sub {
+run_subtest 'Open stdin file inside program', compile_plan + items_ok_plan(1) + 1, sub {
     my $input = make_test_file('abc', 1);
     my $fopen = compile('fopen.cpp', "fopen$exe", $_[0]);
     run_sp({ stdin => $input }, $fopen, [ $input ]);
@@ -108,18 +108,18 @@ run_subtest 'Open stdin file inside program', $compile_plan + items_ok_plan(1) +
     clear_tmpdir;
 };
 
-run_subtest 'Many lines to stdout', $compile_plan + items_ok_plan(1), sub {
+run_subtest 'Many lines to stdout', compile_plan + items_ok_plan(1), sub {
     my $many_lines = compile('many_lines.cpp', "many_lines$exe", $_[0]);
     run_sp({ deadline => 2 }, $many_lines);
     clear_tmpdir;
 };
 
-run_subtest 'Terminate reasons', 5 * $compile_plan + 10, sub {
+run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $while = compile('while.cpp', "while$exe", $_[0] - $compile_plan);
-    my $write = compile('write.cpp', "write$exe", $_[0] - $compile_plan * 2);
-    my $memory = compile('memory.cpp', "memory$exe", $_[0] - $compile_plan * 3);
-    my $empty = compile('empty.cpp', "empty$exe", $_[0] - $compile_plan * 4);
+    my $while = compile('while.cpp', "while$exe", $_[0] - compile_plan);
+    my $write = compile('write.cpp', "write$exe", $_[0] - compile_plan * 2);
+    my $memory = compile('memory.cpp', "memory$exe", $_[0] - compile_plan * 3);
+    my $empty = compile('empty.cpp', "empty$exe", $_[0] - compile_plan * 4);
 
     my $tr_variants = {
         $TR_OK => { # parameters: exit_code
@@ -241,7 +241,7 @@ run_subtest 'Terminate reasons', 5 * $compile_plan + 10, sub {
     clear_tmpdir;
 };
 
-run_subtest 'Run 3 with one stdout file', $compile_plan + items_ok_plan(3) + 2, sub {
+run_subtest 'Run 3 with one stdout file', compile_plan + items_ok_plan(3) + 2, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
     my $out = tmp_name;
     my $r = run_sp_multiple(undef, [
@@ -256,7 +256,7 @@ run_subtest 'Run 3 with one stdout file', $compile_plan + items_ok_plan(3) + 2, 
     clear_tmpdir;
 };
 
-run_subtest 'Run 3 with one stdin file', $compile_plan + items_ok_plan(3) + 2, sub {
+run_subtest 'Run 3 with one stdin file', compile_plan + items_ok_plan(3) + 2, sub {
     my $input = make_test_file('test', 1);
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
     my $r = run_sp_multiple(undef, [
@@ -271,7 +271,7 @@ run_subtest 'Run 3 with one stdin file', $compile_plan + items_ok_plan(3) + 2, s
     clear_tmpdir;
 };
 
-run_subtest 'Run 2 with wl to pipe', $compile_plan + items_ok_plan(2) + 4, sub {
+run_subtest 'Run 2 with wl to pipe', compile_plan + items_ok_plan(2) + 4, sub {
     my $n = 30000;
     my $data;
     $data .= '0123456789' for 1..$n;
@@ -289,9 +289,9 @@ run_subtest 'Run 2 with wl to pipe', $compile_plan + items_ok_plan(2) + 4, sub {
     clear_tmpdir;
 };
 
-run_subtest 'Run 2 with TIME_LIMIT and IDLE_TIME_LIMIT', $compile_plan * 2 + items_ok_plan(3), sub {
+run_subtest 'Run 2 with TIME_LIMIT and IDLE_TIME_LIMIT', compile_plan * 2 + items_ok_plan(3), sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $while = compile('while.cpp', "while$exe", $_[0] - $compile_plan);
+    my $while = compile('while.cpp', "while$exe", $_[0] - compile_plan);
     my $r = run_sp_multiple(undef, [
         program($pipe, undef, { idle_time_limit => 1, stdin => '*1.stdout' })->set_expected_tr($TR_IDLENESS_LIMIT),
         program($pipe, undef, { stdin => '*0.stdout' })->set_expected_tr($TR_OK),
@@ -301,7 +301,7 @@ run_subtest 'Run 2 with TIME_LIMIT and IDLE_TIME_LIMIT', $compile_plan * 2 + ite
     clear_tmpdir;
 };
 
-run_subtest 'Run 2 with deadlock', $compile_plan + items_ok_plan(2), sub {
+run_subtest 'Run 2 with deadlock', compile_plan + items_ok_plan(2), sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
     my $r = run_sp_multiple(undef, [
         program($pipe, undef, { idle_time_limit => 1, stdin => '*1.stdout' })->set_expected_tr($TR_IDLENESS_LIMIT),
@@ -311,9 +311,9 @@ run_subtest 'Run 2 with deadlock', $compile_plan + items_ok_plan(2), sub {
     clear_tmpdir;
 };
 
-run_subtest 'Run 2 with different way to IDLE_TIME_LIMIT', $compile_plan * 2 + items_ok_plan(3), sub {
+run_subtest 'Run 2 with different way to IDLE_TIME_LIMIT', compile_plan * 2 + items_ok_plan(3), sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $sleep = compile('close_stdout.cpp', "sleep$exe", $_[0] - $compile_plan);
+    my $sleep = compile('close_stdout.cpp', "sleep$exe", $_[0] - compile_plan);
     my $r = run_sp_multiple(undef, [
         program($pipe, undef, { idle_time_limit => 1, stdin => '*1.stdout' })->set_expected_tr($TR_IDLENESS_LIMIT),
         program($pipe, undef, { stdin => '*0.stdout' })->set_expected_tr($TR_OK),
@@ -323,9 +323,9 @@ run_subtest 'Run 2 with different way to IDLE_TIME_LIMIT', $compile_plan * 2 + i
     clear_tmpdir;
 };
 
-run_subtest 'Close pipes on exit', $compile_plan * 2 + items_ok_plan(2) + 1, sub {
+run_subtest 'Close pipes on exit', compile_plan * 2 + items_ok_plan(2) + 1, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $empty = compile('empty.cpp', "empty$exe", $_[0] - $compile_plan);
+    my $empty = compile('empty.cpp', "empty$exe", $_[0] - compile_plan);
     my $r = run_sp_multiple({ deadline => 5 }, [
         program($pipe, undef, { stdin => "*1.stdout" }),
         program($empty, [ '1' ])
@@ -335,9 +335,9 @@ run_subtest 'Close pipes on exit', $compile_plan * 2 + items_ok_plan(2) + 1, sub
     clear_tmpdir;
 };
 
-run_subtest 'Force close stdout pipe', $compile_plan * 2 + items_ok_plan(2) + 1, sub {
+run_subtest 'Force close stdout pipe', compile_plan * 2 + items_ok_plan(2) + 1, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $close_stdout = compile('close_stdout.cpp', "close_stdout$exe", $_[0] - $compile_plan);
+    my $close_stdout = compile('close_stdout.cpp', "close_stdout$exe", $_[0] - compile_plan);
     my $r = run_sp_multiple({ deadline => 1 }, [
         program($pipe, undef, { stdin => "*1.stdout" }),
         program($close_stdout, [ '0.6' ])
@@ -347,9 +347,9 @@ run_subtest 'Force close stdout pipe', $compile_plan * 2 + items_ok_plan(2) + 1,
     clear_tmpdir;
 };
 
-run_subtest 'Force close stdout pipe 10x', $compile_plan * 2 + (items_ok_plan(2) + 1) * 10, sub {
+run_subtest 'Force close stdout pipe 10x', compile_plan * 2 + (items_ok_plan(2) + 1) * 10, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
-    my $close_stdout = compile('close_stdout.cpp', "close_stdout$exe", $_[0] - $compile_plan);
+    my $close_stdout = compile('close_stdout.cpp', "close_stdout$exe", $_[0] - compile_plan);
     # Test for bad spawner exit code
     for (1..10) {
         my $r = run_sp_multiple({ deadline => 1 }, [
@@ -362,7 +362,7 @@ run_subtest 'Force close stdout pipe 10x', $compile_plan * 2 + (items_ok_plan(2)
     clear_tmpdir;
 };
 
-run_subtest 'Stdout to file and another program stdin', $compile_plan + items_ok_plan(2) + 1, sub {
+run_subtest 'Stdout to file and another program stdin', compile_plan + items_ok_plan(2) + 1, sub {
     my $out = tmp_name;
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
     my $r = run_sp_multiple({ stdout => $out }, [
@@ -383,7 +383,7 @@ SKIP: {
     my $gcc_test = $Common::builtin_runner->run(undef, $gcc_prog);
     skip('bad -m32 option support', 3) if $gcc_test->exit_code != 0;
 
-    run_subtest 'Win32 compliant stack segment', $compile_plan + 2, sub {
+    run_subtest 'Win32 compliant stack segment', compile_plan + 2, sub {
         my $app = compile('helloworld.cpp', "stackseg_good$exe", $_[0], [ '-Wl,--stack=0x40000000', '-m32' ]);
         run_subtest 'lesser than ML', items_ok_plan(1) + 1, sub {
             run_sp(undef, $app);
@@ -396,7 +396,7 @@ SKIP: {
         clear_tmpdir;
     };
 
-    run_subtest 'Win32 excessive stack segment', $compile_plan + 2, sub {
+    run_subtest 'Win32 excessive stack segment', compile_plan + 2, sub {
         my $app = compile('helloworld.cpp', "stackseg_bad$exe", $_[0], [ '-Wl,--stack=0x7FFFFFFF', '-m32' ]);
         run_subtest 'lesser than ML', 1, sub {
             my $run = $spr->run(undef, program($app));
@@ -408,7 +408,7 @@ SKIP: {
         clear_tmpdir;
     };
 
-    run_subtest 'Win32 excessive data segment', $compile_plan + 2, sub {
+    run_subtest 'Win32 excessive data segment', compile_plan + 2, sub {
         my $app = compile('w32_dataseg.cpp', "w32_dataseg$exe", $_[0], [ '-m32' ]);
         run_subtest 'lesser than ML', 1, sub {
             my $run = $spr->run(undef, program($app));

@@ -27,7 +27,6 @@ use CATS::Spawner::Program;
 
 our @EXPORT = qw(
     $cfg
-    $compile_plan
     $exe
     $fu
     $gcc
@@ -40,6 +39,7 @@ our @EXPORT = qw(
     MB
     clear_tmpdir
     compile
+    compile_plan
     items_ok
     items_ok_plan
     make_test_file
@@ -108,7 +108,7 @@ sub items_ok {
 
 sub program { CATS::Spawner::Program->new(@_) }
 
-our $compile_plan = items_ok_plan(1) + 2;
+sub compile_plan() { items_ok_plan(1) + 2 }
 
 sub compile {
     my ($src, $out, $skip, $flags) = @_;
@@ -120,7 +120,7 @@ sub compile {
     my $compile_success = 1;
     is $r->items->[0]->{exit_status}, 0, 'compile exit code' or $compile_success = 0;
     ok -x $out, 'compile success' or $compile_success = 0;
-    ($skip and skip "$src compilation failed", $skip - $compile_plan) unless $compile_success;
+    ($skip and skip "$src compilation failed", $skip - compile_plan) unless $compile_success;
     $out;
 }
 
