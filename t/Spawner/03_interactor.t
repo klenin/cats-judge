@@ -1,8 +1,6 @@
 use strict;
 use warnings;
 
-use Test::More tests => 20;
-
 use File::Spec;
 use constant FS => 'File::Spec';
 
@@ -10,109 +8,8 @@ use FindBin qw($Bin);
 
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
+use Test::More tests => 11;
 use CATS::Spawner::Const ':all';
-
-ok -x $sp, 'sp exists' or exit;
-ok -x $gcc, 'gcc exists' or exit;
-
-run_subtest 'HelloWorld', compile_plan + items_ok_plan(1) + 1, sub {
-    my $hw = compile('helloworld.cpp', 'helloworld' . $exe, $_[0]);
-    run_sp(undef, $hw);
-    is_deeply $spr->stdout_lines, [ 'Hello world!' ], 'helloworld stdout';
-    clear_tmpdir;
-};
-
-run_subtest 'Pipe', compile_plan + 8, sub {
-    my $pipe = compile('pipe.cpp', 'pipe' . $exe, $_[0]);
-
-    run_subtest 'Pipe input', (items_ok_plan(1) + 1) * 2, sub {
-        my $in = make_test_file('test', 1);
-        run_sp({ stdin => $in }, $pipe);
-        is_deeply $spr->stdout_lines_chomp, [ 'test' ], 'pipe one input global';
-        clear_tmpdir('*.txt');
-        run_sp(undef, $pipe, [], { stdin => $in });
-        is_deeply $spr->stdout_lines_chomp, [ 'test' ], 'pipe one input local';
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe big input', items_ok_plan(1) + 1, sub {
-        my $n = 26214;
-        my $data;
-        $data .= '123456789' for 1..$n;
-        my $in = make_test_file($data, 1);
-        run_sp(undef, $pipe, [], { stdin => $in });
-        is_deeply $spr->stdout_lines_chomp, [ $data ];
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe output', (items_ok_plan(1) + 1) * 2, sub {
-        my $out = tmp_name;
-        run_sp({ stdout => $out }, $pipe, [ '"out string"' ]);
-        is_deeply $fu->read_lines_chomp($out), [ 'out string' ], 'pipe one output global';
-        clear_tmpdir('*.txt', '*.tmp');
-        run_sp({ stdout => '' }, $pipe, [ '"out string"' ], { stdout => $out });
-        is_deeply $fu->read_lines_chomp($out), [ 'out string' ], 'pipe one output local';
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe input -> output', items_ok_plan(1) + 1, sub {
-        my $in = make_test_file('test string', 1);
-        my $out = tmp_name;
-        run_sp({ stdin => $in, stdout => $out }, $pipe);
-        is_deeply $spr->stdout_lines_chomp, [ 'test string' ];
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe input from two files', items_ok_plan(1) + 2, sub {
-        my $in1 = make_test_file('one', 1);
-        my $in2 = make_test_file('two', 1);
-        run_sp({ stdin => $in1 }, $pipe, [], { stdin => $in2 });
-        my $res = $spr->stdout_lines_chomp;
-        is scalar @$res, 1;
-        like $res->[0], qr/^(onetwo|twoone)$/;
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe output in same files', items_ok_plan(1) + 1, sub {
-        my $out1 = tmp_name;
-        my $out2 = tmp_name;
-        run_sp({ stdout => $out1 }, $pipe, [ '"out string"' ], { stdout => $out2 });
-        is_deeply [ @{$fu->read_lines_chomp($out1)}, @{$fu->read_lines_chomp($out2)} ], [ 'out string', 'out string' ];
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe output + error to one file', items_ok_plan(1) + 2, sub {
-        my $out = tmp_name;
-        run_sp({ stdout => $out, stderr => $out }, $pipe, [ 'out', 'err' ]);
-        my $res = $spr->stdout_lines_chomp;
-        is scalar @$res, 1;
-        like $res->[0], qr/^(outerr|errout)$/;
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    run_subtest 'Pipe stdin close without redirect', items_ok_plan(1) + 1, sub {
-        my $out = tmp_name;
-        run_sp({ stdout => $out, stderr => $out }, $pipe);
-        is_deeply $spr->stdout_lines_chomp, [ ];
-        clear_tmpdir('*.txt', '*.tmp');
-    };
-
-    clear_tmpdir;
-};
-
-run_subtest 'Open stdin file inside program', compile_plan + items_ok_plan(1) + 1, sub {
-    my $input = make_test_file('abc', 1);
-    my $fopen = compile('fopen.cpp', "fopen$exe", $_[0]);
-    run_sp({ stdin => $input }, $fopen, [ $input ]);
-    is_deeply $spr->stdout_lines_chomp, [ 'aabbcc' ], 'merged stdout';
-    clear_tmpdir;
-};
-
-run_subtest 'Many lines to stdout', compile_plan + items_ok_plan(1), sub {
-    my $many_lines = compile('many_lines.cpp', "many_lines$exe", $_[0]);
-    run_sp({ deadline => 2 }, $many_lines);
-    clear_tmpdir;
-};
 
 run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
     my $pipe = compile('pipe.cpp', "pipe$exe", $_[0]);
@@ -204,8 +101,7 @@ run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
     $run_tr_test->('Run 3 with different time limits (TR_TIME_LIMIT)', [
         { tr => $TR_TIME_LIMIT, params => { tl => 0.3, tl_min => 0.3, tl_max => 0.5 }},
         { tr => $TR_TIME_LIMIT, params => { tl => 0.4, tl_min => 0.4, tl_max => 0.6 }},
-        # TODO: Investigate reasons for occasional lateness on Windows
-        { tr => $TR_TIME_LIMIT, params => { tl => 0.5, tl_min => 0.5, tl_max => 0.8 }},
+        { tr => $TR_TIME_LIMIT, params => { tl => 0.5, tl_min => 0.5, tl_max => 0.7 }},
     ]);
 
     $run_tr_test->('TR_OK, TR_TIME_LIMIT', [
@@ -373,50 +269,3 @@ run_subtest 'Stdout to file and another program stdin', compile_plan + items_ok_
 
     clear_tmpdir;
 };
-
-SKIP: {
-    skip('not a Win32 system', 3) unless $is_win;
-
-    my $test_src = FS->catdir($Bin, 'cpp', 'helloworld.cpp');
-    my $test_out = FS->catdir($tmpdir, "mingw_m32_test$exe");
-    my $gcc_prog = program($gcc, [ '-m32', @gcc_opts, '-O0', '-o', $test_out, $test_src ]);
-    my $gcc_test = $Common::builtin_runner->run(undef, $gcc_prog);
-    skip('bad -m32 option support', 3) if $gcc_test->exit_code != 0;
-
-    run_subtest 'Win32 compliant stack segment', compile_plan + 2, sub {
-        my $app = compile('helloworld.cpp', "stackseg_good$exe", $_[0], [ '-Wl,--stack=0x40000000', '-m32' ]);
-        run_subtest 'lesser than ML', items_ok_plan(1) + 1, sub {
-            run_sp(undef, $app);
-            is_deeply $spr->stdout_lines, [ 'Hello world!' ], 'stackseg: helloworld stdout';
-        };
-        run_subtest 'greater than ML', items_ok_plan(1) + 1, sub {
-            my $rep = run_sp({ memory_limit => 256 }, $app);
-            is_deeply $spr->stdout_lines, [ 'Hello world!' ], 'stackseg: helloworld stdout';
-        };
-        clear_tmpdir;
-    };
-
-    run_subtest 'Win32 excessive stack segment', compile_plan + 2, sub {
-        my $app = compile('helloworld.cpp', "stackseg_bad$exe", $_[0], [ '-Wl,--stack=0x7FFFFFFF', '-m32' ]);
-        run_subtest 'lesser than ML', 1, sub {
-            my $run = $spr->run(undef, program($app));
-            ok @{$run->items->[0]->{errors}}, 'win32 error expected'
-        };
-        run_subtest 'greater than ML', items_ok_plan(1), sub {
-            my $rep = run_sp({ memory_limit => 1024 }, $app, undef, undef, $TR_MEMORY_LIMIT);
-        };
-        clear_tmpdir;
-    };
-
-    run_subtest 'Win32 excessive data segment', compile_plan + 2, sub {
-        my $app = compile('w32_dataseg.cpp', "w32_dataseg$exe", $_[0], [ '-m32' ]);
-        run_subtest 'lesser than ML', 1, sub {
-            my $run = $spr->run(undef, program($app));
-            ok @{$run->items->[0]->{errors}}, 'win32 error expected'
-        };
-        run_subtest 'greater than ML', items_ok_plan(1), sub {
-            my $rep = run_sp({ memory_limit => 256 }, $app, undef, undef, $TR_MEMORY_LIMIT);
-        };
-        clear_tmpdir;
-    };
-}
