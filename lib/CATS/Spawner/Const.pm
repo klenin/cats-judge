@@ -9,6 +9,7 @@ my $c = [qw(
     $TR_WRITE_LIMIT
     $TR_IDLENESS_LIMIT
     $TR_ABORT
+    $TR_CONTROLLER
 )];
 
 eval 'our (' . join(',', @$c) . ') = 1..' . @$c;
