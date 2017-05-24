@@ -6,6 +6,8 @@ use warnings;
 use LWP::UserAgent;
 use JSON::XS;
 use HTTP::Request::Common;
+use CATS::DevEnv;
+use CATS::JudgeDB;
 
 use base qw(CATS::Judge::Base);
 
@@ -50,24 +52,17 @@ sub auth {
 
 sub is_locked { $_[0]->{lock_counter} }
 
-sub set_DEs {
-    my ($self, $cfg_de) = @_;
+sub update_dev_env {
+    my ($self) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_get_des',
         sid => $self->{sid},
     ]);
 
-    die "set_DEs: $response->{error}" if $response->{error};
+    die "update_dev_env: $response->{error}" if $response->{error};
 
-    my $db_de = $response->{db_de};
-    for my $de (@$db_de) {
-        my $c = $de->{code};
-        exists $cfg_de->{$c} or next;
-        $cfg_de->{$c} = { %{$cfg_de->{$c}}, %$de };
-    }
-    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
-    $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
+    $self->{dev_env} = CATS::DevEnv->new($response);
 }
 
 sub get_problem {
@@ -162,10 +157,20 @@ sub select_request {
     my $response = $self->get_json([
         f => 'api_judge_select_request',
         sid => $self->{sid},
-        supported_DEs => $self->{supported_DEs},
+        de_version => $self->{dev_env}->version,
+        CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
     ]);
 
-    die "select_request: $response->{error}" if $response->{error};
+    if ($response->{error}) {
+        if ($response->{error} eq $cats::es_old_de_version) {
+            warn 'updating des list';
+            $self->update_dev_env();
+            $self->update_de_bitmap();
+            return;
+        } else {
+            die "select_request: $response->{error}"
+        }
+    }
 
     $self->{lock_counter} = $response->{lock_counter};
     $self->{was_pinged} = $response->{was_pinged};

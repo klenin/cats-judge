@@ -6,6 +6,7 @@ use warnings;
 use CATS::Config;
 use CATS::Constants;
 use CATS::DB qw($dbh);
+use CATS::DevEnv;
 use CATS::JudgeDB;
 use CATS::Testset;
 
@@ -73,13 +74,27 @@ sub select_request {
     $current_sid eq $self->{sid}
         or die "killed: $current_sid != $self->{sid}";
 
-    CATS::JudgeDB::select_request({
+    my $request = CATS::JudgeDB::select_request({
         jid              => $self->{id},
         was_pinged       => $self->{was_pinged},
         pin_mode         => $self->{pin_mode},
         time_since_alive => $time_since_alive,
-        supported_DEs    => $self->{supported_DEs},
+        de_version       => $self->{dev_env}->version,
+        CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
     });
+
+    if ($request && $request->{error}) {
+        if ($request->{error} eq $cats::es_old_de_version) {
+            warn 'updating des list';
+            $self->update_dev_env();
+            $self->update_de_bitmap();
+            return;
+        } else {
+            die "select_request error: $request->{error}";
+        }
+    }
+
+    $request;
 }
 
 sub save_log_dump {
@@ -87,16 +102,10 @@ sub save_log_dump {
     CATS::JudgeDB::save_log_dump($req->{id}, $dump);
 }
 
-sub set_DEs {
-    my ($self, $cfg_de) = @_;
-    my $db_de = CATS::JudgeDB::get_DEs;
-    for my $de (@$db_de) {
-        my $c = $de->{code};
-        exists $cfg_de->{$c} or next;
-        $cfg_de->{$c} = { %{$cfg_de->{$c}}, %$de };
-    }
-    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
-    $self->{supported_DEs} = join ',', sort { $a <=> $b } keys %$cfg_de;
+sub update_dev_env {
+    my ($self) = @_;
+
+    $self->{dev_env} = CATS::DevEnv->new(CATS::JudgeDB::get_DEs());
 }
 
 sub get_problem_sources {

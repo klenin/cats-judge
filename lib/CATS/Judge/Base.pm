@@ -34,7 +34,25 @@ sub select_request { abstract @_ }
 
 sub save_log_dump {}
 
-sub set_DEs { $_[1]->{$_}->{code} = $_[1]->{$_}->{id} = $_ for keys %{$_[1]} }
+sub set_DEs {
+    my ($self, $cfg_de) = @_;
+
+    $self->update_dev_env();
+
+    for my $de (@{$self->{dev_env}->des}) {
+        my $c = $de->{code};
+        $cfg_de->{$c} &&= { %{$cfg_de->{$c}}, %$de };
+    }
+
+    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
+    $self->{supported_DEs} = [ sort { $a <=> $b } keys %$cfg_de ];
+    $self->update_de_bitmap();
+}
+
+sub update_de_bitmap {
+    my ($self) = @_;
+    $self->{de_bitmap} = [ $self->{dev_env}->bitmap_by_codes(@{$self->{supported_DEs}}) ];
+}
 
 sub get_problem_sources { [] }
 
