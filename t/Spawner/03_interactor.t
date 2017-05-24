@@ -8,7 +8,7 @@ use FindBin qw($Bin);
 
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
-use Test::More tests => 11;
+use Test::More tests => 12;
 use CATS::Spawner::Const ':all';
 
 run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
@@ -133,6 +133,19 @@ run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
         { tr => $TR_TIME_LIMIT, params => { tl => 0.3, tl_min => 0.3, tl_max => 0.5 }},
         { tr => $TR_MEMORY_LIMIT, params => { ml => 100, ml_min => 90 * MB, ml_max => 200 * MB }},
     ]);
+
+    clear_tmpdir;
+};
+
+run_subtest 'Interact speed', compile_plan * 2 + items_ok_plan(2) + 1, sub {
+    my $inter = compile('interact.cpp', "interact$exe", $_[0]);
+    my $cinpipe = compile('cinpipe.cpp', "cinpipe$exe", $_[0] - compile_plan);
+
+    my $r = run_sp_multiple({ deadline => 2 }, [
+        program($inter),
+        program($cinpipe, undef, { stdin => '*0.stdout', stdout => '*0.stdin' }),
+    ]);
+    is_deeply $spr->stdout_lines_chomp, [ ('111111111') x 10000 ], 'interact + cinpipe stdout';
 
     clear_tmpdir;
 };
