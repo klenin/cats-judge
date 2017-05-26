@@ -85,7 +85,7 @@ sub select_request {
         fname => $self->{run},
         src => '',
         de_id => $self->{de},
-        element_reqs => [],
+        elements => [],
     };
     $self->{run} or return $req;
 

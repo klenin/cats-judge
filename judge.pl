@@ -678,7 +678,7 @@ sub test_solution {
 
     $problem->{run_info} = get_run_info($problem->{run_method});
 
-    if (@{$r->{element_reqs}} > 1) {
+    if ($r->{elements} && @{$r->{elements}} > 1) {
         log_msg("Group requests are not supported at this time.\n Pass solution...\n");
         return $cats::st_accepted;
     }
@@ -947,7 +947,7 @@ sub main_loop {
         my ($r, $state) = prepare_problem();
         log_msg("pong\n") if $judge->was_pinged;
         $r && $state != $cats::st_unhandled_error or next;
-        if (($r->{src} // '') eq '' && @{$r->{element_reqs}} <= 1) {
+        if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) {
             log_msg("Empty source for problem $r->{problem_id}\n");
             $judge->set_request_state($r, $cats::st_unhandled_error);
         }
