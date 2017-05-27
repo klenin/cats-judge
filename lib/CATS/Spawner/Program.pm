@@ -21,6 +21,7 @@ sub make_params {
         ml => $self->opts->{memory_limit},
         wl => $self->opts->{write_limit},
     );
+    ($self->opts->{controller} ? '--controller' : ()),
     map {
         my ($name, $value) = splice @r, 0, 2;
         defined $value ? "-$name=$value" : ();

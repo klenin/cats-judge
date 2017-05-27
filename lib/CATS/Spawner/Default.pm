@@ -211,6 +211,7 @@ my $terminate_reasons = {
     WriteLimitExceeded => $TR_WRITE_LIMIT,
     IdleTimeLimitExceeded => $TR_IDLENESS_LIMIT,
     AbnormalExitProcess => $TR_ABORT,
+    TerminatedByController => $TR_CONTROLLER,
 };
 
 sub mb_to_bytes { defined $_[0] ? int($_[0]  * 1024 * 1024 + 0.5) : undef }
