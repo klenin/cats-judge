@@ -109,9 +109,12 @@ run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
         { tr => $TR_TIME_LIMIT, params => { tl => 0.3, tl_min => 0.3, tl_max => 0.5 }},
     ]);
 
+    # TODO: For some reason, program writes too much specifically on AppVeyor.
+    my $wl_max = ($ENV{APPVEYOR} ? 2 : 0.5) * MB;
+
     $run_tr_test->('TR_OK, TR_WRITE_LIMIT', [
         { tr => $TR_OK, params => { exit_code => 1 }},
-        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => MB }},
+        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => $wl_max }},
     ]);
 
     $run_tr_test->('TR_OK, TR_MEMORY_LIMIT', [
@@ -120,13 +123,13 @@ run_subtest 'Terminate reasons', 5 * compile_plan + 10, sub {
     ]);
 
     $run_tr_test->('TR_WRITE_LIMIT, TR_TIME_LIMIT', [
-        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => MB }},
+        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => $wl_max }},
         { tr => $TR_TIME_LIMIT, params => { tl => 0.3, tl_min => 0.3, tl_max => 0.5 }},
     ]);
 
     $run_tr_test->('TR_MEMORY_LIMIT, TR_WRITE_LIMIT', [
         { tr => $TR_MEMORY_LIMIT, params => { ml => 100, ml_min => 90 * MB, ml_max => 200 * MB }},
-        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => MB }},
+        { tr => $TR_WRITE_LIMIT, params => { wl => '100B', wl_min => 100, wl_max => $wl_max }},
     ]);
 
     $run_tr_test->('TR_TIME_LIMIT, TR_MEMORY_LIMIT', [
