@@ -171,7 +171,7 @@ run_subtest 'Controller stop and return, WHILE agent TR_CONTROLLER', compile_pla
         program($sc, [ 1 ], { controller => 1 }),
         program($while, undef, { stdin => '*0.stdout', stdout => '*0.stdin' })->set_expected_tr($TR_CONTROLLER),
     ]);
-    cmp_ok $r->[1]->{consumed}->{user_time}, '==', 0, 'agent user time';
+    cmp_ok $r->[1]->{consumed}->{user_time}, '<=', 0.05, 'agent user time';
 
     clear_tmpdir;
 };
