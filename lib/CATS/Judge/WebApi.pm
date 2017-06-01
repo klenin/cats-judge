@@ -50,8 +50,6 @@ sub auth {
     $self->{id} = $response->{id};
 }
 
-sub is_locked { $_[0]->{lock_counter} }
-
 sub update_dev_env {
     my ($self) = @_;
 

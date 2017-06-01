@@ -24,8 +24,6 @@ sub make_sid { join '', map $sid_alph[rand @sid_alph], 1..30 }
 
 sub auth { $_[0]->{sid} = $_[0]->make_sid; 1; }
 
-sub is_locked { 0 }
-
 sub set_request_state { abstract @_ }
 
 sub was_pinged { $_[0]->{was_pinged} }

@@ -7,7 +7,6 @@ use CATS::Constants;
 
 use base qw(CATS::Judge::Base);
 
-my $dummy_counter = 0;
 my $source = 'print "Hello world!\n"; open(H, ">output.txt") or die; print H q~bb~;';
 my $file_name = 'test.pl';
 my $de = 501; #perl
@@ -17,11 +16,6 @@ my $test_input = 'aa';
 sub auth {
     my ($self) = @_;
     return;
-}
-
-sub is_locked {
-    $dummy_counter = $dummy_counter + 1;
-    $dummy_counter - 1;
 }
 
 sub set_request_state {
