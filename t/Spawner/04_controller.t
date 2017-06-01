@@ -23,6 +23,7 @@ run_subtest 'Empty controller', compile_plan * 2 + items_ok_plan(2) + 1, sub {
 
     clear_tmpdir;
 };
+
 run_subtest 'Empty agent', compile_plan * 2 + items_ok_plan(2) + 2, sub {
     my $pc = compile('pipe_controller.cpp', "pc$exe", $_[0]);
     my $empty = compile('empty.cpp', "empty$exe", $_[0] - compile_plan);

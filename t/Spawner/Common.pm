@@ -7,6 +7,7 @@ use Exporter qw(import);
 use File::Spec;
 use FindBin qw($Bin);
 use Test::More;
+
 use constant FS => 'File::Spec';
 use constant MB => 1024 * 1024;
 
@@ -153,14 +154,23 @@ sub make_test_file {
     $filename;
 }
 
+my $subtest_depth = 0;
+
 sub run_subtest {
     my ($name, $plan, $sub) = @_;
+    ++$subtest_depth;
+    if ($subtest_depth == 1 && $ARGV[0] && ($name !~ $ARGV[0])) {
+        SKIP: { skip "Skipping, '$name' not matches '$ARGV[0]'", 1; }
+        --$subtest_depth;
+        return;
+    }
     subtest $name => sub {
         SKIP: {
             plan tests => $plan;
             $sub->($plan);
         }
     };
+    --$subtest_depth;
 }
 
 1;
