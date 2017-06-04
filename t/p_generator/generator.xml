@@ -14,7 +14,10 @@
 <Test rank="3"><In use="gen_copy" param="3" /></Test>
 <Test rank="4-6"><In use="gen_group" genAll="1" /></Test>
 <Test rank="7"><In use="gen_stdout" param="7" /></Test>
+<Test rank="8"><In>7</In></Test>
+
 <Test rank="1-7"><Out src="%n.out" /></Test>
+<Test rank="*"><Out src="7.out"/></Test>
 
 </Problem>
 </CATS>
