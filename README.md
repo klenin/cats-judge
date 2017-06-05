@@ -218,7 +218,8 @@ but all other features should still work.
 
 Installation script performs some complex operations, which may require manual intervention.
 Script has following command line options:
-  * `--step <N>...` may be repeated. Perform only a given steps of installation. By default, all steps are performed. You may run `perl install.pl -s 99` to see a list of steps without running any.
+  * `--step <N>...` may be repeated. Perform only given steps of installation. By default, all steps are performed. Run `perl install.pl -s 99` to see a list of steps without running any.
+  * `--bin <download[:version[:remote-repository]]|build>]` Spawner binary source. By default, uses tagged release from Spawner submodule repo.
   * `--devenv <devenv-filter>` only detect development environments containing given string. By default, all known environments are detected.
   * `--modules <modules-filter>` only install modules containing given string. By default, all modules are installed.
   * `--verbose` display additional debug info

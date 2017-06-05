@@ -27,7 +27,7 @@ sub usage
 Usage:
     $cmd
     $cmd --step <num> ...
-        [--bin <spawner bin mode: download[:version[:remote-repository]]|build>]
+        [--bin <download[:version[:remote-repository]]|build>]
         [--devenv <devenv-filter>] [--modules <modules-filter>]
         [--verbose] [--force]
     $cmd --help|-?
@@ -165,46 +165,47 @@ step 'Detect platform', sub {
 step 'Prepare spawner binary', sub {
     $platform or maybe_die "\nDetect platform first";
     my $dir = File::Spec->catdir('spawner-bin', $platform);
-    my $make_type = $opts{bin} // 'download';
     -e $dir ?
         (-d $dir or maybe_die "\n$dir is not a directory") :
         make_path $dir or maybe_die "\nCan't create directory $dir";
-    if ($make_type =~ qr~^download(:(v(\d+\.)+\d+)(:(\w+)\/(\w+))?)?$~) {
-        print "\n";
-        my $version = '';
-        my $repo_own = 'klenin';
-        my $remote_repo = 'Spawner';
-        if ($1) {
-            $version = $2;
-            $repo_own = $5 if $4;
-            $remote_repo = $6 if $4;
-        }
-        else {
-            my $tag = `cd Spawner && git describe --tag --match "v[0-9]*"`;
-            $tag =~ s/(\n|\r)//g;
-            $tag =~ /^v(\d+\.)+\d+$/ or maybe_die "Submodule Spawner does not have valid version tag: $tag";
-            $version = $tag;
-        }
-        print "    Download spawner binary $version...\n";
-        my $file = $platform . '.zip';
-        unlink $file unless -s $file;
-        # File::Fetch does not understand https protocol name but redirect works.
-        my $uri = "http://github.com/$repo_own/$remote_repo/releases/download/$version/$file";
-        print "    Link: $uri\n";
-        if ($proxy) {
-            $ENV{http_proxy} = $ENV{https_proxy} = $proxy;
-        }
-        my $ff = File::Fetch->new(uri => $uri);
-        my $bins = -e $file ? $file : $ff->fetch() or maybe_die "Can't download bin files from $uri";
-        my $sp = $^O eq 'MSWin32' ? 'sp.exe' : 'sp';
-        my $sp_path = File::Spec->catfile($dir, $sp);
-        unzip($bins => $sp_path, Name => $sp, BinModeOut => 1) or maybe_die "Can't unzip $bins";
-        chmod 0744, $sp_path if $^O ne 'MSWin32';
-        unlink $bins;
+
+    my $make_type = $opts{bin} // 'download';
+    $make_type =~ qr~^download(:(v(\d+\.)+\d+)(:(\w+)\/(\w+))?)?$~
+        or maybe_die 'Unknown --bin value';
+    my $version = '';
+    my $repo_owner = 'klenin';
+    my $remote_repo = 'Spawner';
+    if ($1) {
+        $version = $2;
+        $repo_owner = $5 if $4;
+        $remote_repo = $6 if $4;
     }
     else {
-        maybe_die 'Unknown --bin value';
+        # Git wants forward slash even on Windows.
+        my $tag = `git --git-dir=Spawner/.git describe --tag --match "v[0-9]*"`;
+        $tag =~ s/[\n\r]//g;
+        $tag =~ /^v(\d+\.)+\d+$/ or maybe_die "Spawner submodule has invalid version tag: $tag";
+        $version = $tag;
     }
+    print $opts{verbose} ? "\n    Download spawner binary $version...\n" : " $version";
+    my $file = "$platform.zip";
+    # Use non-empty file if already present.
+    unlink $file unless -s $file;
+    # File::Fetch does not understand https protocol name but redirect works.
+    my $uri = "http://github.com/$repo_owner/$remote_repo/releases/download/$version/$file";
+    print "    Link: $uri\n" if $opts{verbose};
+    if ($proxy) {
+        $ENV{http_proxy} = $ENV{https_proxy} = $proxy;
+    }
+    my $ff = File::Fetch->new(uri => $uri);
+    my $zip_file = -e $file ? $file : $ff->fetch or maybe_die "Can't download bin files from $uri";
+    my $sp = $^O eq 'MSWin32' ? 'sp.exe' : 'sp';
+    my $sp_path = File::Spec->catfile($dir, $sp);
+    printf "    Downloaded: %d bytes\n", -s $zip_file if $opts{verbose};
+    unzip($zip_file => $sp_path, Name => $sp, BinModeOut => 1)
+        or maybe_die "Can't unzip $zip_file";
+    chmod 0744, $sp_path if $^O ne 'MSWin32';
+    unlink $zip_file;
 };
 
 my @p = qw(lib cats-problem CATS);
