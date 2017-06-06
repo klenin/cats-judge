@@ -8,7 +8,7 @@ use FindBin qw($Bin);
 
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
-use Test::More tests => 13;
+use Test::More tests => 14;
 use CATS::Spawner::Const ':all';
 
 run_subtest 'Empty controller', compile_plan * 2 + items_ok_plan(2) + 1, sub {
@@ -106,6 +106,19 @@ run_subtest 'Agent index out of range', compile_plan * 2 + 2, sub {
     my $errors = $r->{items}->[0]->{errors};
     is scalar @$errors, 1, 'spawner errors count';
     like $errors->[0], qr/Agent index out of range: 999#msg/, 'spawner PANIC';
+
+    clear_tmpdir;
+};
+
+run_subtest 'Controller wait 2 and return', compile_plan * 2 + items_ok_plan(3), sub {
+    my $wc = compile('wait_controller.cpp', "wc$exe", $_[0]);
+    my $empty = compile('empty.cpp', "empty$exe", $_[0] - compile_plan);
+
+    run_sp_multiple({ time_limit => 1, deadline => 2 }, [
+        program($wc, [ 2, 200 ], { controller => 1 }),
+        program($empty, undef, { stdin => '*0.stdout', stdout => '*0.stdin' }),
+        program($empty, undef, { stdin => '*0.stdout', stdout => '*0.stdin' }),
+    ]);
 
     clear_tmpdir;
 };
