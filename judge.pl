@@ -2,6 +2,7 @@
 use v5.10;
 use strict;
 
+use Carp;
 use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -964,6 +965,10 @@ $cli->parse;
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file, $cli->opts->{'config-set'});
+
+    my $cfg_confess = $cfg->confess // '';
+    $SIG{__WARN__} = \&confess if $cfg_confess =~ /w/i;
+    $SIG{__DIE__} = \&confess if $cfg_confess =~ /d/i;
 }
 
 if ($cli->command eq 'config') {

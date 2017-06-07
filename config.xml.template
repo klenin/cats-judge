@@ -22,6 +22,7 @@
     proxy=""
     api="DirectDatabase"
     columns="RVTMWCO"
+    confess=""
 >
 <!-- api: WebApi | DirectDatabase -->
 
