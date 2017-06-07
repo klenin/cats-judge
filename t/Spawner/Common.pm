@@ -160,7 +160,7 @@ sub run_subtest {
     my ($name, $plan, $sub) = @_;
     ++$subtest_depth;
     if ($subtest_depth == 1 && $ARGV[0] && ($name !~ $ARGV[0])) {
-        SKIP: { skip "Skipping, '$name' not matches '$ARGV[0]'", 1; }
+        SKIP: { skip "Skipping, '$name' does not match '$ARGV[0]'", 1; }
         --$subtest_depth;
         return;
     }

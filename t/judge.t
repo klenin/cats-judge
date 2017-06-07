@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 107;
+use Test::More tests => 26;
 
 use File::Spec;
 
@@ -18,128 +18,171 @@ my $perl = "{$^X}";
 my $judge = FS->catfile($path, '..', 'judge.pl');
 my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Count->new, run_temp_dir => '.' });
 
+
+sub maybe_subtest {
+    my ($name, $plan, $subtest) = @_;
+    SKIP: {
+        skip "Skipping, '$name' does not match '$ARGV[0]' ", 1 if $ARGV[0] && $name !~ $ARGV[0];
+        subtest $name, sub {
+            plan tests => $plan;
+            $subtest->();
+        }
+    }
+}
+
 sub run_judge {
-    my ($name, @args) = @_;
-    my $r = $fu->run([ $perl, $judge, @args ]);
-    is $r->ok, 1, "$name ok";
-    is $r->err, '', "$name no err";
-    is $r->exit_code, 0, "$name exit_code";
+    my $r = $fu->run([ $perl, $judge, @_ ]);
+    is $r->ok, 1, 'ok';
+    is $r->err, '', 'no err';
+    is $r->exit_code, 0, 'exit_code';
     $r;
 }
 
 sub run_judge_sol {
-    my ($name, $problem, $sol, %opt) = @_;
+    my ($problem, $sol, %opt) = @_;
     $opt{de} //= 102;
     $opt{result} //= 'none';
-    run_judge($name, qw(run -p), $problem, '-run', [ $problem, $sol ],
+    run_judge(qw(run -p), $problem, '-run', [ $problem, $sol ],
         map { +"--$_" => $opt{$_} } sort keys %opt);
 }
 
-like join('', @{run_judge('usage')->stdout}), qr/Usage/, 'usage';
+maybe_subtest 'usage', 4, sub {
+    like join('', @{run_judge()->stdout}), qr/Usage/, 'usage';
+};
 
-like run_judge('config print', qw(config --print sleep_time))->stdout->[0],
-    qr/sleep_time = \d+/, 'config print';
+maybe_subtest 'config print', 4, sub {
+    like run_judge('config print', qw(config --print sleep_time))->stdout->[0],
+        qr/sleep_time = \d+/, 'config print';
+};
 
-like run_judge('config set', qw(config --print sleep_time --config-set sleep_time=99))->stdout->[0],
-    qr/sleep_time = 99/, 'config set';
+maybe_subtest 'usage', 4, sub {
+    like run_judge(qw(config --print sleep_time --config-set sleep_time=99))->stdout->[0],
+        qr/sleep_time = 99/, 'config set';
+};
 
 my $p_minimal = FS->catfile($path, 'p_minimal');
 
-{
-    my $s = run_judge_sol('columns R', $p_minimal, 'ok.cpp',
+maybe_subtest 'columns R', 5, sub {
+    my $s = run_judge_sol($p_minimal, 'ok.cpp',
         c => 'columns=R', t => 1, result => 'text')->stdout;
-    like $s->[-1], qr/^\-+$/, 'columns R last row';
-    like $s->[-4], qr/^\s*Rank\s*$/, 'columns Rank';
-}
+    like $s->[-1], qr/^\-+$/, 'last row';
+    like $s->[-4], qr/^\s*Rank\s*$/, 'Rank';
+};
 
-{
-    my $s = run_judge_sol('columns OCRVVTMOW', $p_minimal, 'ok.cpp',
+maybe_subtest 'columns OCRVVTMOW', 5, sub {
+    my $s = run_judge_sol($p_minimal, 'ok.cpp',
         c => 'columns=OCRVVTMOW', t => 1, result => 'text')->stdout;
-    like $s->[-1], qr/^(\-+\+)+\-+$/, 'columns OCRVVTMOW last row';
-    is_deeply [ split /\W+/, $s->[-4] ],
-        [ '', qw(Output Comment Rank Verdict Verdict Time Memory Output Written) ],
-        'columns OCRVVTMOW';
-}
+    like $s->[-1], qr/^(\-+\+)+\-+$/, 'last row';
+    my @cols = qw(Output Comment Rank Verdict Verdict Time Memory Output Written);
+    is_deeply [ split /\W+/, $s->[-4] ], [ '', @cols ], 'columns OCRVVTMOW';
+};
 
-like run_judge('minimal', qw(install --force-install -p), $p_minimal)->stdout->[-1],
-    qr/problem.*installed/, 'minimal installed';
+maybe_subtest 'minimal', 4, sub {
+    like run_judge(qw(install --force-install -p), $p_minimal)->stdout->[-1],
+        qr/problem.*installed/, 'installed';
+};
 
-like run_judge('cached minimal', qw(install -p), $p_minimal)->stdout->[-1],
-    qr/problem.*cached/, 'cached minimal';
+maybe_subtest 'cached minimal', 4, sub {
+    like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
+        qr/problem.*cached/, 'cached minimal';
+};
 
-like run_judge_sol('run minimal', $p_minimal, 'ok.cpp')->stdout->[-1],
-    qr/accepted/, 'run minimal accepted';
+maybe_subtest 'run minimal', 4, sub {
+    like run_judge_sol($p_minimal, 'ok.cpp')->stdout->[-1], qr/accepted/, 'accepted';
+};
 
-{
+maybe_subtest 'minimal html', 5, sub {
     my $tmpdir = [ $path, 'tmp' ];
     $fu->ensure_dir($tmpdir);
-    like run_judge_sol('minimal html',
+    like run_judge_sol(
         $p_minimal, 'ok.cpp', result => 'html',
         'config-set' => 'resultsdir=' . FS->rel2abs(CATS::FileUtil::fn($tmpdir))
     )->stdout->[-1],
-        qr/accepted/, 'minimal html accepted';
-    is scalar @{[ glob(FS->catfile(@$tmpdir, '*')) ]}, 1, 'minimal html exists';
+        qr/accepted/, 'accepted';
+    is scalar @{[ glob(FS->catfile(@$tmpdir, '*')) ]}, 1, 'html exists';
     $fu->remove($tmpdir);
-}
+};
 
-like run_judge_sol('no tests', $p_minimal, 'ok.cpp', t => 99)->stdout->[-1],
-    qr/ignore submit/, 'no tests ignored';
+maybe_subtest 'no tests', 4, sub {
+    like run_judge_sol($p_minimal, 'ok.cpp', t => 99)->stdout->[-1], qr/ignore submit/, 'ignored';
+};
 
 my $p_verdicts = FS->catfile($path, 'p_verdicts');
 
-like run_judge('verdicts', qw(install --force-install -p), $p_verdicts)->stdout->[-1],
-    qr/problem.*installed/, 'verdicts installed';
+maybe_subtest 'verdicts', 4, sub {
+    like run_judge(qw(install --force-install -p), $p_verdicts)->stdout->[-1],
+        qr/problem.*installed/, 'installed';
+};
 
-like run_judge_sol('verdicts OK', $p_verdicts, 'print0.cpp')->stdout->[-1],
-    qr/accepted/, 'verdicts OK';
+maybe_subtest 'verdicts OK', 4, sub {
+    like run_judge_sol($p_verdicts, 'print0.cpp')->stdout->[-1], qr/accepted/, 'OK';
+};
 
-like run_judge_sol('verdicts WA', $p_verdicts, 'print1.cpp')->stdout->[-1],
-    qr/wrong answer/, 'verdicts WA';
+maybe_subtest 'verdicts WA', 4, sub {
+    like run_judge_sol($p_verdicts, 'print1.cpp')->stdout->[-1], qr/wrong answer/, 'WA';
+};
 
-like run_judge_sol('verdicts PE', $p_verdicts, 'print2.cpp')->stdout->[-1],
-    qr/presentation error/, 'verdicts PE';
+maybe_subtest 'verdicts PE', 4, sub {
+    like run_judge_sol($p_verdicts, 'print2.cpp')->stdout->[-1], qr/presentation error/, 'PE';
+};
 
-like run_judge_sol('verdicts UH', $p_verdicts, 'print3.cpp')->stdout->[-1],
-    qr/unhandled error/, 'verdicts UH';
+maybe_subtest 'verdicts UH', 4, sub {
+    like run_judge_sol($p_verdicts, 'print3.cpp')->stdout->[-1], qr/unhandled error/, 'UH';
+};
 
-like run_judge_sol('verdicts CE', $p_verdicts, '1.in')->stdout->[-1],
-    qr/compilation error/, 'verdicts CE';
+maybe_subtest 'verdicts CE', 4, sub {
+    like run_judge_sol($p_verdicts, '1.in')->stdout->[-1], qr/compilation error/, 'CE';
+};
 
-like run_judge_sol('verdicts RE', $p_verdicts, 'return99.cpp')->stdout->[-1],
-    qr/runtime error/, 'verdicts RE';
+maybe_subtest 'verdicts RE', 4, sub {
+    like run_judge_sol($p_verdicts, 'return99.cpp')->stdout->[-1], qr/runtime error/, 'RE';
+};
 
-like run_judge_sol('verdicts TL', $p_verdicts, 'hang.cpp')->stdout->[-1],
-    qr/time limit exceeded/, 'verdicts TL';
+maybe_subtest 'verdicts TL', 4, sub {
+    like run_judge_sol($p_verdicts, 'hang.cpp')->stdout->[-1], qr/time limit exceeded/, 'TL';
+};
 
 SKIP: {
-    skip 'ML under linux is unstable', 4 if $^O ne 'MSWin32';
-    like run_judge_sol('verdicts ML', $p_verdicts, 'allocate.cpp')->stdout->[-1],
-        qr/memory limit exceeded/, 'verdicts ML';
+    skip 'ML under linux is unstable', 1 if $^O ne 'MSWin32';
+    maybe_subtest 'verdicts ML', 4, sub {
+        like run_judge_sol($p_verdicts, 'allocate.cpp')->stdout->[-1],
+            qr/memory limit exceeded/, 'ML';
+    };
 }
 
-like run_judge_sol('verdicts WL', $p_verdicts, 'write_10mb.cpp')->stdout->[-1],
-    qr/write limit exceeded/, 'verdicts WL';
+maybe_subtest 'verdicts WL', 4, sub {
+    like run_judge_sol($p_verdicts, 'write_10mb.cpp')->stdout->[-1], qr/write limit exceeded/, 'WL';
+};
 
 my $p_generator = FS->catfile($path, 'p_generator');
 
-like run_judge_sol('generator', $p_generator, 'sol_copy.cpp')->stdout->[-1],
-    qr/accepted/, 'generator';
+maybe_subtest 'generator', 4, sub {
+    like run_judge_sol($p_generator, 'sol_copy.cpp')->stdout->[-1], qr/accepted/, 'generator';
+};
 
-like run_judge_sol('answer text', $p_generator, '2.out', de => 3, t => 2)->stdout->[-1],
-    qr/accepted/, 'answer text';
+maybe_subtest 'answer text', 4, sub {
+    like run_judge_sol($p_generator, '2.out', de => 3, t => 2)->stdout->[-1],
+        qr/accepted/, 'answer text';
+};
 
-like run_judge_sol('answer text WA', $p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
-    qr/wrong answer on test 3/, 'answer text WA';
+maybe_subtest 'answer text WA', 4, sub {
+    like run_judge_sol($p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
+        qr/wrong answer on test 3/, 'WA';
+};
 
 my $p_interactive = FS->catfile($path, 'p_interactive');
 
-like run_judge_sol('interactive OK', $p_interactive, 'sol_echo.cpp')->stdout->[-1],
-    qr/accepted/, 'interactive OK';
+maybe_subtest 'interactive OK', 4, sub {
+    like run_judge_sol($p_interactive, 'sol_echo.cpp')->stdout->[-1], qr/accepted/, 'OK';
+};
 
-like run_judge_sol('interactive empty', $p_interactive, 'empty.cpp')->stdout->[-1],
-    qr/wrong answer/, 'interactive empty';
+maybe_subtest 'interactive empty', 4, sub {
+    like run_judge_sol($p_interactive, 'empty.cpp')->stdout->[-1],
+        qr/wrong answer/, 'interactive empty';
+};
 
-like run_judge_sol('interactive IL', $p_interactive, 'read.cpp')->stdout->[-1],
-    qr/idleness limit exceeded/, 'interactive IL';
+maybe_subtest 'interactive IL', 4, sub {
+    like run_judge_sol($p_interactive, 'read.cpp')->stdout->[-1], qr/idleness limit exceeded/, 'IL';
+};
 
 1;
