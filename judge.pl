@@ -669,6 +669,46 @@ sub run_single_test {
     }
 }
 
+sub compile {
+    my ($r, $problem) = @_;
+    clear_rundir or return (0, undef);
+
+    prepare_modules($cats::solution_module) or return (0, undef);
+    $fu->write_to_file([ $cfg->rundir, $problem->{full_name} ], $r->{src}) or return (0, undef);
+
+    my $compile_cmd = get_cmd('compile', $r->{de_id});
+    defined $compile_cmd or return (0, undef);
+
+    if ($compile_cmd ne '') {
+        my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
+            apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
+        ) or return (0, undef);
+        my $ok = $sp_report->ok;
+        if ($ok) {
+            my $runfile = get_cmd('runfile', $r->{de_id});
+            $runfile = apply_params($runfile, $problem) if $runfile;
+            if ($runfile && !(-f $cfg->rundir . "/$runfile")) {
+                $ok = 0;
+                log_msg("Runfile '$runfile' not created\n");
+            }
+        }
+        if (!$ok) {
+            insert_test_run_details(result => $cats::st_compilation_error);
+            log_msg("compilation error\n");
+            return (0, $cats::st_compilation_error);
+        }
+    }
+
+    if ($r->{status} == $cats::problem_st_compile) {
+        log_msg("accept compiled solution\n");
+        return (0, $cats::st_accepted);
+    }
+
+    $fu->mkdir_clean([ $cfg->solutionsdir, $r->{id} ]) or return (0, undef);
+    $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $r->{id} ]) or return (0, undef);
+    (1, undef);
+}
+
 sub test_solution {
     my ($r) = @_;
     my ($sid, $de_id) = ($r->{id}, $r->{de_id});
@@ -713,42 +753,8 @@ sub test_solution {
     {
     my $er = eval
     {
-    clear_rundir or return undef;
-
-    prepare_modules($cats::solution_module) or return undef;
-    $fu->write_to_file([ $cfg->rundir, $problem->{full_name} ], $r->{src}) or return;
-
-    my $compile_cmd = get_cmd('compile', $de_id);
-    defined $compile_cmd or return undef;
-
-    if ($compile_cmd ne '') {
-        my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
-            apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
-        ) or return undef;
-        my $ok = $sp_report->ok;
-        if ($ok) {
-            my $runfile = get_cmd('runfile', $de_id);
-            $runfile = apply_params($runfile, $problem) if $runfile;
-            if ($runfile && !(-f $cfg->rundir . "/$runfile"))
-            {
-                $ok = 0;
-                log_msg("Runfile '$runfile' not created\n");
-            }
-        }
-        if (!$ok) {
-            insert_test_run_details(result => $cats::st_compilation_error);
-            log_msg("compilation error\n");
-            return $cats::st_compilation_error;
-        }
-    }
-
-    if ($r->{status} == $cats::problem_st_compile) {
-        log_msg("accept compiled solution\n");
-        return $cats::st_accepted;
-    }
-
-    $fu->mkdir_clean([ $cfg->solutionsdir, $sid ]) or return;
-    $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $sid ]) or return;
+    my ($ret, $st) = compile($r, $problem);
+    return $st unless $ret;
 
     my %tests = $judge->get_testset($sid, 1) or do {
         log_msg("no tests found\n");
