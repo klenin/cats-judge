@@ -734,8 +734,7 @@ sub test_solution {
         { ($cats::source_modules{$_->{stype}} || -1) == $cats::checker_module }
         @$problem_sources;
 
-    if (!defined $problem->{checker_id} && !defined $problem->{std_checker})
-    {
+    if (!defined $problem->{checker_id} && !defined $problem->{std_checker}) {
         log_msg("no checker defined!\n");
         return undef;
     }
@@ -749,44 +748,40 @@ sub test_solution {
     my $res = undef;
     my $failed_test = undef;
 
-    for (0..1)
-    {
-    my $er = eval
-    {
-    my ($ret, $st) = compile($r, $problem);
-    return $st unless $ret;
+    for (0..1) {
+        my $er = eval {
+            my ($ret, $st) = compile($r, $problem);
+            return $st unless $ret;
 
-    my %tests = $judge->get_testset($sid, 1) or do {
-        log_msg("no tests found\n");
-        return $cats::st_ignore_submit;
-    };
-    my %tp_params = (tests => \%tests);
-    my $tp = $r->{run_all_tests} ?
-        CATS::TestPlan::ScoringGroups->new(%tp_params) :
-        CATS::TestPlan::ACM->new(%tp_params);
-    for ($tp->start; $tp->current; ) {
-        $res = run_single_test(
-            problem => $problem, sid => $sid, rank => $tp->current,
-            de_id => $de_id, memory_handicap => $memory_handicap
-        ) or return undef;
-        insert_test_run_details(result => $res);
-        $inserted_details{$tp->current} = $res;
-        $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
-        $failed_test = $tp->first_failed;
+            my %tests = $judge->get_testset($sid, 1) or do {
+                log_msg("no tests found\n");
+                return $cats::st_ignore_submit;
+            };
+            my %tp_params = (tests => \%tests);
+            my $tp = $r->{run_all_tests} ?
+                CATS::TestPlan::ScoringGroups->new(%tp_params) :
+                CATS::TestPlan::ACM->new(%tp_params);
+            for ($tp->start; $tp->current; ) {
+                $res = run_single_test(
+                    problem => $problem, sid => $sid, rank => $tp->current,
+                    de_id => $de_id, memory_handicap => $memory_handicap
+                ) or return undef;
+                insert_test_run_details(result => $res);
+                $inserted_details{$tp->current} = $res;
+                $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
+                $failed_test = $tp->first_failed;
+            }
+            'FALL';
+        };
+        my $e = $@;
+        if ($e) {
+            die $e unless $e =~ /^REINIT/;
+        }
+        else {
+            return $er unless ($er || '') eq 'FALL';
+            last;
+        }
     }
-    'FALL';
-    };
-    my $e = $@;
-    if ($e)
-    {
-        die $e unless $e =~ /^REINIT/;
-    }
-    else
-    {
-        return $er unless ($er || '') eq 'FALL';
-        last;
-    }
-    } # for
     if ($failed_test) {
         $res = $inserted_details{$failed_test};
     }
