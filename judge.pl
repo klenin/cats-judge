@@ -2,6 +2,7 @@
 use v5.10;
 use strict;
 
+use Carp;
 use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -586,6 +587,7 @@ sub filter_hash {
 sub run_single_test {
     my %p = @_;
     my $problem = $p{problem};
+    my $r = $p{r};
 
     log_msg("[test $p{rank}]\n");
     $test_run_details{test_rank} = $p{rank};
@@ -596,7 +598,7 @@ sub run_single_test {
     my $pid = $problem->{id};
 
     prepare_solution_environment($pid,
-        get_solution_path($p{sid}), $cfg->rundir, $problem->{run_info}, 1) or return;
+        get_solution_path($r->{id}), $cfg->rundir, $problem->{run_info}, 1) or return;
 
     my_safe_copy(
         [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
@@ -604,9 +606,10 @@ sub run_single_test {
 
     {
         my %limits = get_limits_hash({ %p, %$problem });
+
         my @run_params = get_run_params(
             $problem,
-            { filter_hash($problem, qw/name full_name/), de_id => $p{de_id} },
+            { %{$r->{name_parts}}, de_id => $r->{de_id} },
             { %limits },
             { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
         ) or return;
@@ -674,26 +677,26 @@ sub compile {
     clear_rundir or return (0, undef);
 
     prepare_modules($cats::solution_module) or return (0, undef);
-    $fu->write_to_file([ $cfg->rundir, $problem->{full_name} ], $r->{src}) or return (0, undef);
+    $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src}) or return (0, undef);
 
     my $compile_cmd = get_cmd('compile', $r->{de_id});
     defined $compile_cmd or return (0, undef);
 
     if ($compile_cmd ne '') {
         my $sp_report = $sp->run_single({ section => $cats::log_section_compile },
-            apply_params($compile_cmd, { filter_hash($problem, qw/full_name name/) })
+            apply_params($compile_cmd, $r->{name_parts})
         ) or return (0, undef);
         my $ok = $sp_report->ok;
         if ($ok) {
             my $runfile = get_cmd('runfile', $r->{de_id});
-            $runfile = apply_params($runfile, $problem) if $runfile;
+            $runfile = apply_params($runfile, $r->{name_parts}) if $runfile;
             if ($runfile && !(-f $cfg->rundir . "/$runfile")) {
                 $ok = 0;
                 log_msg("Runfile '$runfile' not created\n");
             }
         }
         if (!$ok) {
-            insert_test_run_details(result => $cats::st_compilation_error);
+            insert_test_run_details(req_id => $r->{id}, test_rank => 1, result => $cats::st_compilation_error);
             log_msg("compilation error\n");
             return (0, $cats::st_compilation_error);
         }
@@ -711,16 +714,33 @@ sub compile {
 
 sub test_solution {
     my ($r) = @_;
-    my ($sid, $de_id) = ($r->{id}, $r->{de_id});
 
-    log_msg("Testing solution: $sid for problem: $r->{problem_id}\n");
+    log_msg("Testing solution: $r->{id} for problem: $r->{problem_id}\n");
     my $problem = $judge->get_problem($r->{problem_id});
+
+    if ($problem->{run_method} == $cats::rm_competitive) {
+        log_msg("Competitive problems are not supported at this time.\n Pass solution...\n");
+        return $cats::st_accepted;
+    }
 
     $problem->{run_info} = get_run_info($problem->{run_method});
 
-    if ($r->{elements} && @{$r->{elements}} > 1) {
-        log_msg("Group requests are not supported at this time.\n Pass solution...\n");
-        return $cats::st_accepted;
+    my @run_requests;
+    my $is_group_req = 0;
+    if ($r->{elements_count} > 0) {
+        if ($r->{elements_count} == 1) {
+            if ($r->{elements}->[0]->{elements_count} > 0) {
+                $is_group_req = 1;
+                push @run_requests, $r->{elements}->[0];
+            } else {
+                push @run_requests, $r;
+            }
+        } else {
+            $is_group_req = 1;
+            push @run_requests, @{$r->{elements}};
+        }
+    } else {
+        push @run_requests, $r;
     }
 
     # Override limits
@@ -728,70 +748,75 @@ sub test_solution {
         $problem->{$l} = $r->{"req_$l"} || $r->{"cp_$l"} || $problem->{$l};
     }
 
-    my $memory_handicap = $judge_de_idx{$de_id}->{memory_handicap};
-
     ($problem->{checker_id}) = map $_->{id}, grep
         { ($cats::source_modules{$_->{stype}} || -1) == $cats::checker_module }
         @$problem_sources;
 
-    if (!defined $problem->{checker_id} && !defined $problem->{std_checker})
-    {
+    if (!defined $problem->{checker_id} && !defined $problem->{std_checker}) {
         log_msg("no checker defined!\n");
         return undef;
     }
 
-    $judge->delete_req_details($sid);
-    %test_run_details = (req_id => $sid, test_rank => 1);
-    %inserted_details = ();
-
-    (undef, undef, $problem->{full_name}, $problem->{name}, undef) = split_fname($r->{fname});
-
-    my $res = undef;
-    my $failed_test = undef;
-
-    for (0..1)
-    {
-    my $er = eval
-    {
-    my ($ret, $st) = compile($r, $problem);
-    return $st unless $ret;
-
-    my %tests = $judge->get_testset($sid, 1) or do {
-        log_msg("no tests found\n");
-        return $cats::st_ignore_submit;
-    };
-    my %tp_params = (tests => \%tests);
-    my $tp = $r->{run_all_tests} ?
-        CATS::TestPlan::ScoringGroups->new(%tp_params) :
-        CATS::TestPlan::ACM->new(%tp_params);
-    for ($tp->start; $tp->current; ) {
-        $res = run_single_test(
-            problem => $problem, sid => $sid, rank => $tp->current,
-            de_id => $de_id, memory_handicap => $memory_handicap
-        ) or return undef;
-        insert_test_run_details(result => $res);
-        $inserted_details{$tp->current} = $res;
-        $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
-        $failed_test = $tp->first_failed;
+    for my $run_req (@run_requests) {
+        $judge->delete_req_details($run_req->{id});
+        (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($run_req->{fname}) for $run_req->{name_parts};
     }
-    'FALL';
-    };
-    my $e = $@;
-    if ($e)
-    {
-        die $e unless $e =~ /^REINIT/;
+    $judge->delete_req_details($r->{id}) if $is_group_req;
+
+    my $solution_status = $cats::st_accepted;
+
+    for (0..1) {
+        my $er = eval {
+            for my $run_req (@run_requests) {
+                my ($ret, $st) = compile($run_req, $problem);
+                return $st unless $ret;
+            }
+
+            my %tests = $judge->get_testset($r->{id}, 1) or do {
+                log_msg("no tests found\n");
+                return $cats::st_ignore_submit;
+            };
+            my %tp_params = (tests => \%tests);
+            my $tp = $r->{run_all_tests} ?
+                CATS::TestPlan::ScoringGroups->new(%tp_params) :
+                CATS::TestPlan::ACM->new(%tp_params);
+
+            for my $run_req (@run_requests) {
+                my $res = undef;
+                my $failed_test = undef;
+                %test_run_details = (req_id => $run_req->{id}, test_rank => 1);
+                %inserted_details = ();
+                my $memory_handicap = $judge_de_idx{$run_req->{de_id}}->{memory_handicap};
+
+                for ($tp->start; $tp->current; ) {
+                    $res = run_single_test(
+                        problem => $problem, r => $run_req, rank => $tp->current, memory_handicap => $memory_handicap
+                    ) or return undef;
+                    insert_test_run_details(result => $res);
+                    $inserted_details{$tp->current} = $res;
+                    $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
+                    $failed_test = $tp->first_failed;
+                }
+                if ($failed_test) {
+                    $solution_status = $res;
+                    $run_req->{failed_test} = $r->{failed_test} = $failed_test;
+                }
+
+                $judge->set_request_state($run_req, $res, %$run_req);
+            }
+            'FALL';
+        };
+        my $e = $@;
+        if ($e) {
+            die $e unless $e =~ /^REINIT/;
+        }
+        else {
+            return $er unless ($er || '') eq 'FALL';
+            last;
+        }
     }
-    else
-    {
-        return $er unless ($er || '') eq 'FALL';
-        last;
-    }
-    } # for
-    if ($failed_test) {
-        $res = $inserted_details{$failed_test};
-    }
-    $r->{failed_test} = $failed_test;
-    return $res;
+
+    return $solution_status;
 }
 
 sub problem_ready {
@@ -912,7 +937,7 @@ sub test_problem {
     my $state;
 
     log_msg("test log:\n");
-    if ($r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
+    if ($r->{fname} && $r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
         log_msg("renamed from '$r->{fname}'\n");
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
@@ -925,7 +950,7 @@ sub test_problem {
     };
 
     defined $state
-        or insert_test_run_details(result => ($state = $cats::st_unhandled_error));
+        or insert_test_run_details(req_id => $r->{id}, test_rank => 1, result => ($state = $cats::st_unhandled_error));
 
     $judge->save_log_dump($r, $log->{dump});
     if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
@@ -953,7 +978,7 @@ sub main_loop {
         my ($r, $state) = prepare_problem();
         log_msg("pong\n") if $judge->was_pinged;
         $r && $state != $cats::st_unhandled_error or next;
-        if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) {
+        if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
             log_msg("Empty source for problem $r->{problem_id}\n");
             $judge->set_request_state($r, $cats::st_unhandled_error);
         }
@@ -969,6 +994,10 @@ $cli->parse;
     my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
     open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
     $cfg->read_file($cfg_file, $cli->opts->{'config-set'});
+
+    my $cfg_confess = $cfg->confess // '';
+    $SIG{__WARN__} = \&confess if $cfg_confess =~ /w/i;
+    $SIG{__DIE__} = \&confess if $cfg_confess =~ /d/i;
 }
 
 if ($cli->command eq 'config') {
