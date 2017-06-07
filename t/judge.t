@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 
 use File::Spec;
 
@@ -42,8 +42,9 @@ sub run_judge_sol {
     my ($problem, $sol, %opt) = @_;
     $opt{de} //= 102;
     $opt{result} //= 'none';
-    run_judge(qw(run -p), $problem, '-run', [ $problem, $sol ],
-        map { +"--$_" => $opt{$_} } sort keys %opt);
+    my @sols = ref $sol eq 'ARRAY' ? @$sol : ($sol);
+    my @runs = map { -run => [ $problem, $_ ] } @sols;
+    run_judge(qw(run -p), $problem, @runs, map { +"--$_" => $opt{$_} } sort keys %opt);
 }
 
 maybe_subtest 'usage', 4, sub {
@@ -140,6 +141,14 @@ maybe_subtest 'verdicts RE', 4, sub {
 
 maybe_subtest 'verdicts TL', 4, sub {
     like run_judge_sol($p_verdicts, 'hang.cpp')->stdout->[-1], qr/time limit exceeded/, 'TL';
+};
+
+maybe_subtest 'verdicts multiple', 5, sub {
+    my $s = run_judge_sol($p_verdicts, ['print1.cpp', 'print0.cpp', 'hang.cpp'],
+        c => 'columns=V', t => 2, result => 'text')->stdout;
+    like $s->[-1], qr/^[\-+]+$/, 'last row';
+    # Runs are sorted alphabetically.
+    like $s->[-2], qr/^\s+TL\s+\|\s+OK\s+\|\s+WA\s+$/, 'verdicts';
 };
 
 SKIP: {
