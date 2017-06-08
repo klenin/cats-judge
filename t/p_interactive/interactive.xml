@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CATS version="1.9">
 <Problem title="Interactive" lang="en"
-  tlimit="1" mlimit="256" inputFile="*STDIN" outputFile="*STDOUT">
+  tlimit="2" mlimit="256" inputFile="*STDIN" outputFile="*STDOUT">
 
 <Run method="interactive" />
 <Checker src="cmp.cpp" type="checker" de_code="102" style="testlib" />
