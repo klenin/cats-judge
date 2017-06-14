@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use File::Spec;
 
@@ -177,6 +177,12 @@ maybe_subtest 'answer text', 4, sub {
 maybe_subtest 'answer text WA', 4, sub {
     like run_judge_sol($p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
         qr/wrong answer on test 3/, 'WA';
+};
+
+my $p_module = FS->catfile($path, 'p_module');
+
+maybe_subtest 'module import', 4, sub {
+    like run_judge_sol($p_module, 'test.cpp')->stdout->[-1], qr/accepted/, 'module import result'
 };
 
 my $p_interactive = FS->catfile($path, 'p_interactive');
