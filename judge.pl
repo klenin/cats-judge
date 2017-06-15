@@ -768,24 +768,27 @@ sub compile {
 sub run_testplan {
     my ($tp, $problem, $requests) = @_;
     $inserted_details{$_->{id}} = {} for @$requests;
-    my $result = $cats::st_accepted;
+    my $run_verdict = $cats::st_accepted;
     my $competitive_outputs = {};
     for ($tp->start; $tp->current; ) {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
             run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
             or return;
-        my $res = $cats::st_accepted;
+        my $test_verdict = $cats::st_accepted;
         for my $i (0 .. $#$test_run_details) {
             my $details = $test_run_details->[$i];
-            $res = $result = $details->{result} if $details->{result} != $cats::st_accepted;
+            # For a test, set verdict to the first non-accepted of agent verdicts.
+            $test_verdict = $details->{result} if $test_verdict == $cats::st_accepted;
             insert_test_run_details(%$details);
             $inserted_details{$details->{req_id}}->{$tp->current} = $details->{result};
             $judge->set_request_state($requests->[$i], $details->{result}, %{$requests->[$i]})
                 if $problem->{run_method} == $cats::rm_competitive;
         }
-        $tp->set_test_result($res == $cats::st_accepted ? 1 : 0);
+        $tp->set_test_result($test_verdict == $cats::st_accepted ? 1 : 0);
+        # For a run, set verdict to the first non-accepted test verdict.
+        $run_verdict = $test_verdict if $run_verdict == $cats::st_accepted;
     }
-    ($result, $competitive_outputs);
+    ($run_verdict, $competitive_outputs);
 }
 
 sub test_solution {
@@ -863,13 +866,13 @@ sub test_solution {
                     my $tp = $r->{run_all_tests} ?
                         CATS::TestPlan::ScoringGroups->new(%tp_params) :
                         CATS::TestPlan::ACM->new(%tp_params);
-                    my ($res, undef) = run_testplan($tp, $problem, [ $run_req ]) or return;
+                    my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ]) or return;
                     if (my $failed_test = $tp->first_failed) {
-                        $solution_status = $res;
                         $run_req->{failed_test} = $r->{failed_test} = $failed_test;
                     }
-
-                    $judge->set_request_state($run_req, $res, %$run_req);
+                    # For a group request, set group verdict to the first non-accepted run verdict.
+                    $solution_status = $run_verdict if $solution_status == $cats::st_accepted;
+                    $judge->set_request_state($run_req, $run_verdict, %$run_req);
                 }
             }
             'FALL';
