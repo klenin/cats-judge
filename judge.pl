@@ -252,23 +252,17 @@ sub generate_test {
     $sp_report->ok ? $out : undef;
 }
 
-sub generate_test_group
-{
+sub generate_test_group {
     my ($problem, $test, $tests, $save_input_prefix) = @_;
     my $pid = $problem->{id};
     $test->{gen_group} or die 'gen_group';
     return 1 if $test->{generated};
-    my $out = generate_test($problem, $test, 'in');
-    unless ($out)
-    {
-        log_msg("failed to generate test group $test->{gen_group}\n");
-        return undef;
-    }
+    my $out = generate_test($problem, $test, 'in')
+        or return log_msg("failed to generate test group $test->{gen_group}\n");
     $out =~ s/%n/%d/g;
     $out =~ s/%0n/%02d/g;
     #$out =~ s/%(0*)n/length($1) ? '%0' . length($1) . 'd' : '%d'/eg;
-    for (@$tests)
-    {
+    for (@$tests) {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
         $fu->copy_glob(
@@ -550,13 +544,11 @@ sub run_checker {
 
     my $checker_cmd;
     my %limits;
-    if (defined $problem->{std_checker})
-    {
+    if (defined $problem->{std_checker}) {
         $checker_cmd = get_std_checker_cmd($problem->{std_checker})
             or return undef;
     }
-    else
-    {
+    else {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy(
@@ -654,15 +646,14 @@ sub run_single_test {
             $test_run_details->[$i]->{memory_used} = $solution_report->{consumed}->{memory};
             $test_run_details->[$i]->{disk_used} = $solution_report->{consumed}->{write};
 
-            if ($solution_report->{terminate_reason} == $TR_OK ||
-                ($problem->{run_method} == $cats::rm_competitive && $solution_report->{terminate_reason} == $TR_CONTROLLER)) {
+            my $tr = $solution_report->{terminate_reason};
+            if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
                 if ($solution_report->{exit_code} != 0) {
                     $test_run_details->[$i]->{checker_comment} = $solution_report->{exit_code};
                     $result = $test_run_details->[$i]->{result} = $cats::st_runtime_error;
                 }
             } else {
-                $result = $test_run_details->[$i]->{result} =
-                    $get_tr_status->($solution_report->{terminate_reason}) or return;
+                $result = $test_run_details->[$i]->{result} = $get_tr_status->($tr) or return;
             }
 
             ($test_run_details->[$i]->{output}, $test_run_details->[$i]->{output_size}) =
@@ -713,7 +704,8 @@ sub run_single_test {
                 return log_msg("competitive checker stdout bad format\n") if @agent_result < 3;
 
                 my $agent = int $agent_result[0] - 1;
-                return log_msg("competitive checker stdout error\n") if $agent < 0 || $agent > @$test_run_details;
+                return log_msg("competitive checker stdout error\n")
+                    if $agent < 0 || $agent > @$test_run_details;
 
                 my $agent_verdict = $get_verdict->($agent_result[1]) // return;
                 $result = $agent_verdict if $agent_verdict != $cats::st_accepted;
@@ -775,11 +767,12 @@ sub compile {
 
 sub run_testplan {
     my ($tp, $problem, $requests) = @_;
-    $inserted_details{$_->{id}} = {} for (@$requests);
+    $inserted_details{$_->{id}} = {} for @$requests;
     my $result = $cats::st_accepted;
     my $competitive_outputs = {};
     for ($tp->start; $tp->current; ) {
-        (my $test_run_details, $competitive_outputs->{$tp->current}) = run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
+        (my $test_run_details, $competitive_outputs->{$tp->current}) =
+            run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
             or return;
         my $res = $cats::st_accepted;
         for my $i (0 .. $#$test_run_details) {
@@ -832,7 +825,8 @@ sub test_solution {
 
     for my $run_req (@run_requests) {
         $judge->delete_req_details($run_req->{id});
-        (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($run_req->{fname}) for $run_req->{name_parts};
+        (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($run_req->{fname})
+            for $run_req->{name_parts};
     }
     $judge->delete_req_details($r->{id}) if $is_group_req;
 
