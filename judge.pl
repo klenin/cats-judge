@@ -244,14 +244,11 @@ sub generate_test_group {
     for (@$tests) {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
-        $fu->copy_glob(
-            [ $cfg->rundir, sprintf($out, $_->{rank}) ],
-            [ $cfg->cachedir, $pid, "$_->{rank}.tst" ]) or return;
+        my $tf = $problem_cache->test_file($pid, $_);
+        $fu->copy_glob([ $cfg->rundir, sprintf($out, $_->{rank}) ], $tf) or return;
 
-        $judge->save_input_test_data(
-            $pid, $test->{rank},
-            $fu->load_file($problem_cache->test_file($pid, $test), $save_input_prefix)
-        ) if $save_input_prefix && !defined $test->{in_file};
+        $judge->save_input_test_data($pid, $_->{rank}, $fu->load_file($tf, $save_input_prefix))
+            if $save_input_prefix && !defined $test->{in_file};
     }
     1;
 }
