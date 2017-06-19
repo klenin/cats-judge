@@ -35,7 +35,7 @@ sub save_log_dump {}
 sub set_DEs {
     my ($self, $cfg_de) = @_;
 
-    $self->update_dev_env();
+    $self->update_dev_env;
 
     for my $de (@{$self->{dev_env}->des}) {
         my $c = $de->{code};
@@ -44,8 +44,10 @@ sub set_DEs {
 
     delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
     $self->{supported_DEs} = [ sort { $a <=> $b } keys %$cfg_de ];
-    $self->update_de_bitmap();
+    $self->update_de_bitmap;
 }
+
+sub update_dev_env {}
 
 sub update_de_bitmap {
     my ($self) = @_;
