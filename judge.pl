@@ -22,6 +22,7 @@ use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
 use CATS::Judge::Local;
+use CATS::Judge::ProblemCache;
 use CATS::Problem::Backend;
 use CATS::Problem::PolygonBackend;
 
@@ -54,6 +55,7 @@ my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
 
 my $judge;
+my $problem_cache;
 my $sp;
 my %judge_de_idx;
 
@@ -196,12 +198,6 @@ sub apply_params {
     $str =~ s/%$_/$params->{$_}/g
         for sort { length $b <=> length $a } keys %$params;
     $str;
-}
-
-sub save_problem_description {
-    my ($pid, $title, $date, $state) = @_;
-    $fu->write_to_file([ $cfg->cachedir,  "$pid.des" ],
-        join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
 sub get_limits_hash {
@@ -454,7 +450,7 @@ sub initialize_problem {
 
     my $p = $judge->get_problem($pid);
 
-    save_problem_description($pid, $p->{title}, $p->{upload_date}, 'not ready')
+    $problem_cache->save_description($pid, $p->{title}, $p->{upload_date}, 'not ready')
         or return undef;
 
     # Compile all source files in package (solutions, generators, checkers etc).
@@ -501,7 +497,7 @@ sub initialize_problem {
     }
     prepare_tests($p) or return undef;
 
-    save_problem_description($pid, $p->{title}, $p->{upload_date}, 'ready')
+    $problem_cache->save_description($pid, $p->{title}, $p->{upload_date}, 'ready')
         or return undef;
 
     1;
@@ -880,36 +876,6 @@ sub test_solution {
     return $solution_status;
 }
 
-sub problem_ready {
-    my ($pid) = @_;
-
-    open my $pdesc, '<', CATS::FileUtil::fn([ $cfg->cachedir, "$pid.des" ]) or return 0;
-
-    my $title = <$pdesc>;
-    my $date = <$pdesc>;
-    my $state = <$pdesc>;
-
-    $state eq 'state:ready' or return 0;
-
-    # Emulate old CATS_TO_EXACT_DATE format.
-    $date =~ m/^date:(\d+)-(\d+)-(\d+)\s(.+)$/ or return 0;
-    $date = "$3-$2-$1 $4";
-    $judge->is_problem_uptodate($pid, $date);
-}
-
-sub clear_problem_cache {
-    my ($problem_id) = @_;
-    $problem_id or return;
-    for (CATS::SourceManager::get_guids_by_regexp('*', $cfg->{modulesdir})) {
-        my $m = eval { CATS::SourceManager::load($_, $cfg->{modulesdir}); } or next;
-        $log->warning("Orphaned module: $_")
-            if $m->{path} =~ m~[\/\\]\Q$problem_id\E[\/\\]~;
-    }
-    $log->clear_dump;
-    $fu->remove([ $cfg->cachedir, "$problem_id*" ]) or return; # Both file and directory.
-    log_msg("problem '$problem_id' cache removed\n");
-}
-
 sub prepare_problem {
     my $r = $judge->select_request or return;
 
@@ -934,7 +900,7 @@ sub prepare_problem {
     }
 
     my $state = $cats::st_testing;
-    my $is_ready = problem_ready($r->{problem_id});
+    my $is_ready = $problem_cache->is_ready($r->{problem_id});
     if (!$is_ready || $cli->opts->{'force-install'}) {
         log_msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
         eval {
@@ -1099,6 +1065,9 @@ else {
     die "Unknown api '$api'\n";
 }
 
+$problem_cache = CATS::Judge::ProblemCache->new(
+    cfg => $cfg, fu => $fu, log => $log, judge => $judge);
+
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
 $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
@@ -1119,9 +1088,7 @@ if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
 }
 elsif ($cli->command =~ /^(clear-cache)$/) {
-    my $pd = CATS::FileUtil::fn([ $cfg->{cachedir}, $judge->{problem} ]);
-    clear_problem_cache(
-        -f "$pd.des" || -d $pd ? $judge->{problem} : $judge->select_request->{problem_id});
+    $problem_cache->clear_current;
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for my $rr (@{$cli->opts->{run} || [ '' ]}) {
