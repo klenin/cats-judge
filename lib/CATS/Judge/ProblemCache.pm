@@ -22,17 +22,18 @@ sub cfg { $_[0]->{cfg} }
 sub fu { $_[0]->{fu} }
 sub log { $_[0]->{log} }
 sub judge { $_[0]->{judge} }
+sub dir { $_[0]->{cfg}->cachedir }
 
 sub save_description {
     my ($self, $pid, $title, $date, $state) = @_;
-    $self->fu->write_to_file([ $self->cfg->cachedir,  "$pid.$ext" ],
+    $self->fu->write_to_file([ $self->dir,  "$pid.$ext" ],
         join "\n", 'title:' . Encode::encode_utf8($title), "date:$date", "state:$state");
 }
 
 sub is_ready {
     my ($self, $pid) = @_;
 
-    open my $pdesc, '<', CATS::FileUtil::fn([ $self->cfg->cachedir, "$pid.$ext" ]) or return 0;
+    open my $pdesc, '<', CATS::FileUtil::fn([ $self->dir, "$pid.$ext" ]) or return 0;
 
     my $title = <$pdesc>;
     my $date = <$pdesc>;
@@ -49,7 +50,7 @@ sub is_ready {
 sub clear_current {
     my ($self) = @_;
 
-    my $path = CATS::FileUtil::fn([ $self->cfg->cachedir, $self->judge->{problem} ]);
+    my $path = CATS::FileUtil::fn([ $self->dir, $self->judge->{problem} ]);
     my $problem_id = -f "$path.$ext" || -d $path ?
         $self->judge->{problem} : $self->judge->select_request->{problem_id} or return;
 
@@ -60,7 +61,7 @@ sub clear_current {
     }
     $self->log->clear_dump;
     # Remove both description file and directory.
-    $self->fu->remove([ $self->cfg->cachedir, "$problem_id*" ]) or return;
+    $self->fu->remove([ $self->dir, "$problem_id*" ]) or return;
     $self->log->msg("problem '$problem_id' cache removed\n");
 }
 
