@@ -36,7 +36,7 @@ use open IN => ':crlf', OUT => ':raw';
 my $lh;
 my $lock_file;
 
-BEGIN {
+INIT {
     $lock_file = FS->catfile(cats_dir, 'judge.lock');
     open $lh, '>', $lock_file or die "Can not open $lock_file: $!";
     flock $lh, LOCK_EX | LOCK_NB or die "Can not lock $lock_file: $!\n";
