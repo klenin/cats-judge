@@ -155,12 +155,6 @@ sub get_std_checker_cmd {
      $cfg->checkers->{$std_checker_name};
 }
 
-sub get_problem_source_path {
-    my ($sid, $pid, @rest) = @_;
-
-    [ $cfg->cachedir, $pid, 'temp', $sid, @rest ]
-}
-
 sub get_solution_path {
     my ($sid, @rest) = @_;
 
@@ -208,7 +202,7 @@ sub generate_test {
 
     clear_rundir or return undef;
 
-    $fu->copy(get_problem_source_path($test->{generator_id}, $pid, '*'), $cfg->rundir)
+    $fu->copy($problem_cache->source_path($pid, $test->{generator_id}, '*'), $cfg->rundir)
         or return;
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
@@ -288,7 +282,7 @@ sub prepare_solution_environment {
     if ($run_info->{method} == $cats::rm_interactive || $run_info->{method} == $cats::rm_competitive) {
         my $interactor = $run_info->{interactor} or return;
         if (!$interactor->{legacy}) {
-            $copy_func->(get_problem_source_path($interactor->{id}, $pid, '*'), $run_dir)
+            $copy_func->($problem_cache->source_path($pid, $interactor->{id}, '*'), $run_dir)
                 or return;
         }
     }
@@ -312,7 +306,7 @@ sub validate_test {
     clear_rundir or return;
     my ($validator) = grep $_->{id} eq $in_v_id, @$problem_sources or die;
     $fu->copy($path_to_test, $cfg->rundir) or return;
-    $fu->copy(get_problem_source_path($in_v_id, $pid, '*'), $cfg->rundir) or return;
+    $fu->copy($problem_cache->source_path($pid, $in_v_id, '*'), $cfg->rundir) or return;
 
     my $validate_cmd = get_cmd('validate', $validator->{de_id})
         or return log_msg("No validate cmd for: $validator->{de_id}\n");
@@ -384,8 +378,9 @@ sub prepare_tests {
 
             clear_rundir or return undef;
 
-            prepare_solution_environment($pid,
-                get_problem_source_path($t->{std_solution_id}, $pid), $cfg->rundir, $problem->{run_info}) or return;
+            prepare_solution_environment(
+                $pid, $problem_cache->source_path($pid, $t->{std_solution_id}),
+                $cfg->rundir, $problem->{run_info}) or return;
 
             $fu->copy($tf, input_or_default($problem->{input_file})) or return;
 
@@ -436,6 +431,7 @@ sub initialize_problem {
         or return undef;
 
     # Compile all source files in package (solutions, generators, checkers etc).
+
     $fu->mkdir_clean([ $cfg->cachedir, $pid ]) or return;
     $fu->mkdir_clean([ $cfg->cachedir, $pid, 'temp' ]) or return;
 
@@ -464,7 +460,7 @@ sub initialize_problem {
            $fu->write_to_file([ $cfg->rundir, $cfg->formal_input_fname ], $p->{formal_input}) or return;
         }
 
-        my $tmp = get_problem_source_path($ps->{id}, $pid);
+        my $tmp = $problem_cache->source_path($pid, $ps->{id});
         $fu->mkdir_clean($tmp) or return;
         $fu->copy([ $cfg->rundir, '*' ], $tmp) or return;
 
@@ -522,7 +518,7 @@ sub run_checker {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy(
-            get_problem_source_path($problem->{checker_id}, $problem->{id}, '*'),
+            $problem_cache->source_path($problem->{id}, $problem->{checker_id}, '*'),
             $cfg->rundir, $problem->{id}) or return;
 
         (undef, undef, undef, $checker_params->{name}, undef) =

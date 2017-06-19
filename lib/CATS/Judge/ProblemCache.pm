@@ -75,4 +75,9 @@ sub answer_file {
     [ $self->dir, $pid, "$test->{rank}.ans" ];
 }
 
+sub source_path {
+    my ($self, $pid, $source_id, @rest) = @_;
+    [ $self->dir, $pid, 'temp', $source_id, @rest ];
+}
+
 1;
