@@ -82,18 +82,15 @@ sub get_run_cmd {
     return apply_params($run_cmd, $opts);
 }
 
+sub set_name_parts {
+    my ($r) = @_;
+    (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($r->{fname})
+        for $r->{name_parts};
+}
+
 sub get_run_params {
     my ($problem, $rs, $run_cmd_opts) = @_;
     my $run_info = $problem->{run_info};
-
-    my $get_names = sub {
-        my ($r) = @_;
-        $r->{fname} || $r->{full_name} && $r->{name}
-            or return log_msg("No file names specified in get_run_params\n");
-        my (undef, undef, $fname, $name, undef) =
-            $r->{fname} ? split_fname($r->{fname}) : (undef, undef, $r->{full_name}, $r->{name}, undef);
-        { full_name => $fname, name => $name }
-    };
 
     my $is_interactive = $run_info->{method} == $cats::rm_interactive;
     my $is_competititve = $run_info->{method} == $cats::rm_competitive;
@@ -114,8 +111,7 @@ sub get_run_params {
         } else {
             $solution_opts = { %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
-
-        my $names = $get_names->($r) or return;
+        my $names = $r->{name_parts} or return log_msg("No name parts\n");
         my $run_cmd = get_run_cmd($r->{de_id}, { %$names, %$run_cmd_opts }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
     }
@@ -129,13 +125,13 @@ sub get_run_params {
     };
 
     if ($run_info->{method} == $cats::rm_interactive || $run_info->{method} == $cats::rm_competitive) {
-        $run_info->{interactor} or return log_msg('No interactor specified in get_run_params\n');
+        my $i = $run_info->{interactor}
+            or return log_msg("No interactor specified in get_run_params\n");
         my %limits = get_limits_hash($run_info->{interactor}, $problem);
         delete $limits{deadline};
         $global_opts->{idle_time_limit} = $limits{time_limit} + 1 if $limits{time_limit};
 
-        my $names = $get_names->($run_info->{interactor}) or return;
-        my $run_cmd = get_run_cmd($run_info->{interactor}->{de_id}, $names) or return;
+        my $run_cmd = get_run_cmd($i->{de_id}, $i->{name_parts}) or return;
 
         unshift @programs, CATS::Spawner::Program->new($run_cmd,
             $is_competititve ? [ scalar @programs ] : [],
@@ -414,11 +410,7 @@ sub prepare_tests {
             $fu->copy(get_input_test_file_path($pid, $t), input_or_default($problem->{input_file}))
                 or return;
 
-            my @run_params = get_run_params(
-                $problem,
-                [ $ps ],
-                {},
-            ) or return;
+            my @run_params = get_run_params($problem, [ $ps ], {}) or return;
             my $sp_report = $sp->run(@run_params) or return;
 
             return if grep !$_->ok, @{$sp_report->items};
@@ -614,8 +606,7 @@ sub run_single_test {
     {
 
         my @run_params = get_run_params(
-            $problem,
-            [ map +{ %{$_->{name_parts}}, de_id => $_->{de_id} }, @$r ],
+            $problem, $r,
             { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
         ) or return;
 
@@ -828,8 +819,7 @@ sub test_solution {
 
     for my $run_req (@run_requests) {
         $judge->delete_req_details($run_req->{id});
-        (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($run_req->{fname})
-            for $run_req->{name_parts};
+        set_name_parts($run_req);
     }
     $judge->delete_req_details($r->{id}) if $is_group_req;
 
@@ -932,6 +922,7 @@ sub prepare_problem {
     }
 
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
+    set_name_parts($_) for @$problem_sources;
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
         map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
