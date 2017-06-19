@@ -65,4 +65,14 @@ sub clear_current {
     $self->log->msg("problem '$problem_id' cache removed\n");
 }
 
+sub test_file {
+    my ($self, $pid, $test) = @_;
+    [ $self->dir, $pid, "$test->{rank}.tst" ];
+}
+
+sub answer_file {
+    my ($self, $pid, $test) = @_;
+    [ $self->dir, $pid, "$test->{rank}.ans" ];
+}
+
 1;
