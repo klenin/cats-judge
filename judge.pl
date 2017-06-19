@@ -566,19 +566,16 @@ sub run_single_test {
 
     clear_rundir or return undef;
 
-    my $pid = $problem->{id};
-
     my $test_run_details = [];
 
     for my $req (@$r) {
         push @$test_run_details, { req_id => $req->{id}, test_rank => $p{rank}, checker_comment => '' };
-        prepare_solution_environment($pid,
+        prepare_solution_environment($problem->{id},
             get_solution_path($req->{id}), $cfg->rundir, $problem->{run_info}, 1) or return;
     }
 
-    my_safe_copy(
-        [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
-        input_or_default($problem->{input_file}), $pid) or return;
+    my $tf = $problem_cache->test_file($problem->{id}, \%p);
+    my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
 
     my $competitive_test_output;
     {
@@ -638,11 +635,9 @@ sub run_single_test {
             if $problem->{run_method} != $cats::rm_competitive && $result != $cats::st_accepted;
     }
 
+    my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
     my_safe_copy(
-        [ $cfg->cachedir, $problem->{id}, "$p{rank}.tst" ],
-        input_or_default($problem->{input_file}), $problem->{id}) or return;
-    my_safe_copy(
-        [ $cfg->cachedir, $problem->{id}, "$p{rank}.ans" ],
+        $problem_cache->answer_file($problem->{id}, \%p),
         [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
 
     {
