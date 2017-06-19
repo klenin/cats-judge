@@ -9,9 +9,9 @@
 </ProblemStatement>
 
 <Module name="test" src="test.h" type="solution" de_code="1" />
-<Module name="test" src="test.h" type="checker" de_code="1" />
+<Module name="test" src="test.h" export="test.module.1" type="checker" de_code="1" />
 <Solution name="test" src="test.cpp" de_code="102" />
-<Checker name="test" src="test.cpp" de_code="102" />
+<Checker name="test" src="test.cpp" de_code="102" style="testlib" />
 
 <Test rank="1"><In src="1.in" /><Out src="1.out" /></Test>
 </Problem>

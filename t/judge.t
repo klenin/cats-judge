@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 29;
+use Test::More tests => 30;
 
 use File::Spec;
 
@@ -187,6 +187,12 @@ my $p_module = FS->catfile($path, 'p_module');
 
 maybe_subtest 'module import', 4, sub {
     like run_judge_sol($p_module, 'test.cpp')->stdout->[-1], qr/accepted/, 'module import result'
+};
+
+maybe_subtest 'module orphan', 5, sub {
+    my $r = run_judge(qw(clear-cache -p), $p_module)->stdout;
+    like $r->[-2], qr/Orphaned.*test\.module\.1/, 'warning';
+    like $r->[-1], qr/cache\s+removed/, 'cache removed';
 };
 
 my $p_interactive = FS->catfile($path, 'p_interactive');
