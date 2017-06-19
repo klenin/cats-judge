@@ -432,8 +432,7 @@ sub initialize_problem {
 
     # Compile all source files in package (solutions, generators, checkers etc).
 
-    $fu->mkdir_clean([ $cfg->cachedir, $pid ]) or return;
-    $fu->mkdir_clean([ $cfg->cachedir, $pid, 'temp' ]) or return;
+    $problem_cache->clear_dir($pid) or return;
 
     my %main_source_types;
     $main_source_types{$_} = 1 for keys %cats::source_modules;
@@ -1061,7 +1060,7 @@ if ($cli->command =~ /^(download|upload)$/) {
     sync_problem($cli->command);
 }
 elsif ($cli->command =~ /^(clear-cache)$/) {
-    $problem_cache->clear_current;
+    $problem_cache->remove_current;
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for my $rr (@{$cli->opts->{run} || [ '' ]}) {

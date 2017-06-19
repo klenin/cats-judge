@@ -9,6 +9,7 @@ use CATS::FileUtil;
 use CATS::SourceManager;
 
 my $ext = 'des';
+my $source_dir = 'temp';
 
 sub new {
     my ($class) = shift;
@@ -47,7 +48,7 @@ sub is_ready {
     $self->judge->is_problem_uptodate($pid, $date);
 }
 
-sub clear_current {
+sub remove_current {
     my ($self) = @_;
 
     my $path = CATS::FileUtil::fn([ $self->dir, $self->judge->{problem} ]);
@@ -77,7 +78,13 @@ sub answer_file {
 
 sub source_path {
     my ($self, $pid, $source_id, @rest) = @_;
-    [ $self->dir, $pid, 'temp', $source_id, @rest ];
+    [ $self->dir, $pid, $source_dir, $source_id, @rest ];
+}
+
+sub clear_dir {
+    my ($self, $pid) = @_;
+    $self->fu->mkdir_clean([ $self->dir, $pid ]) &&
+    $self->fu->mkdir_clean([ $self->dir, $pid, $source_dir ]);
 }
 
 1;
