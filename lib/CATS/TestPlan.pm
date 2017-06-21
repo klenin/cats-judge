@@ -102,7 +102,7 @@ sub set_test_result {
     my ($self, $result) = @_;
     $self->SUPER::set_test_result($result);
     my $failed = $self->{tests}->{$self->current};
-    if (!$result && $failed && CATS::Testset::is_scoring_group($failed)) {
+    if (!$result && $failed && $failed->{points}) {
         $self->{plan} = [
             grep {
                 my $t = $self->{tests}->{$_};

@@ -3,7 +3,7 @@ use warnings;
 
 use File::Spec;
 use FindBin;
-use Test::More tests => 29;
+use Test::More tests => 30;
 use Test::Exception;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
@@ -90,6 +90,18 @@ for my $try (1..3) {
     }
     is_deeply $p->state,
         { 1 => 1, 2 => 0, 4 => 0, 5 => 1, 6 => 1, 8 => 0, 10 => 1 }, "sg state with fails";
+}
+
+{
+    my $sg1 = { name => 'sg1', hide_details => 1 };
+    my $sg2 = { name => 'sg1', depends_on => $sg1 };
+    my $tests = { 1 => $sg1, 2 => $sg1, 3 => $sg1, 4 => $sg2, 5 => $sg2, 6 => $sg2 };
+    my $p = CATS::TestPlan::ScoringGroups->new(tests => $tests);
+    for ($p->start; $p->current; ) {
+        $p->set_test_result($p->current % 2);
+    }
+    is_deeply $p->state,
+        { 1 => 1, 2 => 0, 3 => 1, 4 => 0, 5 => 1, 6 => 0 }, "no sg without points";
 }
 
 1;
