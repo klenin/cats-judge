@@ -18,6 +18,7 @@ use CATS::Constants;
 use CATS::SourceManager;
 use CATS::FileUtil;
 use CATS::Utils qw(split_fname);
+
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
@@ -67,15 +68,6 @@ sub get_cmd {
     my ($action, $de_id) = @_;
     exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
     $judge_de_idx{$de_id}->{$action};
-}
-
-sub get_cfg_define {
-    my $name = shift;
-    my $value = $cfg->defines->{$name};
-    if (!$value) {
-        log_msg("unknown define name: $name\n");
-    }
-    $value;
 }
 
 sub get_run_cmd {
@@ -1042,10 +1034,12 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 {
     my $cfg_dirs = {};
     $cfg_dirs->{$_} = $cfg->{$_} for $cfg->dir_fields;
+
+    my $sp_define = $cfg->defines->{'#spawner'} or die 'No #spawner define in config';
     $sp = CATS::Spawner::Default->new({
         %$cfg,
         logger => $log,
-        path => apply_params(get_cfg_define('#spawner'), $cfg_dirs),
+        path => apply_params($sp_define, $cfg_dirs),
         run_dir => $cfg->rundir,
         json => 1,
     });
