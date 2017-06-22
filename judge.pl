@@ -136,22 +136,11 @@ sub get_run_params {
     ($global_opts, @programs);
 }
 
-sub get_std_checker_cmd {
-    my $std_checker_name = shift;
-
-    if (!defined $cfg->checkers->{$std_checker_name}) {
-        log_msg("unknown std checker: $std_checker_name\n");
-        return undef;
-    }
-
-     $cfg->checkers->{$std_checker_name};
-}
-
 sub my_safe_copy {
     my ($src, $dest, $pid) = @_;
     $fu->copy($src, $dest) and return 1;
     log_msg "Trying to reinitialize\n";
-    # Either problem cache was damages or imported module has been changed.
+    # Either problem cache was damaged or imported module has been changed.
     # Try reinilializing the problem. If that does not help, fail the run.
     initialize_problem($pid);
     $fu->copy($src, $dest);
@@ -496,8 +485,8 @@ sub run_checker {
     my $checker_cmd;
     my %limits;
     if (defined $problem->{std_checker}) {
-        $checker_cmd = get_std_checker_cmd($problem->{std_checker})
-            or return undef;
+        $checker_cmd = $cfg->checkers->{$problem->{std_checker}}
+            or return log_msg("unknown std checker: $problem->{std_checker}\n");
     }
     else {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
@@ -531,11 +520,6 @@ sub run_checker {
     @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK or return undef;
 
     ($sp_report, $output);
-}
-
-sub filter_hash {
-    my $hash = shift;
-    map { $_ => $hash->{$_} } @_;
 }
 
 sub run_single_test {
