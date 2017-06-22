@@ -155,12 +155,6 @@ sub get_std_checker_cmd {
      $cfg->checkers->{$std_checker_name};
 }
 
-sub get_solution_path {
-    my ($sid, @rest) = @_;
-
-    [ $cfg->solutionsdir, $sid, @rest ]
-}
-
 sub my_safe_copy {
     my ($src, $dest, $pid) = @_;
     $fu->copy($src, $dest) and return 1;
@@ -566,7 +560,7 @@ sub run_single_test {
     for my $req (@$r) {
         push @$test_run_details, { req_id => $req->{id}, test_rank => $p{rank}, checker_comment => '' };
         prepare_solution_environment($problem->{id},
-            get_solution_path($req->{id}), $cfg->rundir, $problem->{run_info}, 1) or return;
+            [ $cfg->solutionsdir, $req->{id} ], $cfg->rundir, $problem->{run_info}, 1) or return;
     }
 
     my $tf = $problem_cache->test_file($problem->{id}, \%p);
@@ -595,7 +589,7 @@ sub run_single_test {
         if ($problem->{run_method} == $cats::rm_interactive || $problem->{run_method} == $cats::rm_competitive) {
             my $interactor_report = shift @report_items;
             if (!$interactor_report->ok) {
-                return ;
+                return;
             }
         }
         my $result = $cats::st_accepted;
@@ -719,8 +713,9 @@ sub compile {
         return (0, $cats::st_accepted);
     }
 
-    $fu->mkdir_clean([ $cfg->solutionsdir, $r->{id} ]) or return (0, undef);
-    $fu->copy([ $cfg->rundir, '*' ], [ $cfg->solutionsdir, $r->{id} ]) or return (0, undef);
+    my $sd = [ $cfg->solutionsdir, $r->{id} ];
+    $fu->mkdir_clean($sd) or return (0, undef);
+    $fu->copy([ $cfg->rundir, '*' ], $sd) or return (0, undef);
     (1, undef);
 }
 
