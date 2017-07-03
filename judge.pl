@@ -893,7 +893,7 @@ sub sync_problem {
     $problem_exist and $judge->select_request;
     my $root = $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
     my $backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
-        $judge->{parser}{problem}, $judge->{logger}, $judge->{problem}, $judge->{url},
+        $judge->{parser}{problem}, $log, $judge->{problem}, $judge->{url},
         $problem_exist, $root, $cfg->{proxy}, $judge->{verbose});
     $backend->login(interactive_login) if $backend->needs_login;
     $backend->start;
