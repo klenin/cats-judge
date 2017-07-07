@@ -19,13 +19,14 @@ use CATS::SourceManager;
 use CATS::FileUtil;
 use CATS::Utils qw(split_fname);
 
+use CATS::Backend::CATS;
+use CATS::Backend::Polygon;
+
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
 use CATS::Judge::Local;
 use CATS::Judge::ProblemCache;
-use CATS::Problem::Backend;
-use CATS::Problem::PolygonBackend;
 
 use CATS::Spawner::Default;
 use CATS::Spawner::Program;
@@ -892,7 +893,7 @@ sub sync_problem {
     my $problem_exist = -d $judge->{problem} || -f $judge->{problem};
     $problem_exist and $judge->select_request;
     my $root = $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
-    my $backend = ($system eq 'cats' ? 'CATS::Problem::Backend' : 'CATS::Problem::PolygonBackend')->new(
+    my $backend = ('CATS::Backend::' . ($system eq 'cats' ? 'CATS' : 'Polygon'))->new(
         $judge->{parser}{problem}, $log, $judge->{problem}, $judge->{url},
         $problem_exist, $root, $cfg->{proxy}, $judge->{verbose});
     $backend->login(interactive_login) if $backend->needs_login;
