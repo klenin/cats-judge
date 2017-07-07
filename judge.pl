@@ -19,9 +19,7 @@ use CATS::SourceManager;
 use CATS::FileUtil;
 use CATS::Utils qw(split_fname);
 
-use CATS::Backend::CATS;
-use CATS::Backend::Polygon;
-
+use CATS::Backend;
 use CATS::Judge::Config;
 use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
@@ -863,47 +861,6 @@ sub prepare_problem {
     ($r, $state);
 }
 
-sub interactive_login {
-    eval { require Term::ReadKey; 1; } or $log->error('Term::ReadKey is required for interactive login');
-    print 'login: ';
-    chomp(my $login = <>);
-    print "password: ";
-    Term::ReadKey::ReadMode('noecho');
-    chomp(my $password = <>);
-    print "\n";
-    Term::ReadKey::ReadMode('restore');
-    ($login, $password);
-}
-
-sub get_system {
-    if ($judge->{system}) {
-        $judge->{system} =~ m/^(cats|polygon)$/ or $log->error('bad option --system');
-        return $judge->{system};
-    }
-    for (qw(cats polygon)) {
-        my $u = $cfg->{$_ . '_url'};
-        return $_ if $judge->{url} =~ /^\Q$u\E/;
-    }
-    die 'Unable to determine system from --system and --url options';
-}
-
-sub sync_problem {
-    my ($action) = @_;
-    my $system = get_system;
-    my $problem_exist = -d $judge->{problem} || -f $judge->{problem};
-    $problem_exist and $judge->select_request;
-    my $root = $system eq 'cats' ? $cfg->cats_url : $cfg->polygon_url;
-    my $backend = ('CATS::Backend::' . ($system eq 'cats' ? 'CATS' : 'Polygon'))->new(
-        $judge->{parser}{problem}, $log, $judge->{problem}, $judge->{url},
-        $problem_exist, $root, $cfg->{proxy}, $judge->{verbose});
-    $backend->login(interactive_login) if $backend->needs_login;
-    $backend->start;
-    $log->msg('%s problem %s ... ', ($action eq 'upload' ? 'Uploading' : 'Downloading'), ($judge->{problem} || 'by url'));
-    $action eq 'upload' ? $backend->upload_problem : $backend->download_problem;
-    $problem_exist or $judge->{problem} .= '.zip';
-    $log->note('ok');
-}
-
 sub test_problem {
     my ($r) = @_;
     my $state;
@@ -1031,7 +988,16 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
 }
 
 if ($cli->command =~ /^(download|upload)$/) {
-    sync_problem($cli->command);
+    CATS::Backend->new(
+        log => $log,
+        cfg => $cfg,
+        system => $judge->{system},
+        problem => $judge->{problem},
+        parser => $judge->{parser},
+        verbose => $judge->{verbose},
+        url => $judge->{url},
+        judge => $judge,
+    )->sync_problem($cli->command);
 }
 elsif ($cli->command =~ /^(clear-cache)$/) {
     $problem_cache->remove_current;
