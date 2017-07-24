@@ -713,9 +713,11 @@ sub run_testplan {
             $judge->set_request_state($requests->[$i], $details->{result}, %{$requests->[$i]})
                 if $problem->{run_method} == $cats::rm_competitive;
         }
-        $tp->set_test_result($test_verdict == $cats::st_accepted ? 1 : 0);
-        # For a run, set verdict to the first non-accepted test verdict.
-        $run_verdict = $test_verdict if $run_verdict == $cats::st_accepted;
+
+        my $ok = $test_verdict == $cats::st_accepted ? 1 : 0;
+        # For a run, set verdict to the lowest ranked non-accepted test verdict.
+        $run_verdict = $test_verdict if !$ok && $tp->current < ($tp->first_failed || 1e10);
+        $tp->set_test_result($ok);
     }
     ($run_verdict, $competitive_outputs);
 }

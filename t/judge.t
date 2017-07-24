@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 30;
+use Test::More tests => 31;
 
 use File::Spec;
 
@@ -123,8 +123,13 @@ maybe_subtest 'verdicts WA', 4, sub {
     like run_judge_sol($p_verdicts, 'print1.cpp')->stdout->[-1], qr/wrong answer/, 'WA';
 };
 
-maybe_subtest 'verdicts WA before PE', 4, sub {
+maybe_subtest 'verdicts WA before PE All', 4, sub {
     like run_judge_sol($p_verdicts, 'copy.cpp')->stdout->[-1], qr/wrong answer on test 1/, 'WA';
+};
+
+maybe_subtest 'verdicts WA before PE ACM', 4, sub {
+    like run_judge_sol($p_verdicts, 'copy.cpp', 'use-plan' => 'acm' )->stdout->[-1],
+        qr/wrong answer on test 1/, 'WA';
 };
 
 maybe_subtest 'verdicts PE', 4, sub {
