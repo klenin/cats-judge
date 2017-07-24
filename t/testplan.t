@@ -3,7 +3,7 @@ use warnings;
 
 use File::Spec;
 use FindBin;
-use Test::More tests => 30;
+use Test::More tests => 32;
 use Test::Exception;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
@@ -52,21 +52,34 @@ sub make_tests { +{ map { $_ => undef } 1 .. $_[0] } }
     is $p->first_failed, undef, "acm no first failed";
 }
 
-for my $try (1..3) {
-    my $n = 20;
-    my $f = 10;
-    my $p = CATS::TestPlan::ACM->new(tests => make_tests($n));
-    my $i = 1;
-    for ($p->start; $p->current; ++$i) {
-        $p->set_test_result($p->current < $f ? 1 : 0);
+{
+    for my $try (1..3) {
+        my $n = 20;
+        my $f = 10;
+        my $p = CATS::TestPlan::ACM->new(tests => make_tests($n));
+        my $i = 1;
+        for ($p->start; $p->current; ++$i) {
+            $p->set_test_result($p->current < $f ? 1 : 0);
+        }
+        cmp_ok $i, '>=', $f + 1, "acm $try min";
+        cmp_ok $i, '<=', $f + 2, "acm $try max";
+        is_deeply
+            [ sort { $a <=> $b } grep $p->state->{$_}, keys %{$p->state} ],
+            [ 1 .. $f - 1 ], "acm $try passed";
+        is $p->state->{$f}, 0, "acm $try failed";
+        is $p->first_failed, $f, "acm $try first failed";
     }
-    cmp_ok $i, '>=', $f + 1, "acm $try min";
-    cmp_ok $i, '<=', $f + 2, "acm $try max";
-    is_deeply
-        [ sort { $a <=> $b } grep $p->state->{$_}, keys %{$p->state} ],
-        [ 1 .. $f - 1 ], "acm $try passed";
-    is $p->state->{$f}, 0, "acm $try failed";
-    is $p->first_failed, $f, "acm $try first failed";
+}
+
+{
+    my @cnt;
+    for my $try (1..100) {
+        my $p = CATS::TestPlan::ACM->new(tests => make_tests(2));
+        $p->start;
+        $cnt[$p->current]++;
+    }
+    cmp_ok $cnt[1], '>=', 30, 'acm random lo';
+    cmp_ok $cnt[1], '<=', 70, 'acm random hi';
 }
 
 

@@ -64,7 +64,7 @@ sub start {
     $self->{state} = {};
     my $p = $self->{plan} = [ keys %{$self->{tests}} ]; # Randomized by language.
     for (my $i = 0; $i < $#$p; ++$i) {
-        my $j = $i + int(rand(@$p - $i - 1)) + 1;
+        my $j = $i + int(rand(@$p - $i));
         ($p->[$i], $p->[$j]) = ($p->[$j], $p->[$i]);
     }
     $self->{phase} = 1;
