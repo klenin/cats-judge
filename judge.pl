@@ -947,6 +947,7 @@ my $api = $cfg->api;
 
 if ($cli->command eq 'serve' && $api eq 'DirectDatabase' || defined $cli->opts->{db}) {
     require CATS::DB;
+    require SQL::Abstract;
     CATS::DB::sql_connect({
         ib_timestampformat => $CATS::Judge::Base::timestamp_format,
         ib_dateformat => '%d-%m-%Y',

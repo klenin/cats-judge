@@ -116,8 +116,10 @@ step 'Verify optional modules', sub {
         IPC::Run
         LWP::Protocol::https
         LWP::UserAgent
+        SQL::Abstract
         Term::ReadKey
-        WWW::Mechanize);
+        WWW::Mechanize
+    );
     warn join "\n", 'Some optional modules not found:', @bad, '' if @bad;
 };
 
