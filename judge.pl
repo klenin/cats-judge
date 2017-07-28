@@ -200,7 +200,7 @@ sub generate_test {
 }
 
 sub generate_test_group {
-    my ($problem, $test, $tests, $save_input_prefix) = @_;
+    my ($problem, $test, $tests) = @_;
     my $pid = $problem->{id};
     $test->{gen_group} or die 'gen_group';
     return 1 if $test->{generated};
@@ -214,9 +214,10 @@ sub generate_test_group {
         $_->{generated} = 1;
         my $tf = $problem_cache->test_file($pid, $_);
         $fu->copy_glob([ $cfg->rundir, sprintf($out, $_->{rank}) ], $tf) or return;
-
-        $judge->save_input_test_data($pid, $_->{rank}, $fu->load_file($tf, $save_input_prefix))
-            if $save_input_prefix && !defined $test->{in_file};
+        if ($problem->{save_input_prefix} && !defined $test->{in_file}) {
+            my @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
+            $judge->save_input_test_data($pid, $_->{rank}, @input_data);
+        }
     }
     1;
 }
@@ -317,17 +318,17 @@ sub prepare_tests {
         }
         elsif (defined $t->{generator_id}) {
             if ($t->{gen_group}) {
-                generate_test_group($problem, $t, $tests, $problem->{save_input_prefix})
-                    or return undef;
+                generate_test_group($problem, $t, $tests) or return undef;
             }
             else {
                 my $out = generate_test($problem, $t, $problem->{input_file})
                     or return undef;
                 $fu->copy([ $cfg->rundir, $out ], $tf) or return;
 
-                $judge->save_input_test_data(
-                    $pid, $t->{rank}, $fu->load_file($tf, $problem->{save_input_prefix})
-                ) if $problem->{save_input_prefix} && !defined $t->{in_file};
+                if ($problem->{save_input_prefix} && !defined $t->{in_file}) {
+                    my @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
+                    $judge->save_input_test_data($pid, $t->{rank}, @input_data);
+                }
             }
         }
         else {
@@ -710,7 +711,7 @@ sub run_testplan {
     for ($tp->start; $tp->current; ) {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
             run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
-            or return;
+                or return;
         my $test_verdict = $cats::st_accepted;
         for my $i (0 .. $#$test_run_details) {
             my $details = $test_run_details->[$i];
