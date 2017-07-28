@@ -521,6 +521,16 @@ sub run_checker {
     ($sp_report, $output);
 }
 
+sub save_output_prefix {
+    my ($dest, $problem, $req) = @_;
+    my $len =
+        $req->{req_save_output_prefix} //
+        $req->{cp_save_output_prefix} //
+        $problem->{save_output_prefix} or return;
+    my $out = output_or_default($problem->{output_file});
+    ($dest->{output}, $dest->{output_size}) = $fu->load_file($out, $len);
+}
+
 sub run_single_test {
     my %p = @_;
     my $problem = $p{problem};
@@ -586,14 +596,12 @@ sub run_single_test {
                 $result = $test_run_details->[$i]->{result} = $get_tr_status->($tr) or return;
             }
 
-            ($test_run_details->[$i]->{output}, $test_run_details->[$i]->{output_size}) =
-                $fu->load_file([ $cfg->rundir, $problem->{output_file} ], $problem->{save_output_prefix})
-                    if $problem->{save_output_prefix} && $problem->{run_method} != $cats::rm_competitive;
+            save_output_prefix($test_run_details->[$i], $problem, $r->[$i])
+                if $problem->{run_method} != $cats::rm_competitive;
         }
 
-        ($competitive_test_output->{output}, $competitive_test_output->{output_size}) =
-            $fu->load_file([ $cfg->rundir, $problem->{output_file} ], $problem->{save_output_prefix})
-                if $problem->{save_output_prefix} && $problem->{run_method} == $cats::rm_competitive;
+        save_output_prefix($competitive_test_output, $problem, $r->[0]) # Controller is always first.
+            if $problem->{run_method} == $cats::rm_competitive;
 
         return $test_run_details
             if $problem->{run_method} != $cats::rm_competitive && $result != $cats::st_accepted;
