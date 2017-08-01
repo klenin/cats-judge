@@ -99,7 +99,7 @@ sub select_request {
 
 sub save_log_dump {
     my ($self, $req, $dump) = @_;
-    CATS::JudgeDB::save_log_dump($req->{id}, $dump);
+    CATS::JudgeDB::save_log_dump($req->{id}, $dump, $self->{id});
 }
 
 sub update_dev_env {
@@ -115,12 +115,12 @@ sub get_problem_sources {
 
 sub delete_req_details {
     my ($self, $req_id) = @_;
-    CATS::JudgeDB::delete_req_details($req_id);
+    CATS::JudgeDB::delete_req_details($req_id, $self->{id}) or die 'stolen';
 }
 
 sub insert_req_details {
     my ($self, $p) = @_;
-    CATS::JudgeDB::insert_req_details(%$p);
+    CATS::JudgeDB::insert_req_details(%$p, judge_id => $self->{id}) or die 'stolen';
 }
 
 sub save_input_test_data {
