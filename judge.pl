@@ -874,7 +874,6 @@ sub prepare_problem {
 
 sub test_problem {
     my ($r) = @_;
-    my $state;
 
     log_msg("test log:\n");
     if ($r->{fname} && $r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
@@ -882,15 +881,13 @@ sub test_problem {
         $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
     }
 
+    my $state;
     eval {
         $state = test_solution($r); 1;
     } or do {
-        $state = undef;
         log_msg("error: $@\n");
     };
-
-    defined $state
-        or insert_test_run_details(req_id => $r->{id}, test_rank => 1, result => ($state = $cats::st_unhandled_error));
+    $state //= $cats::st_unhandled_error;
 
     $judge->save_log_dump($r, $log->{dump});
     if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
