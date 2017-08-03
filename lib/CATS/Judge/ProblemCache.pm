@@ -55,7 +55,7 @@ sub remove_current {
     my $problem_id = -f "$path.$ext" || -d $path ?
         $self->judge->{problem} : $self->judge->select_request->{problem_id} or return;
 
-    for (CATS::SourceManager::get_guids_by_regexp('*', $self->cfg->modulesdir)) {
+    for (sort(CATS::SourceManager::get_guids_by_regexp('*', $self->cfg->modulesdir))) {
         my $m = eval { CATS::SourceManager::load($_, $self->cfg->modulesdir); } or next;
         $self->log->warning("Orphaned module: $_")
             if $m->{path} =~ m~[\/\\]\Q$problem_id\E[\/\\]~;
