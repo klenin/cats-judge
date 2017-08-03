@@ -102,10 +102,13 @@ sub get_run_params {
             delete $limits{deadline};
             $solution_opts = { %limits, stdin => '*0.stdout', stdout => '*0.stdin' };
         } else {
-            $solution_opts = { %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
+            $solution_opts = {
+                %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
         my $names = $r->{name_parts} or return log_msg("No name parts\n");
-        my $run_cmd = get_run_cmd($r->{de_id}, { %$names, %$run_cmd_opts }) or return;
+        my $run_cmd = get_run_cmd($r->{de_id}, {
+            %$names, %$run_cmd_opts, output_file => output_or_default($problem->{output_file}),
+        }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
     }
 
@@ -117,7 +120,7 @@ sub get_run_params {
         stdout => '*null',
     };
 
-    if ($run_info->{method} == $cats::rm_interactive || $run_info->{method} == $cats::rm_competitive) {
+    if ($is_interactive || $is_competititve) {
         my $i = $run_info->{interactor}
             or return log_msg("No interactor specified in get_run_params\n");
         my %limits = get_limits_hash($run_info->{interactor}, $problem);
@@ -555,10 +558,8 @@ sub run_single_test {
     my $competitive_test_output;
     {
 
-        my @run_params = get_run_params(
-            $problem, $r,
-            { output_file => $problem->{output_file}, test_rank => sprintf('%02d', $p{rank}) }
-        ) or return;
+        my @run_params = get_run_params($problem, $r, { test_rank => sprintf('%02d', $p{rank}) })
+            or return;
 
         my $get_tr_status = sub {
             return {
