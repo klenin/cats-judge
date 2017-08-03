@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CATS version="1.8">
-<Problem title="Minimal" lang="en"
+<Problem title="Validator" lang="en"
   tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
 
 <Checker src="ok.cpp" type="checker" de_code="102" style="testlib" />
