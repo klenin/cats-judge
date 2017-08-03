@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 32;
+use Test::More tests => 34;
 
 use File::Spec;
 
@@ -31,7 +31,7 @@ sub maybe_subtest {
 }
 
 sub run_judge {
-    my $r = $fu->run([ $perl, $judge, @_ ]);
+    my $r = $fu->run([ $perl, $judge, grep defined $_, @_ ]);
     is $r->ok, 1, 'ok';
     is $r->err, '', 'no err';
     is $r->exit_code, 0, 'exit_code';
@@ -174,6 +174,11 @@ maybe_subtest 'verdicts WL', 4, sub {
 
 my $p_generator = FS->catfile($path, 'p_generator');
 
+maybe_subtest 'generator install', 4, sub {
+    like run_judge(qw(install --force-install -p), $p_generator)->stdout->[-1],
+        qr/problem.*installed/, 'installed';
+};
+
 maybe_subtest 'generator', 4, sub {
     like run_judge_sol($p_generator, 'sol_copy.cpp')->stdout->[-1], qr/accepted/, 'generator';
 };
@@ -190,13 +195,21 @@ maybe_subtest 'answer text WA', 4, sub {
 
 my $p_module = FS->catfile($path, 'p_module');
 
-maybe_subtest 'module import', 4, sub {
-    like run_judge_sol($p_module, 'test.cpp')->stdout->[-1], qr/accepted/, 'module import result'
+maybe_subtest 'module export', 4, sub {
+    like run_judge_sol($p_module, 'test.cpp')->stdout->[-1], qr/accepted/, 'module export'
 };
 
-maybe_subtest 'module orphan', 5, sub {
+my $p_module_import = FS->catfile($path, 'p_module_import');
+
+maybe_subtest 'module import', 4, sub {
+    like run_judge_sol($p_module_import, 'ok.cpp', 'force-install' => undef)->stdout->[-1],
+        qr/accepted/, 'module import'
+};
+
+maybe_subtest 'module orphan', 6, sub {
     my $r = run_judge(qw(clear-cache -p), $p_module)->stdout;
-    like $r->[-2], qr/Orphaned.*test\.module\.1/, 'warning';
+    like $r->[-3], qr/Orphaned.*test\.module\.1/, 'warning';
+    like $r->[-2], qr/Orphaned.*test\.module\.2/, 'warning';
     like $r->[-1], qr/cache\s+removed/, 'cache removed';
 };
 

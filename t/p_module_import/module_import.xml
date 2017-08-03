@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Module import" lang="ru" tlimit="1" mlimit="256"
+    inputFile="input.txt" outputFile="output.txt">
+
+<ProblemStatement><p></p></ProblemStatement>
+
+<Solution name="ok" src="ok.cpp" de_code="102" />
+<Import guid="test.module.1" type="checker" />
+<Import guid="test.module.2" type="checker" />
+
+<Test rank="1"><In>1</In><Out>2</Out></Test>
+</Problem>
+</CATS>
