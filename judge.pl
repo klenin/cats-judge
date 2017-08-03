@@ -184,7 +184,6 @@ sub generate_test {
 
     my $generate_cmd = get_cmd('generate', $ps->{de_id})
         or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
-    my (undef, undef, $fname, $name, undef) = split_fname($ps->{fname});
 
     my $redir;
     my $out = $ps->{output_file} // $input_fname;
@@ -193,8 +192,10 @@ sub generate_test {
         $out = 'stdout1.txt';
         $redir = $out;
     }
+    my $applied_cmd = apply_params(
+        $generate_cmd, { %{$ps->{name_parts}}, args => $test->{param} // ''});
     my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
-        apply_params($generate_cmd, { full_name => $fname, name => $name, args => $test->{param} // ''}),
+        $applied_cmd,
         [],
         { get_limits_hash($ps, $problem), stdout => $redir }
     ) or return undef;
@@ -288,11 +289,10 @@ sub validate_test {
 
     my $validate_cmd = get_cmd('validate', $validator->{de_id})
         or return log_msg("No validate cmd for: $validator->{de_id}\n");
-    my ($vol, $dir, $fname, $name, $ext) = split_fname($validator->{fname});
-    my ($t_vol, $t_dir, $t_fname, $t_name, $t_ext) = split_fname(FS->catfile(@$path_to_test));
+    my (undef, undef, $t_fname, $t_name, undef) = split_fname(FS->catfile(@$path_to_test));
 
     my $sp_report = $sp->run_single({},
-        apply_params($validate_cmd, { full_name => $fname, name => $name, test_input => $t_fname }),
+        apply_params($validate_cmd, { %{$validator->{name_parts}}, test_input => $t_fname }),
         [],
         { get_limits_hash($validator, $problem) }
     ) or return;
@@ -387,14 +387,14 @@ sub prepare_modules {
     my ($stype) = @_;
     # Select modules in order they are listed in problem definition xml.
     for my $m (grep $_->{stype} == $stype, @$problem_sources) {
-        my (undef, undef, $fname, $name, undef) = split_fname($m->{fname});
+        my $fname = $m->{name_parts}->{full_name};
         log_msg("module: $fname\n");
         $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
 
         # If compile_cmd is absent, module does not need compilation (de_code=1).
         my $compile_cmd = get_cmd('compile', $m->{de_id})
             or next;
-        $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
+        $sp->run_single({}, apply_params($compile_cmd, $m->{name_parts}))
             or return undef;
     }
     1;
@@ -421,11 +421,10 @@ sub initialize_problem {
         prepare_modules($cats::source_modules{$ps->{stype}} || 0)
             or return undef;
 
-        my ($vol, $dir, $fname, $name, $ext) = split_fname($ps->{fname});
-        $fu->write_to_file([ $cfg->rundir, $fname ], $ps->{src}) or return;
+        $fu->write_to_file([ $cfg->rundir, $ps->{name_parts}->{full_name} ], $ps->{src}) or return;
 
         if (my $compile_cmd = get_cmd('compile', $ps->{de_id})) {
-            my $sp_report = $sp->run_single({}, apply_params($compile_cmd, { full_name => $fname, name => $name }))
+            my $sp_report = $sp->run_single({}, apply_params($compile_cmd, $ps->{name_parts}))
                 or return undef;
             if (!$sp_report->ok) {
                 log_msg("*** compilation error ***\n");
@@ -490,6 +489,7 @@ sub run_checker {
     if (defined $problem->{std_checker}) {
         $checker_cmd = $cfg->checkers->{$problem->{std_checker}}
             or return log_msg("unknown std checker: $problem->{std_checker}\n");
+        %limits = get_limits_hash({}, $problem);
     }
     else {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
@@ -498,8 +498,7 @@ sub run_checker {
             $problem_cache->source_path($problem->{id}, $problem->{checker_id}, '*'),
             $cfg->rundir, $problem->{id}) or return;
 
-        (undef, undef, undef, $checker_params->{name}, undef) =
-            split_fname($checker_params->{full_name} = $ps->{fname});
+        $checker_params->{$_} = $ps->{name_parts}->{$_} for qw(name full_name);
         $cats::source_modules{$ps->{stype}} || 0 == $cats::checker_module
             or die "Bad checker type $ps->{stype}";
         $checker_params->{checker_args} =
