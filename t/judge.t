@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 34;
+use Test::More tests => 35;
 
 use File::Spec;
 
@@ -229,9 +229,18 @@ maybe_subtest 'interactive IL', 4, sub {
 };
 
 my $q_nogen = FS->catfile($path, 'q_nogen');
+
 maybe_subtest 'failed generator', 4, sub {
     like run_judge(qw(install -p), $q_nogen)->stdout->[-1],
         qr/problem.*failed to install/, 'failed';
+};
+
+my $q_validator = FS->catfile($path, 'q_validator');
+
+maybe_subtest 'failed validator', 5, sub {
+    my $r = run_judge(qw(install -p), $q_validator)->stdout;
+    like $r->[-2], qr/input validation failed: #2/, 'validation';
+    like $r->[-1], qr/problem.*failed to install/, 'failed';
 };
 
 1;

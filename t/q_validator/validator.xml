@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Minimal" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="ok.cpp" type="checker" de_code="102" style="testlib" />
+<Validator name="ok" src="ok.cpp" de_code="102" />
+<Validator name="bad" src="bad.cpp" de_code="102" />
+<Test rank="1"><In validate="ok">1</In><Out>2</Out></Test>
+<Test rank="2"><In validate="bad">1</In><Out>2</Out></Test>
+
+</Problem>
+</CATS>
