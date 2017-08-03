@@ -863,7 +863,9 @@ sub prepare_problem {
             $state = $cats::st_unhandled_error;
             log_msg("error: $@\n") if $@;
         };
-        log_msg("problem '$r->{problem_id}' installed\n") if $state != $cats::st_unhandled_error;
+        log_msg(
+            "problem '$r->{problem_id}' " .
+            ($state != $cats::st_unhandled_error ? "installed\n" : "failed to install\n"));
     }
     else {
         log_msg("problem $r->{problem_id} cached\n");

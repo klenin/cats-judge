@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 31;
+use Test::More tests => 32;
 
 use File::Spec;
 
@@ -213,6 +213,12 @@ maybe_subtest 'interactive empty', 4, sub {
 
 maybe_subtest 'interactive IL', 4, sub {
     like run_judge_sol($p_interactive, 'read.cpp')->stdout->[-1], qr/idleness limit exceeded/, 'IL';
+};
+
+my $q_nogen = FS->catfile($path, 'q_nogen');
+maybe_subtest 'failed generator', 4, sub {
+    like run_judge(qw(install -p), $q_nogen)->stdout->[-1],
+        qr/problem.*failed to install/, 'failed';
 };
 
 1;
