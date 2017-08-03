@@ -510,18 +510,12 @@ sub run_checker {
             or return log_msg("No 'check' action for DE: $ps->{code}\n");
     }
 
-    my $sp_report;
-    my $output;
-    $sp_report = $sp->run_single({ duplicate_output => \$output },
-        apply_params($checker_cmd, $checker_params),
-        [],
-        { %limits }
-    ) or return undef;
+    my $sp_report = $sp->run_single({ duplicate_output => \my $output },
+        apply_params($checker_cmd, $checker_params), [], { %limits }) or return;
 
-    # checked only once?
-    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK or return undef;
+    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK or return;
 
-    ($sp_report, $output);
+    [ $sp_report, $output ];
 }
 
 sub save_output_prefix {
@@ -541,7 +535,7 @@ sub run_single_test {
 
     log_msg("[test $p{rank}]\n");
 
-    clear_rundir or return undef;
+    clear_rundir or return;
 
     my $test_run_details = [];
 
@@ -614,8 +608,8 @@ sub run_single_test {
         [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
 
     {
-        my ($sp_report, $checker_output) = run_checker(problem => $problem, rank => $p{rank})
-            or return undef;
+        my $checker_result = run_checker(problem => $problem, rank => $p{rank}) or return;
+        my ($sp_report, $checker_output) = @$checker_result;
 
         my $save_comment = sub {
             #Encode::from_to($$c, 'cp866', 'utf8');
@@ -712,6 +706,8 @@ sub run_testplan {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
             run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
                 or return;
+        # In case run_single_test returns a list of single undef via log_msg.
+        $test_run_details or return;
         my $test_verdict = $cats::st_accepted;
         for my $i (0 .. $#$test_run_details) {
             my $details = $test_run_details->[$i];
