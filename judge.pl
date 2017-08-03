@@ -775,59 +775,59 @@ sub test_solution {
 
     my $solution_status = $cats::st_accepted;
 
-    for (0..1) {
-        my $er = eval {
-            for my $run_req (@run_requests) {
-                my ($ret, $st) = compile($run_req, $problem);
-                return $st unless $ret;
-            }
+    my $try = sub {
+        for my $run_req (@run_requests) {
+            my ($ret, $st) = compile($run_req, $problem);
+            return $st unless $ret;
+        }
 
-            my %tests = $judge->get_testset($r->{id}, 1) or do {
-                log_msg("no tests found\n");
-                return $cats::st_ignore_submit;
-            };
-            my %tp_params = (tests => \%tests);
-
-            if ($problem->{run_method} == $cats::rm_competitive) {
-                my $tp = CATS::TestPlan::All->new(%tp_params);
-                ($solution_status, my $test_outputs) = run_testplan($tp, $problem, \@run_requests) or return;
-                if (my $failed_test = $tp->first_failed) {
-                    $r->{failed_test} = $failed_test;
-                }
-                $inserted_details{$r->{id}} = {};
-                for my $test_rank (keys %$test_outputs) {
-                    my $outputs = $test_outputs->{$test_rank} or next;
-                    insert_test_run_details(req_id => $r->{id}, test_rank => $test_rank,
-                        result => $solution_status, %$outputs);
-                    $inserted_details{$r->{id}}->{$test_rank} = $solution_status;
-                }
-            } else {
-                for my $run_req (@run_requests) {
-                    my $tp = $r->{run_all_tests} ?
-                        CATS::TestPlan::ScoringGroups->new(%tp_params) :
-                        CATS::TestPlan::ACM->new(%tp_params);
-                    my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ]) or return;
-                    if (my $failed_test = $tp->first_failed) {
-                        $run_req->{failed_test} = $r->{failed_test} = $failed_test;
-                    }
-                    # For a group request, set group verdict to the first non-accepted run verdict.
-                    $solution_status = $run_verdict if $solution_status == $cats::st_accepted;
-                    $judge->set_request_state($run_req, $run_verdict, %$run_req);
-                }
-            }
-            'FALL';
+        my %tests = $judge->get_testset($r->{id}, 1) or do {
+            log_msg("no tests found\n");
+            return $cats::st_ignore_submit;
         };
-        my $e = $@;
-        if ($e) {
-            die $e unless $e =~ /^REINIT/;
-        }
-        else {
-            return $er unless ($er || '') eq 'FALL';
-            last;
-        }
-    }
+        my %tp_params = (tests => \%tests);
 
-    return $solution_status;
+        if ($problem->{run_method} == $cats::rm_competitive) {
+            my $tp = CATS::TestPlan::All->new(%tp_params);
+            ($solution_status, my $test_outputs) = run_testplan($tp, $problem, \@run_requests) or return;
+            if (my $failed_test = $tp->first_failed) {
+                $r->{failed_test} = $failed_test;
+            }
+            $inserted_details{$r->{id}} = {};
+            for my $test_rank (keys %$test_outputs) {
+                my $outputs = $test_outputs->{$test_rank} or next;
+                insert_test_run_details(req_id => $r->{id}, test_rank => $test_rank,
+                    result => $solution_status, %$outputs);
+                $inserted_details{$r->{id}}->{$test_rank} = $solution_status;
+            }
+        } else {
+            for my $run_req (@run_requests) {
+                my $tp = $r->{run_all_tests} ?
+                    CATS::TestPlan::ScoringGroups->new(%tp_params) :
+                    CATS::TestPlan::ACM->new(%tp_params);
+                my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ]) or return;
+                if (my $failed_test = $tp->first_failed) {
+                    $run_req->{failed_test} = $r->{failed_test} = $failed_test;
+                }
+                # For a group request, set group verdict to the first non-accepted run verdict.
+                $solution_status = $run_verdict if $solution_status == $cats::st_accepted;
+                $judge->set_request_state($run_req, $run_verdict, %$run_req);
+            }
+        }
+        'FALL';
+    };
+
+    # We throw 'REINIT' on possibly fixable errors, so try again after first catch.
+    my $result = eval { $try->(); };
+    if (my $e = $@) {
+        $e =~ /^REINIT/ or die $e;
+    }
+    else {
+        return ($result // '') eq 'FALL' ? $solution_status : $result;
+    }
+    # If the error persists, give up.
+    $result = $try->();
+    return ($result // '') eq 'FALL' ? $solution_status : $result;
 }
 
 sub prepare_problem {
