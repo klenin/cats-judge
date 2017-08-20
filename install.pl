@@ -7,11 +7,13 @@ use File::Copy qw(copy);
 use File::Fetch;
 use File::Path qw(make_path);
 use File::Spec;
+use FindBin;
 use Getopt::Long;
 use IPC::Cmd;
 use List::Util qw(max);
 
-use lib 'lib';
+use lib File::Spec->catdir($FindBin::Bin, 'lib');
+
 use CATS::ConsoleColor qw(colored);
 use CATS::DevEnv::Detector::Utils qw(globq run);
 use CATS::FileUtil;
@@ -137,7 +139,7 @@ step 'Detect development environments', sub {
     IPC::Cmd->can_capture_buffer or print ' IPC::Cmd is inadequate, will use emulation';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs();
-    for (globq(File::Spec->catfile(qw[lib CATS DevEnv Detector *.pm]))) {
+    for (globq(File::Spec->catfile($FindBin::Bin, qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ qr/$opts{devenv}/i;
         require $_;
