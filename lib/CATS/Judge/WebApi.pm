@@ -13,17 +13,35 @@ use base qw(CATS::Judge::Base);
 
 sub new_from_cfg {
     my ($class, $cfg) = @_;
-    $class->SUPER::new(name => $cfg->name, password => $cfg->cats_password, cats_url => $cfg->cats_url);
+    $class->SUPER::new(
+        name => $cfg->name, password => $cfg->cats_password,
+        cats_url => $cfg->cats_url, no_sertificate => $cfg->no_certificate_check,
+    );
+}
+
+# Based on http://www.perlmonks.org/?node_id=1078704 .
+sub suppress_certificate_check {
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+    $ENV{HTTPS_DEBUG} = 1;
+    IO::Socket::SSL::set_ctx_defaults(
+         SSL_verifycn_scheme => 'www',
+         SSL_verify_mode => 0,
+    );
 }
 
 sub init {
     my ($self) = @_;
 
     $self->{agent} = LWP::UserAgent->new(requests_redirectable => [ qw(GET POST) ]);
+    if ($self->{no_certificate_check}) {
+        require IO::Socket::SSL;
+        $self->{agent}->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
+    }
 }
 
 sub get_json {
     my ($self, $params) = @_;
+    suppress_certificate_check if $self->{no_certificate_check};
 
     push @$params, 'json', 1;
     my $request = $self->{agent}->request(POST "$self->{cats_url}/", $params);

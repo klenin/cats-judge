@@ -27,6 +27,7 @@ sub optional_fields() { qw(
     proxy
     columns
     confess
+    no_certificate_check
 ) }
 sub special_fields() { qw(defines DEs checkers def_DEs) }
 sub security_fields() { qw(cats_password) }
