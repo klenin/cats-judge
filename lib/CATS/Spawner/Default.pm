@@ -3,6 +3,7 @@ package CATS::Spawner::Default;
 use strict;
 use warnings;
 
+use Encode qw();
 use JSON::XS qw(decode_json);
 
 use CATS::FileUtil;
@@ -86,9 +87,8 @@ sub prepare_redirect {
     }
 }
 
-sub dump_child_stdout
-{
-    my ($self, $duplicate_to) = @_;
+sub dump_child_stdout {
+    my ($self, $duplicate_to, $encoding) = @_;
     my $log = $self->opts->{logger};
 
     open(my $fstdout, '<', $self->opts->{stdout_file})
@@ -96,6 +96,7 @@ sub dump_child_stdout
 
     my $eol = 0;
     while (<$fstdout>) {
+        $_ = Encode::decode($encoding, $_) if $encoding;
         print STDERR $_ if $self->opts->{show_child_stdout};
         $log->dump_write($_) if $self->opts->{save_child_stdout};
         $$duplicate_to .= $_ if $duplicate_to;
@@ -109,15 +110,15 @@ sub dump_child_stdout
     1;
 }
 
-sub dump_child_stderr
-{
-    my ($self, $duplicate_to) = @_;
+sub dump_child_stderr {
+    my ($self, $duplicate_to, $encoding) = @_;
     my $log = $self->opts->{logger};
 
     open(my $fstderr, '<', $self->opts->{stderr_file})
         or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{stderr_file});
 
     while (<$fstderr>) {
+        $_ = Encode::decode($encoding, $_) if $encoding;
         print STDERR $_ if $self->opts->{show_child_stderr};
         $log->dump_write($_) if $self->opts->{save_child_stderr};
     }
@@ -172,8 +173,8 @@ sub _run {
         or return $report->error("unable to open report '$opts->{report}': $!")->write_to_log($opts->{logger});
 
     $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
-    $self->dump_child_stdout($globals->{duplicate_output});
-    $self->dump_child_stderr;
+    $self->dump_child_stdout($globals->{duplicate_output}, $globals->{encoding});
+    $self->dump_child_stderr($globals->{encoding});
     $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n") if $globals->{section};
 
     my $parsed_report = $opts->{json} ?

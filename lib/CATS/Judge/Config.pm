@@ -30,7 +30,8 @@ sub optional_fields() { qw(
 ) }
 sub special_fields() { qw(defines DEs checkers def_DEs) }
 sub security_fields() { qw(cats_password) }
-sub de_fields() { qw(compile run interactor_name run_interactive generate check runfile validate extension) }
+sub de_fields() { qw(
+    compile encoding run interactor_name run_interactive generate check runfile validate extension) }
 sub param_fields() { required_fields, optional_fields, special_fields }
 
 sub import {

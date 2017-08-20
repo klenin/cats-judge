@@ -260,6 +260,7 @@
 <de
     code="205"
     compile='"#pascalabc" "%full_name"'
+    encoding="CP866"
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
