@@ -17,7 +17,7 @@ use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
 use CATS::FileUtil;
-use CATS::Utils qw(split_fname);
+use CATS::Utils qw(sanitize_file_name split_fname);
 
 use CATS::Backend;
 use CATS::Judge::Config;
@@ -875,10 +875,8 @@ sub test_problem {
     my ($r) = @_;
 
     log_msg("test log:\n");
-    if ($r->{fname} && $r->{fname} =~ /[^_a-zA-Z0-9\.\\\:\$]/) {
-        log_msg("renamed from '$r->{fname}'\n");
-        $r->{fname} =~ tr/_a-zA-Z0-9\.\\:$/x/c;
-    }
+    my $orig_name = $r->{fname};
+    sanitize_file_name($r->{fname}) and log_msg("renamed from '$orig_name'\n");
 
     my $state;
     eval {
