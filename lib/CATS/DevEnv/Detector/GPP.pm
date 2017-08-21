@@ -33,13 +33,13 @@ END
     my $exe = temp_file('hello_world.exe');
     run command => [ $gcc, '-o', $exe, $source ] or return;
     my ($ok, undef, undef, $out) = run command => [ $exe ];
-    $ok && $out->[0] eq 'Hello World';
+    $ok && @$out && $out->[0] eq 'Hello World';
 }
 
 sub get_version {
     my ($self, $path) = @_;
-    my ($ok, undef, undef, $out) = run command => [ $path, '--version' ];
-    $ok && $out->[0] =~ /[gG]\+\+.+\s((?:\d+\.)+\d+)/ ? $1 : 0;
+    my ($ok, undef, $full) = run command => [ $path, '--version' ];
+    $ok && @$full && $full->[0] =~ /[gG]\+\+.+\s((?:\d+\.)+\d+)/ ? $1 : 0;
 }
 
 1;
