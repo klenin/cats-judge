@@ -1,3 +1,7 @@
+addons:
+  apt:
+    packages:
+    - fpc
 language: perl
 perl:
 - "5.22"
