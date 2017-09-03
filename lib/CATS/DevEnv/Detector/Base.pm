@@ -59,7 +59,7 @@ sub validate_and_add {
 
     my $version = $self->get_version($p) or return;
     my $r = $self->{result}->{$np} = { path => $p, version => $version };
-    $self->hello_world($p) or return;
+    $self->hello_world($p, $r) or return;
     $r->{init} = $self->get_init($p);
     $r->{valid} = 1;
     clear;

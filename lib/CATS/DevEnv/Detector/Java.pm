@@ -19,7 +19,7 @@ sub _detect {
 }
 
 sub hello_world {
-    my ($self, $javac) = @_;
+    my ($self, $javac, $r) = @_;
     my $hello_world =<<'END'
 class HelloWorld {
     public static void main(String[] args) {
@@ -32,6 +32,7 @@ END
     run command => [ $javac, $source ] or return;
     my $java = $javac;
     $java =~ s/javac/java/;
+    $r->{extra_paths}->{runtime} = $java;
     my ($ok, undef, undef, $out, $err) =
         run command => [ $java, '-cp', TEMP_SUBDIR, 'HelloWorld' ];
     $ok && $out->[0] eq 'Hello World';
