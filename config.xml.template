@@ -38,7 +38,8 @@
 
 <!-- This code is touched by install.pl -->
 <define name="#arch_7z" de_code_autodetect="2" value="C:\Program Files\7-Zip\7z.exe" />
-<define name="#java" de_code_autodetect="403" value="C:\Program Files\Java\jdk1.7.0_03\bin" />
+<define name="#javac" de_code_autodetect="403" value="C:\Program Files\Java\jdk1.7.0_03\bin\javac.exe" />
+<define name="#java" de_code_autodetect="403.runtime" value="C:\Program Files\Java\jdk1.7.0_03\bin\java.exe" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#go" de_code_autodetect="404" value="C:\Go\bin\go.exe" />
 
@@ -293,14 +294,14 @@
 <!-- Java -->
 <de
     code="401"
-    compile='"#java\javac.exe" "%full_name"'
-    run='"#java\java.exe" -Xss64m "%name"'
-    interactor_name='"#java\java.exe" -Xss64m "Interact"'
-    run_interactive='"#java\java.exe" -Xss64m "%name"'
+    compile='"#javac" "%full_name"'
+    run='"#java" -Xss64m "%name"'
+    interactor_name='"#java" -Xss64m "Interact"'
+    run_interactive='"#java" -Xss64m "%name"'
     runfile='%name.class'
-    generate='"#java\java.exe" -Xmx256m -Xss64m "%name" %args'
-    validate='"#java\java.exe" -Xmx256m -Xss64m "%name" "%test_input"'
-    check='"#java\java.exe" -Xss64m "%name" %checker_args'
+    generate='"#java" -Xmx256m -Xss64m "%name" %args'
+    validate='"#java" -Xmx256m -Xss64m "%name" "%test_input"'
+    check='"#java" -Xss64m "%name" %checker_args'
     extension='java'/>
 
 <!-- C# 1.1 -->
@@ -318,10 +319,10 @@
 <!-- Java + testlib4j.jar -->
 <de
     code="403"
-    compile='"#java\javac.exe" "%full_name" -cp testlib4j.jar'
-    run='"#java\java.exe" -Xss64m "%name"'
-    generate='"#java\java.exe" -Xss64m "%name" %args'
-    check='"#java\java.exe" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
+    compile='"#javac" "%full_name" -cp testlib4j.jar'
+    run='"#java" -Xss64m "%name"'
+    generate='"#java" -Xss64m "%name" %args'
+    check='"#java" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
 
 <!-- The Go Programming Language -->
 <de
