@@ -232,6 +232,7 @@ step 'Save configuration', sub {
     my $sp = $platform ?
         File::Spec->rel2abs(CATS::Spawner::Platform::get_path($platform)) : undef;
     while (<$conf_in>) {
+        my $orig = $_;
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
         s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
         if (($platform // '') ne 'win32') {
@@ -249,6 +250,7 @@ step 'Save configuration', sub {
             s/value="[^"]*"/value="$path"/;
         }
         print $conf_out $_;
+        print "\n    $orig -> $_" if $opts{verbose} && $orig ne $_;
     }
     close $conf_in;
     close $conf_out;
