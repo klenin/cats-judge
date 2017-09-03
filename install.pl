@@ -148,7 +148,12 @@ step 'Detect development environments', sub {
         for (values %{$d->detect}){
             printf "      %s %-12s %s\n",
                 ($_->{preferred} ? '*' : $_->{valid} ? ' ' : '?'), $_->{version}, $_->{path};
-            push @detected_DEs, { path => $_->{path}, code => $d->code } if ($_->{preferred});
+            my $ep = $_->{extra_paths};
+            for (sort keys %{$ep}) {
+                printf "        %12s %s\n", $_, $ep->{$_};
+            }
+            push @detected_DEs, { path => $_->{path}, code => $d->code, extra_paths => $ep }
+                if $_->{preferred};
         }
     }
 };
@@ -238,8 +243,11 @@ step 'Save configuration', sub {
         }
 
         $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
-        my ($code) = /de_code_autodetect="(\d+)"/;
-        s/value="[^"]*"/value="$path_idx{$code}->{path}"/ if $flag && $code && $path_idx{$code};
+        my ($code, $extra) = /de_code_autodetect="(\d+)(?:\.([a-zA-Z]+))?"/;
+        if ($flag && $code && (my $de = $path_idx{$code})) {
+            my $path = $extra ? $de->{extra_paths}->{$extra} : $de->{path};
+            s/value="[^"]*"/value="$path"/;
+        }
         print $conf_out $_;
     }
     close $conf_in;
