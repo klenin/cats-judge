@@ -131,7 +131,7 @@ sub check_item {
             $item =~ /^\d+$/ or croak "Got $item instead of INT at $path";
         }
         elsif ($s == FLOAT) {
-            $item =~ /^\d+(:?\.\d+)?$/ or croak "Got $item instead of FLOAT at $path";
+            $item =~ /^\d+(:?\.\d+)?(:?e[+\-]?\d+)?$/ or croak "Got $item instead of FLOAT at $path";
         }
         elsif ($s != STR) {
             croak "Bad schema at $path";

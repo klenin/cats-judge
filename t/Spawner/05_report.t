@@ -4,7 +4,7 @@ use warnings;
 use FindBin qw($Bin);
 use File::Spec;
 use Test::Exception;
-use Test::More tests => 21;
+use Test::More tests => 24;
 
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
@@ -26,7 +26,10 @@ throws_ok { ci('1.2', INT, 'int2') } qr/int2/, 'bad INT 2';
 
 ok ci('55', FLOAT, ''), 'FLOAT 1';
 ok ci('5.5', FLOAT, ''), 'FLOAT 2';
+ok ci('5e9', FLOAT, ''), 'FLOAT exp 1';
+ok ci('2.2e-005', FLOAT, ''), 'FLOAT exp 2';
 throws_ok { ci('5.x', FLOAT, 'float1') } qr/float1/, 'bad FLOAT 1';
+throws_ok { ci('5e', FLOAT, 'float2') } qr/float2/, 'bad FLOAT 2';
 
 ok ci('abc', STR, ''), 'STR';
 
