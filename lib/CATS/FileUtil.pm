@@ -77,8 +77,8 @@ sub remove_file {
     -f $fn || -l $fn or return $self->log("remove_file: '$fn' is not a file\n");
 
     # Some AV software blocks access to new executables while running checks.
-    for my $retry (0..9) {
-        unlink $fn or return $self->log("remove_file: unlink '$fn' failed ($!)\n");
+    for my $retry (0..3) {
+        unlink $fn or $self->log("remove_file: unlink '$fn' failed ($!)\n");
         -f $fn || -l $fn or return 1;
         sleep 1; # Might be delayed stat update.
         -f $fn || -l $fn or return 1;
