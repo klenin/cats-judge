@@ -28,8 +28,11 @@ sub _run {
     $report->exit_code($run->exit_code);
     $report->add({
         params => $globals,
+        application => $program->application,
+        arguments => [ map ref eq 'ARRAY' ? CATS::FileUtil::fn(@$_) : $_, $program->arguments ],
         terminate_reason => ($run->ok || $run->exit_code ? $TR_OK : $TR_ABORT),
         errors => [],
+        exit_code => $run->exit_code,
         exit_status => $run->exit_code,
         consumed => {
             wall_clock_time => 0,
