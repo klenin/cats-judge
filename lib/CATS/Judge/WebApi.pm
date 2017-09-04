@@ -3,9 +3,12 @@ package CATS::Judge::WebApi;
 use strict;
 use warnings;
 
-use LWP::UserAgent;
-use JSON::XS;
+use File::Spec;
+use File::Temp;
 use HTTP::Request::Common;
+use JSON::XS;
+use LWP::UserAgent;
+
 use CATS::DevEnv;
 use CATS::JudgeDB;
 
@@ -40,11 +43,12 @@ sub init {
 }
 
 sub get_json {
-    my ($self, $params) = @_;
+    my ($self, $params, $headers) = @_;
     suppress_certificate_check if $self->{no_certificate_check};
 
     push @$params, 'json', 1;
-    my $request = $self->{agent}->request(POST "$self->{cats_url}/", $params);
+    my $request = $self->{agent}->request(
+        POST "$self->{cats_url}/", %{$headers // {}}, Content => $params);
     die "Error: $request->{_rc} '$request->{_msg}'" unless $request->{_rc} == 200;
     decode_json($request->{_content});
 }
@@ -141,12 +145,21 @@ sub is_problem_uptodate {
 sub save_log_dump {
     my ($self, $req, $dump) = @_;
 
+    # IO::Socket::SSL fails when writing long data blocks.
+    # LWP does not provide chunking directly, but
+    # DYNAMIC_FILE_UPLOAD reads and transmits file by blocks of 2048 bytes.
+    # No way to pass a file handle to HTTP::Request::Common, so create a real file.
+    my $fh = File::Temp->new(TEMPLATE => 'logXXXXXXXX', DIR => File::Spec->tmpdir);
+    print $fh $dump;
+    $fh->flush;
+
+    local $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
     my $response = $self->get_json([
         f => 'api_judge_save_log_dump',
         req_id => $req->{id},
-        dump => $dump,
+        dump => [ $fh->filename, 'log' ],
         sid => $self->{sid},
-    ]);
+    ], { Content_Type => 'form-data' } );
 
     die "save_log_dump: $response->{error}" if $response->{error};
 }
