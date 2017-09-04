@@ -4,7 +4,7 @@ use warnings;
 use FindBin qw($Bin);
 use File::Spec;
 use Test::Exception;
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 BEGIN { require File::Spec->catdir($Bin, 'Common.pm'); Common->import; }
 
@@ -39,6 +39,7 @@ throws_ok { ci(undef, STR, 'undef1') } qr/undef1/, 'not OPT';
 ok ci([ 1, 2, 3], [ INT ], ''), 'array of INT';
 throws_ok { ci(123, [ INT ], 'array1') } qr/array1/, 'bad array of INT 1';
 throws_ok { ci([ 1, 'a' ], [ INT ], 'array2') } qr/array2#1/, 'bad array of INT 2';
+throws_ok { ci({}, [ INT ], 'array3') } qr/HASH.+ARRAY.+array3/, 'bad array of INT 3';
 
 {
 my $h = { x => INT, y => FLOAT };
@@ -47,6 +48,7 @@ throws_ok { ci([], $h, 'hash1') } qr/hash1/, 'bad hash 1';
 throws_ok { ci({ x => 5 }, $h, 'hash1') } qr~hash1/y~, 'bad hash 2';
 throws_ok { ci({ x => 5, z => '' }, $h, 'hash3') } qr~hash3/z~, 'bad hash 3';
 throws_ok { ci({ x => 'abc', y => 5 }, $h, 'hash4') } qr~hash4/x~, 'bad hash 4';
+throws_ok { ci([], $h, 'hash5') } qr~ARRAY.+HASH.+hash5~, 'bad hash 5';
 }
 
 {

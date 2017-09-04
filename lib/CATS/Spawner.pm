@@ -62,10 +62,10 @@ my $item_schema = {
     params => ANY,
     application => STR,
     arguments => [ STR ],
-    method => STR,
+    method => OPT | STR,
     security => {
-        level => INT | OPT,
-        user_name => STR,
+        level => OPT | INT,
+        user_name => OPT | STR,
     },
     errors => [ STR ],
     limits => {
@@ -109,31 +109,37 @@ sub error { $_[0]->add({ errors => [ $_[1] ] }) }
 
 sub check_item {
     my ($item, $schema, $path) = @_;
+    $schema or die 'Schema required';
     return 1 if $schema == ANY;
-    if (!defined $item) {
-        !ref $schema && ($schema & OPT) ? return 1 : croak "Undef at $path";
-    }
-    my $ref_schema = ref $schema || '<undef>';
-    my $ref_item = ref $item || '<undef>';
-    $ref_item eq $ref_schema
-        or croak sprintf 'Got %s instead of %s at %s', $ref_item, $ref_schema, $path;
-    if ($ref_schema eq 'HASH') {
+    return 1 if !defined $item && !ref $schema && ($schema & OPT);
+    $item //= {} if ref $schema eq 'HASH';
+    $item //= [] if ref $schema eq 'ARRAY';
+    ref $item eq ref $schema
+        or croak sprintf 'Got %s instead of %s at %s',
+        ref $item  || (defined $item ? 'scalar' : '<undef>'), ref $schema || $schema, $path;
+    if (ref $schema eq 'HASH') {
         $schema->{$_} or croak "Unknown key $path/$_" for keys %$item;
         check_item($item->{$_}, $schema->{$_}, "$path/$_") for keys %$schema;
     }
-    elsif ($ref_schema eq 'ARRAY') {
+    elsif (ref $schema eq 'ARRAY') {
         my $i = 0;
         check_item($_, $schema->[0], "$path#" . $i++) for @$item;
     }
     elsif (!ref $schema) {
         my $s = $schema & (OPT - 1);
         if ($s == INT) {
-            $item =~ /^\d+$/ or croak "Got $item instead of INT at $path";
+            $item //= '<undef>';
+            $item =~ /^\d+$/ or croak sprintf 'Got %s instead of INT at %s', $item, $path;
         }
         elsif ($s == FLOAT) {
-            $item =~ /^\d+(:?\.\d+)?(:?e[+\-]?\d+)?$/ or croak "Got $item instead of FLOAT at $path";
+            $item //= '<undef>';
+            $item =~ /^\d+(:?\.\d+)?(:?e[+\-]?\d+)?$/
+                or croak sprintf 'Got %s instead of FLOAT at %s', $item, $path;
         }
-        elsif ($s != STR) {
+        elsif ($s == STR) {
+            defined $item or croak sprintf 'Got <undef> instead of STR at %s', $path;
+        }
+        else {
             croak "Bad schema at $path";
         }
     }
