@@ -160,7 +160,7 @@ sub set_request_state {
         state => $state,
         problem_id => $p{problem_id},
         contest_id => $p{contest_id},
-        failed_test => $p{failed_test},
+        failed_test => $p{failed_test} // '',
         sid => $self->{sid},
     ]);
 
@@ -174,7 +174,7 @@ sub select_request {
         f => 'api_judge_select_request',
         sid => $self->{sid},
         de_version => $self->{dev_env}->version,
-        CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
+        map "$_", CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
     ]);
 
     if ($response->{error}) {
