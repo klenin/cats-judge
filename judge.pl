@@ -866,7 +866,7 @@ sub prepare_problem {
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    $judge->save_log_dump($r, $log->{dump});
+    $judge->save_log_dump($r, $log->get_dump);
     $judge->set_request_state($r, $state, %$r);
     ($r, $state);
 }
@@ -886,7 +886,7 @@ sub test_problem {
     };
     $state //= $cats::st_unhandled_error;
 
-    $judge->save_log_dump($r, $log->{dump});
+    $judge->save_log_dump($r, $log->get_dump);
     if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
         $state = $cats::st_awaiting_verification;
     }
@@ -944,7 +944,7 @@ $fu->ensure_dir($cfg->solutionsdir, 'solutions');
 $fu->ensure_dir($cfg->logdir, 'logdir');
 $fu->ensure_dir($cfg->rundir, 'rundir');
 
-$log->init($cfg->logdir);
+$log->init($cfg->logdir, max_dump_size => $cfg->log_dump_size);
 
 my $api = $cfg->api;
 

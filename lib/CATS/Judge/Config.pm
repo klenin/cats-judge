@@ -28,6 +28,7 @@ sub optional_fields() { qw(
     columns
     confess
     no_certificate_check
+    log_dump_size
 ) }
 sub special_fields() { qw(defines DEs checkers def_DEs) }
 sub security_fields() { qw(cats_password) }

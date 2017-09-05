@@ -10,7 +10,7 @@ use File::Spec;
 
 sub new {
     my ($class) = shift;
-    my $self = { last_line => '', dump => '' };
+    my $self = { last_line => '', dump => '', dump_size => 0 };
     bless $self, $class;
     $self;
 }
@@ -28,8 +28,9 @@ sub set_name {
 }
 
 sub init {
-    my ($self, $path) = @_;
+    my ($self, $path, %opts) = @_;
     $self->{path} = $path;
+    $self->{max_dump_size} = $opts{max_dump_size} || 200000;
     $self->set_name(make_name());
 }
 
@@ -41,6 +42,14 @@ sub rollover {
     $self->set_name($new_name);
 }
 
+sub _add_dump {
+    my ($self, $s) = @_;
+    $self->{dump_size} += length $s;
+    my $capacity = $self->{max_dump_size} - length($self->{dump});
+    return if $capacity <= 0;
+    $self->{dump} .= substr($s, 0, $capacity);
+}
+
 sub msg {
     my $self = shift;
     my $fmt = shift;
@@ -50,7 +59,7 @@ sub msg {
         syswrite $self->{file}, Encode::encode_utf8(strftime('%d.%m %H:%M:%S', localtime) . " $s");
         $self->{last_line} = $s;
     }
-    $self->{dump} .= $s;
+    $self->_add_dump($s);
     undef;
 }
 
@@ -73,9 +82,14 @@ sub warning {
 sub dump_write {
     my ($self, $data) = @_;
     syswrite $self->{file}, Encode::encode_utf8($data);
-    $self->{dump} .= $data if length $self->{dump} < 50000;
+    $self->_add_dump($data);
 }
 
-sub clear_dump { $_[0]->{dump} = ''; }
+sub get_dump {
+    my ($self) = @_;
+    $self->{dump} . ($self->{dump_size} > length $self->{dump} ? " ... $self->{dump_size} bytes" : '');
+}
+
+sub clear_dump { $_[0]->{dump} = ''; $_[0]->{dump_size} = 0; }
 
 1;
