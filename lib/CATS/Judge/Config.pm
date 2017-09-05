@@ -66,10 +66,10 @@ sub read_file {
         my ($p, $el, %atts) = @_;
         my $h = {
             judge => sub {
-                $self->{$_} = $atts{$_} for required_fields, optional_fields;
+                $self->{$_} //= $atts{$_} for required_fields, optional_fields;
             },
             security => sub {
-                $self->{$_} = $atts{$_} for security_fields;
+                $self->{$_} //= $atts{$_} for security_fields;
             },
             de => sub {
                 my $dd = $self->def_DEs;
