@@ -24,6 +24,9 @@ set SP_LOAD_RATIO=5%%
 set SP_LEGACY=sp00
 set SP_JSON=1
 
+perl judge.pl config --print "^name$" --bare | ^
+perl -MWin32::API -e "Win32::API::More->new('kernel32', 'SetConsoleTitle', 'P', 'I')->Call(<STDIN>)"
+
 :repeat
 perl judge.pl serve
 if [%errorlevel%] == [99] ( exit /b )
