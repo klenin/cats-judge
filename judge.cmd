@@ -1,4 +1,11 @@
 @echo off
+if [%SUPPRESS_TERMINATE_PROMPT%] == [YES] (
+    set SUPPRESS_TERMINATE_PROMPT=
+) else (
+    set SUPPRESS_TERMINATE_PROMPT=YES
+    call %0 %* < nul
+    exit /b
+)
 call preparevs.cmd
 :SET SP_USER=
 :SET SP_PASSWORD=
@@ -17,7 +24,9 @@ SET SP_LOAD_RATIO=5%%
 SET SP_LEGACY=sp00
 SET SP_JSON=1
 
-:1
+:repeat
 perl judge.pl serve
-timeout 2
-GOTO 1
+if [%errorlevel%] == [99] ( exit /b )
+perl "-Msigtrap=handler,sub{exit 99},INT" -e "sleep(2)"
+if [%errorlevel%] == [99] ( exit /b )
+goto repeat

@@ -8,7 +8,10 @@ use File::Spec;
 use constant FS => 'File::Spec';
 use Fcntl qw(:flock);
 use List::Util qw(max);
-use sigtrap qw(die INT);
+use sigtrap handler => sub {
+    print "\nCtrl+C pressed\n";
+    exit 99;
+}, 'INT';
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
