@@ -998,7 +998,7 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
     });
 }
 
-if ($cli->command =~ /^(download|upload)$/) {
+sub make_backend() {
     CATS::Backend->new(
         log => $log,
         cfg => $cfg,
@@ -1008,7 +1008,14 @@ if ($cli->command =~ /^(download|upload)$/) {
         verbose => $judge->{verbose},
         url => $judge->{url},
         judge => $judge,
-    )->sync_problem($cli->command);
+    )
+}
+
+if ($cli->command =~ /^(download|upload)$/) {
+    make_backend->sync_problem($cli->command);
+}
+elsif ($cli->command =~ /^list$/) {
+    make_backend->list;
 }
 elsif ($cli->command =~ /^(clear-cache)$/) {
     $problem_cache->remove_current;

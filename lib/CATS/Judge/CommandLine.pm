@@ -32,6 +32,7 @@ Commands:
     #run# --problem <zip_or_directory_or_name> [--force-install]
         --run <file>... [--de <de_code>] [--testset <testset>]
         [--result text|html|none] [--result=columns <regexp>]
+    #list# --url <url> [--system cats|polygon]
     #download# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
     #upload# --problem <zip_or_directory_or_name> --url <url>
@@ -70,6 +71,10 @@ my %commands = (
     install => [
         'force-install',
         '!problem=s',
+    ],
+    list => [
+        'system=s',
+        '!url=s',
     ],
     run => [
         'de=i',

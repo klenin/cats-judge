@@ -76,6 +76,8 @@ sub start {
     ($self->{session}) = $mech->uri =~ m/session=([a-z0-9]*)&ccid=$self->{ccid}/;
 }
 
+sub list { die 'Not implemented' }
+
 sub upload_statements {
     my $self = shift;
     my $mech = $self->{mech};

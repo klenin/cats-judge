@@ -41,22 +41,35 @@ sub get_system {
     die 'Unable to determine system from --system and --url options';
 }
 
+sub make_backend {
+    my ($self, $problem_exists) = @_;
+    my $system = $self->get_system;
+    $problem_exists and $self->{judge}->select_request;
+    my $root = $system eq 'cats' ? $self->cfg->cats_url : $self->cfg->polygon_url;
+    ('CATS::Backend::' . ($system eq 'cats' ? 'CATS' : 'Polygon'))->new(
+        $self->{parser}{problem}, $self->log, $self->{problem} // '', $self->{url},
+        $problem_exists, $root, $self->cfg->{proxy}, $self->{verbose});
+}
+
 sub sync_problem {
     my ($self, $action) = @_;
-    my $system = $self->get_system;
-    my $problem_exist = -d $self->{problem} || -f $self->{problem};
-    $problem_exist and $self->{judge}->select_request;
-    my $root = $system eq 'cats' ? $self->cfg->cats_url : $self->cfg->polygon_url;
-    my $backend = ('CATS::Backend::' . ($system eq 'cats' ? 'CATS' : 'Polygon'))->new(
-        $self->{parser}{problem}, $self->log, $self->{problem}, $self->{url},
-        $problem_exist, $root, $self->cfg->{proxy}, $self->{verbose});
+    my $problem_exists = -d $self->{problem} || -f $self->{problem};
+    my $backend = $self->make_backend($problem_exists);
     $backend->login($self->interactive_login) if $backend->needs_login;
     $backend->start;
     $self->log->msg('%s problem %s ... ',
         ($action eq 'upload' ? 'Uploading' : 'Downloading'), ($self->{problem} || 'by url'));
     $action eq 'upload' ? $backend->upload_problem : $backend->download_problem;
-    $problem_exist or $self->{problem} .= '.zip';
+    $problem_exists or $self->{problem} .= '.zip';
     $self->log->note('ok');
+}
+
+sub list {
+    my ($self) = @_;
+    my $backend = $self->make_backend(0);
+    $backend->login($self->interactive_login) if $backend->needs_login;
+    $backend->start;
+    $backend->list;
 }
 
 1;

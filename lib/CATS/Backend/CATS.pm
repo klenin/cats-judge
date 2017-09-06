@@ -69,6 +69,14 @@ sub start {
     if ($response->{error}) {
         $self->{log}->error($response->{error});
     }
+    $self->{problem_list} = $response->{problems} or die;
+}
+
+sub list {
+    my ($self) = @_;
+    for my $pr (@{$self->{problem_list}}) {
+        printf "%3s %s\n", $pr->{code}, $pr->{name};
+    }
 }
 
 sub upload_problem {

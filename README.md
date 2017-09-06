@@ -128,6 +128,15 @@ j run B.zip -run sol.cpp -de 102
 ```
 Enforce GCC compiler for solution.
 
+### `list` command
+
+List available problems from web-based contest control system.
+Request credentials if needed.
+
+Options:
+  * `--url <url>` required
+  * `--system cats|polygon` use given Web API. By default system is detected based on URL prefix.
+
 ### `download` command
 
 Download problem from web-based contest control system.
