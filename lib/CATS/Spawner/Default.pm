@@ -111,7 +111,7 @@ sub dump_child_stdout {
 }
 
 sub dump_child_stderr {
-    my ($self, $duplicate_to, $encoding) = @_;
+    my ($self, $encoding) = @_;
     my $log = $self->opts->{logger};
 
     open(my $fstderr, '<', $self->opts->{stderr_file})
@@ -173,8 +173,8 @@ sub _run {
         or return $report->error("unable to open report '$opts->{report}': $!")->write_to_log($opts->{logger});
 
     $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
-    $self->dump_child_stdout($globals->{duplicate_output}, $globals->{encoding});
-    $self->dump_child_stderr($globals->{encoding});
+    $self->dump_child_stdout($globals->{duplicate_output}, $globals->{encoding}) if %stdouts;
+    $self->dump_child_stderr($globals->{encoding}) if %stderrs;
     $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n") if $globals->{section};
 
     my $parsed_report = $opts->{json} ?
