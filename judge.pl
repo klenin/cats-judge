@@ -940,7 +940,7 @@ $cli->parse;
 }
 
 if ($cli->command eq 'config') {
-    $cfg->print_params($cli->opts->{'print'});
+    $cfg->print_params($cli->opts->{'print'}, $cli->opts->{bare});
     exit;
 }
 

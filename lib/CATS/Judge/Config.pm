@@ -100,24 +100,24 @@ sub read_file {
 }
 
 sub print_helper {
-    my ($val, $keys, $depth) = @_;
+    my ($val, $keys, $depth, $bare) = @_;
     for my $k (sort @$keys) {
-        print "$depth$k =";
+        print "$depth$k =" unless $bare;
         my $v = $val->{$k};
         if (ref $v) {
             print "\n";
             print_helper($v, [ keys %$v ], "$depth    ");
         }
         else {
-            print " $v\n";
+            print $bare ? "$v\n" : " $v\n";
         }
     }
 }
 
 sub print_params {
-    my ($self, $regexp) = @_;
+    my ($self, $regexp, $bare) = @_;
     my $r = qr/$regexp/;
-    print_helper($self, [ grep /$r/, keys %$self ], '');
+    print_helper($self, [ grep /$r/, keys %$self ], '', $bare);
 }
 
 1;

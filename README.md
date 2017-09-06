@@ -121,7 +121,7 @@ display only test number and judge verdict for each test.
 j run B.zip -run sol.pas -t 1,3,12-15 -format=polygon
 ```
 Test solution `sol.pas` for a Polygon-style problem.
-Run only tests 1, 3,  12, 13, 14 and 15.
+Run only tests 1, 3, 12, 13, 14 and 15.
 
 ```
 j run B.zip -run sol.cpp -de 102
@@ -154,6 +154,7 @@ Work with configuration.
 
 Options:
   * `--print <regexp>` print configuration
+  * `--bare` print values without names
 
 Examples:
 ```
@@ -176,7 +177,7 @@ Options:
 
 ### `serve` command
 
-Start judging server.
+Start judging server. On Windows it is recommended to use `judge.cmd` wrapper.
 
 ### `help` command
 

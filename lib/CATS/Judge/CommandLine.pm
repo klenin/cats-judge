@@ -36,7 +36,7 @@ Commands:
         [--system cats|polygon]
     #upload# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
-    #config# --print <regexp>
+    #config# --print <regexp> [--bare]
     #clear-cache# --problem <zip_or_directory_or_name>
     #help#|-?
 
@@ -55,7 +55,8 @@ USAGE
 my %commands = (
     '-?' => [],
     config => [
-        '!print:s'
+        '!print:s',
+        'bare',
     ],
     'clear-cache' => [
         '!problem=s',
