@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 14;
+use Test::More tests => 18;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -85,4 +85,19 @@ my $end = q~</judge>~;
     my $c = make_cfg;
     $c->load(src => qq~$default<define name="#xx" value="2"/><judge name="test#xx"/>$end~);
     is $c->name, 'test2', 'define';
+}
+
+{
+    my $c = make_cfg;
+    throws_ok { $c->load(src => qq~$default<include />$end~) } qr/file/, 'include no file';
+    throws_ok { $c->load(src => qq~$default<include file="qqq"/>$end~) } qr/qqq/, 'include bad file';
+    $c->load(src => qq~$default
+      <judge name="zzz"/>
+      <de code="111" compile="zzz" run="qqq" />
+      <include file="t/cfg_include.xml" />
+      <de code="111" check="zzz#inc 1" />
+      $end~);
+    is $c->name, 'included', 'include name';
+    is_deeply $c->DEs->{111}, {
+        compile => 'bbb', run => 'qqq', check => 'zzzabc 1' }, 'include de';
 }

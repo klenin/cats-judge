@@ -99,6 +99,10 @@ sub load_part {
             $_[0]->{exec} or die "checker $_[0]->{name}: exec required";
             $self->checkers->{$_[0]->{name}} = $self->apply_defines($_[0]->{exec});
         },
+        include => sub {
+            $_[0]->{file} or die 'include: file required';
+            $self->load_file($_[0]->{file});
+        },
     };
 
     my $parser = XML::Parser::Expat->new;
@@ -111,7 +115,7 @@ sub load_part {
 }
 
 sub load_file {
-    my ($self, $file, $overrides) = @_;
+    my ($self, $file) = @_;
     my $full_name = File::Spec->catfile($self->{root}, $file);
     open my $fh, '<', $full_name or die "unable to open $full_name: $!";
     $self->load_part($fh);

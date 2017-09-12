@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<judge name="included">
+  <de code="111" compile="bbb"/>
+  <define name="#inc" value="abc"/>
+</judge>
