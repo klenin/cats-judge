@@ -52,7 +52,7 @@ END {
     unlink $lock_file or die $!;
 }
 
-my $cfg = CATS::Judge::Config->new;
+my $cfg = CATS::Judge::Config->new(root => cats_dir);
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
@@ -930,9 +930,7 @@ sub main_loop {
 $cli->parse;
 
 {
-    my $judge_cfg = FS->catdir(cats_dir(), 'config.xml');
-    open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
-    $cfg->read_file($cfg_file, $cli->opts->{'config-set'});
+    $cfg->load(file => 'config.xml', override => $cli->opts->{'config-set'});
 
     my $cfg_confess = $cfg->confess // '';
     $SIG{__WARN__} = \&confess if $cfg_confess =~ /w/i;

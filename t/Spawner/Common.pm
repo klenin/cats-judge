@@ -61,14 +61,12 @@ END { -d $tmpdir and rmdir $tmpdir }
 our $is_win = ($^O eq 'MSWin32');
 our $exe = $is_win ? '.exe' : '';
 
-our $cfg = CATS::Judge::Config->new;
+our $cfg = CATS::Judge::Config->new(root => $root);
 our $fu = CATS::FileUtil->new({ logger => CATS::Logger::Die->new });
 our $perl = $fu->quote_fn($^X);
 our $sp = FS->catdir($root, CATS::Spawner::Platform::get_path);
 
-my $judge_cfg = FS->catdir($root, 'config.xml');
-open my $cfg_file, '<', $judge_cfg or die "Couldn't open $judge_cfg";
-$cfg->read_file($cfg_file, {});
+$cfg->load(file => 'config.xml');
 
 our ($gcc, @gcc_opts) = split ' ', $cfg->defines->{'#gnu_cpp'};
 

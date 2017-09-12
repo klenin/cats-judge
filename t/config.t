@@ -11,8 +11,10 @@ use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
 
 use CATS::Judge::Config;
 
+sub make_cfg { CATS::Judge::Config->new(root => File::Spec->catdir($FindBin::Bin, '..')) }
+
 {
-    my $c = CATS::Judge::Config->new;
+    my $c = make_cfg;
     is $c->apply_defines('abc'), 'abc', 'apply no defs';
     $c->{defines} = { x => 1, xy => 2, z => 'x' };
     is $c->apply_defines('abcxd'), 'abc1d', 'apply 1';
@@ -42,30 +44,30 @@ my $default = q~<?xml version="1.0"?>
 my $end = q~</judge>~;
 
 {
-    my $c = CATS::Judge::Config->new;
-    $c->read_file("$default$end", { cats_url => 'rrr' });
+    my $c = make_cfg;
+    $c->load(src => "$default$end", override => { cats_url => 'rrr' });
     is $c->name, 'test', 'read';
     is $c->cats_url, 'rrr', 'override';
 }
 
 {
-    my $c = CATS::Judge::Config->new;
-    $c->read_file(qq~$default<judge name="test1"/>$end~, { cats_url => 'rrr' });
+    my $c = make_cfg;
+    $c->load(src => qq~$default<judge name="test1"/>$end~);
     is $c->name, 'test1', 'read override';
 }
 
 {
-    my $c = CATS::Judge::Config->new;
-    throws_ok { $c->read_file("$default<zzz/>$end") } qr/zzz/, 'unknown tag';
-    throws_ok { $c->read_file(qq~$default<checker name="qqq"/>$end~) }
+    my $c = make_cfg;
+    throws_ok { $c->load(src => "$default<zzz/>$end") } qr/zzz/, 'unknown tag';
+    throws_ok { $c->load(src => qq~$default<checker name="qqq"/>$end~) }
         qr/qqq.*exec/, 'checker no exec';
-    throws_ok { $c->read_file(qq~$default<define/>$end~) }
+    throws_ok { $c->load(src => qq~$default<define/>$end~) }
         qr/define.*name/, 'define no name';
-    throws_ok { $c->read_file(qq~$default<define name="ttt"/>$end~) }
+    throws_ok { $c->load(src => qq~$default<define name="ttt"/>$end~) }
         qr/ttt.*value/, 'define no value';
-    throws_ok { $c->read_file(qq~$default<de/>$end~) }
+    throws_ok { $c->load(src => qq~$default<de/>$end~) }
         qr/de.*code/, 'de no code';
-    throws_ok { $c->read_file(qq~$default
+    throws_ok { $c->load(src => qq~$default
         <de code="111" extension="xx"/>
         <de code="222" extension="xx"/>
         $end
@@ -74,13 +76,13 @@ my $end = q~</judge>~;
 }
 
 {
-    my $c = CATS::Judge::Config->new;
+    my $c = make_cfg;
     (my $no_name = $default) =~ s/name=/name1=/;
-    throws_ok { $c->read_file("$no_name$end") } qr/name/, 'no required';
+    throws_ok { $c->load(src => "$no_name$end") } qr/name/, 'no required';
 }
 
 {
-    my $c = CATS::Judge::Config->new;
-    $c->read_file(qq~$default<define name="#xx" value="2"/><judge name="test#xx"/>$end~);
+    my $c = make_cfg;
+    $c->load(src => qq~$default<define name="#xx" value="2"/><judge name="test#xx"/>$end~);
     is $c->name, 'test2', 'define';
 }

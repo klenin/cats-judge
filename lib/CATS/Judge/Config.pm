@@ -3,7 +3,9 @@ package CATS::Judge::Config;
 use strict;
 use warnings;
 
+use File::Spec;
 use XML::Parser::Expat;
+
 use CATS::Config;
 
 sub dir_fields() { qw(cachedir logdir modulesdir solutionsdir resultsdir rundir workdir) }
@@ -45,8 +47,9 @@ sub import {
 }
 
 sub new {
-    my ($class) = shift;
-    my $self = { defines => {}, DEs => {}, checkers => {}, def_DEs => {} };
+    my ($class, %p) = @_;
+    $p{root} or die 'root required';
+    my $self = { root => $p{root}, defines => {}, DEs => {}, checkers => {}, def_DEs => {} };
     bless $self, $class;
     $self;
 }
@@ -67,7 +70,7 @@ sub _read_attributes {
     }
 }
 
-sub read_part {
+sub load_part {
     my ($self, $source) = @_;
 
     my $handlers = {
@@ -101,17 +104,26 @@ sub read_part {
     my $parser = XML::Parser::Expat->new;
     $parser->setHandlers(Start => sub {
         my ($p, $el, %attrs) = @_;
-        my $h = $handlers->{$el} or die "Unknown tag $el";
+        my $h = $handlers->{$el} or die "unknown tag $el";
         $h->(\%attrs);
     });
     $parser->parse($source);
 }
 
-sub read_file {
+sub load_file {
     my ($self, $file, $overrides) = @_;
-    $self->read_part($file);
-    if ($overrides) {
-        $self->{$_} = $overrides->{$_} for keys %$overrides;
+    my $full_name = File::Spec->catfile($self->{root}, $file);
+    open my $fh, '<', $full_name or die "unable to open $full_name: $!";
+    $self->load_part($fh);
+}
+
+sub load {
+    my ($self, %p) = @_;
+    $p{file} ? $self->load_file($p{file}) :
+    $p{src} ? $self->load_part($p{src}) :
+    die 'file or src required';
+    if (my $ov = $p{override}) {
+        $self->{$_} = $ov->{$_} for keys %$ov;
     }
     defined $self->{$_} or die "config: undefined $_" for required_fields;
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
