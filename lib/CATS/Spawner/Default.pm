@@ -87,6 +87,8 @@ sub prepare_redirect {
     }
 }
 
+my $stderr_encoding = $^O eq 'MSWin32' ? 'WINDOWS-1251' : 'UTF-8';
+
 sub dump_child_stdout {
     my ($self, $duplicate_to, $encoding) = @_;
     my $log = $self->opts->{logger};
@@ -97,7 +99,7 @@ sub dump_child_stdout {
     my $eol = 0;
     while (<$fstdout>) {
         $_ = Encode::decode($encoding, $_) if $encoding;
-        print STDERR $_ if $self->opts->{show_child_stdout};
+        print STDERR Encode::encode($stderr_encoding, $_) if $self->opts->{show_child_stdout};
         $log->dump_write($_) if $self->opts->{save_child_stdout};
         $$duplicate_to .= $_ if $duplicate_to;
         $eol = substr($_, -2, 2) eq '\n';
@@ -119,7 +121,7 @@ sub dump_child_stderr {
 
     while (<$fstderr>) {
         $_ = Encode::decode($encoding, $_) if $encoding;
-        print STDERR $_ if $self->opts->{show_child_stderr};
+        print STDERR Encode::encode($stderr_encoding, $_) if $self->opts->{show_child_stderr};
         $log->dump_write($_) if $self->opts->{save_child_stderr};
     }
     1;
