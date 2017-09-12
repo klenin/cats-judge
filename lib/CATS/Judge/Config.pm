@@ -55,7 +55,8 @@ sub apply_defines {
     my ($self, $value) = @_;
     $value //= '';
     my $defines = $self->{defines};
-    $value =~ s/$_/$defines->{$_}/g for sort { length $b <=> length $a } keys %$defines;
+    $value =~ s/$_/$defines->{$_}/g
+        for sort { length $b <=> length $a || $a cmp $b } keys %$defines;
     $value;
 }
 
