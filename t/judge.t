@@ -17,7 +17,7 @@ use CATS::Loggers;
 my $perl = "{$^X}";
 my $judge = FS->catfile($path, '..', 'judge.pl');
 my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Count->new, run_temp_dir => '.' });
-
+my $verbose = 0;
 
 sub maybe_subtest {
     my ($name, $plan, $subtest) = @_;
@@ -31,7 +31,9 @@ sub maybe_subtest {
 }
 
 sub run_judge {
-    my $r = $fu->run([ $perl, $judge, grep defined $_, @_ ]);
+    my @p = ($judge, grep defined $_, @_);
+    print join ' ', map { ref $_ ? join('/', @$_) : $_ } @p if $verbose;
+    my $r = $fu->run([ $perl, @p ]);
     is $r->ok, 1, 'ok';
     is $r->err, '', 'no err';
     is $r->exit_code, 0, 'exit_code';
