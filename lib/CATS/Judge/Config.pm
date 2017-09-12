@@ -51,16 +51,16 @@ sub new {
     $self;
 }
 
+sub apply_defines {
+    my ($self, $value) = @_;
+    $value //= '';
+    my $defines = $self->{defines};
+    $value =~ s/$_/$defines->{$_}/g for sort { length $b <=> length $a } keys %$defines;
+    $value;
+}
+
 sub read_file {
     my ($self, $file, $overrides) = @_;
-
-    my $defines = {};
-    my $apply_defines = sub {
-        my ($value) = @_;
-        my $expr = shift // '';
-        $expr =~ s/$_/$defines->{$_}/g for sort { length $b <=> length $a } keys %$defines;
-        $expr;
-    };
 
     my $parser = XML::Parser::Expat->new;
     $parser->setHandlers(Start => sub {
@@ -79,20 +79,18 @@ sub read_file {
                     $dd->{$_} = $atts{code};
                 }
                 $self->DEs->{$atts{'code'}} =
-                    { map { $_ => $apply_defines->($atts{$_}) } de_fields };
+                    { map { $_ => $self->apply_defines($atts{$_}) } de_fields };
             },
             define => sub {
-                $defines->{$atts{'name'}} = $apply_defines->($atts{'value'});
+                $self->{defines}->{$atts{'name'}} = $self->apply_defines($atts{'value'});
             },
             checker => sub {
-                $self->checkers->{$atts{'name'}} = $apply_defines->($atts{'exec'});
+                $self->checkers->{$atts{'name'}} = $self->apply_defines($atts{'exec'});
             },
         }->{$el} or die "Unknown tag $el";
         $h->();
     });
     $parser->parse($file);
-
-    $self->{defines} = $defines;
 
     $self->{$_} = $overrides->{$_} for keys %$overrides;
     defined $self->{$_} or die "config: undefined $_" for required_fields;
