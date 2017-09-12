@@ -3,6 +3,7 @@ package CATS::Judge::WebApi;
 use strict;
 use warnings;
 
+use Encode;
 use File::Spec;
 use File::Temp;
 use HTTP::Request::Common;
@@ -150,7 +151,7 @@ sub save_log_dump {
     # DYNAMIC_FILE_UPLOAD reads and transmits file by blocks of 2048 bytes.
     # No way to pass a file handle to HTTP::Request::Common, so create a real file.
     my $fh = File::Temp->new(TEMPLATE => 'logXXXXXXXX', DIR => File::Spec->tmpdir);
-    print $fh $dump;
+    print $fh Encode::encode_utf8($dump);
     $fh->flush;
 
     local $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
