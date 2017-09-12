@@ -810,7 +810,8 @@ sub test_solution {
                 }
                 # For a group request, set group verdict to the first non-accepted run verdict.
                 $solution_status = $run_verdict if $solution_status == $cats::st_accepted;
-                $judge->set_request_state($run_req, $run_verdict, %$run_req);
+                # For a single request, state will be set by test_solution.
+                $judge->set_request_state($run_req, $run_verdict, %$run_req) if @run_requests > 1;
             }
         }
         'FALL';
