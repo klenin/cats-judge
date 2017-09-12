@@ -49,7 +49,10 @@ sub import {
 sub new {
     my ($class, %p) = @_;
     $p{root} or die 'root required';
-    my $self = { root => $p{root}, defines => {}, DEs => {}, checkers => {}, def_DEs => {} };
+    my $self = {
+        root => $p{root}, defines => {}, DEs => {}, checkers => {}, def_DEs => {},
+        include => { stack => [], overrides => $p{include_overrides} // {} },
+    };
     bless $self, $class;
     $self;
 }
@@ -116,9 +119,20 @@ sub load_part {
 
 sub load_file {
     my ($self, $file) = @_;
-    my $full_name = File::Spec->catfile($self->{root}, $file);
-    open my $fh, '<', $full_name or die "unable to open $full_name: $!";
-    $self->load_part($fh);
+
+    my $stack = $self->{include}->{stack};
+    die 'circular include: ', join ' -> ', @$stack, $file if grep $_ eq $file, @$stack;
+    push @$stack, $file;
+
+    if (my $ov = $self->{include}->{overrides}->{$file}) {
+        $self->load_part($ov);
+    }
+    else {
+       my $full_name = File::Spec->catfile($self->{root}, $file);
+       open my $fh, '<', $full_name or die "unable to open $full_name: $!";
+       $self->load_part($fh);
+    }
+    pop @$stack;
 }
 
 sub load {

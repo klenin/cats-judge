@@ -4,14 +4,14 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 18;
+use Test::More tests => 20;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
 
 use CATS::Judge::Config;
 
-sub make_cfg { CATS::Judge::Config->new(root => File::Spec->catdir($FindBin::Bin, '..')) }
+sub make_cfg { CATS::Judge::Config->new(root => File::Spec->catdir($FindBin::Bin, '..'), @_) }
 
 {
     my $c = make_cfg;
@@ -100,4 +100,14 @@ my $end = q~</judge>~;
     is $c->name, 'included', 'include name';
     is_deeply $c->DEs->{111}, {
         compile => 'bbb', run => 'qqq', check => 'zzzabc 1' }, 'include de';
+}
+
+{
+    my $c = make_cfg(include_overrides => {
+      'loop' => '<?xml version="1.0"?><judge><include file="loop"/></judge>',
+      'level2' => '<?xml version="1.0"?><judge><include file="t/cfg_include.xml"/></judge>',
+    });
+    throws_ok { $c->load(file => 'loop') } qr/loop/, 'include recursive';
+    $c->load(src => qq~$default<include file="level2"/>$end~);
+    is $c->name, 'included', 'include nested';
 }
