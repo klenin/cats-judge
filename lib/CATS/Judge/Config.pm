@@ -60,6 +60,13 @@ sub apply_defines {
     $value;
 }
 
+sub _read_attributes {
+    my ($self, $dest, $atts, @fields) = @_;
+    for (@fields) {
+        $dest->{$_} = $self->apply_defines($atts->{$_}) if exists $atts->{$_};
+    }
+}
+
 sub read_file {
     my ($self, $file, $overrides) = @_;
 
@@ -68,32 +75,38 @@ sub read_file {
         my ($p, $el, %atts) = @_;
         my $h = {
             judge => sub {
-                $self->{$_} //= $atts{$_} for required_fields, optional_fields;
+                $self->_read_attributes($self, \%atts, required_fields, optional_fields);
             },
             security => sub {
-                $self->{$_} //= $atts{$_} for security_fields;
+                $self->_read_attributes($self, \%atts, security_fields);
             },
             de => sub {
+                my $code = $atts{code} or die 'de: code required';
                 my $dd = $self->def_DEs;
-                for (split / /, $atts{'extension'} // '') {
-                    die "Duplicate default extension $_ for DEs $dd->{$_} and $atts{code}" if $dd->{$_};
-                    $dd->{$_} = $atts{code};
+                for (split / /, $atts{extension} // '') {
+                    die "duplicate default extension $_ for DEs $dd->{$_} and $code" if $dd->{$_};
+                    $dd->{$_} = $code;
                 }
-                $self->DEs->{$atts{'code'}} =
-                    { map { $_ => $self->apply_defines($atts{$_}) } de_fields };
+                $self->_read_attributes($self->DEs->{$code} //= {}, \%atts, de_fields);
             },
             define => sub {
-                $self->{defines}->{$atts{'name'}} = $self->apply_defines($atts{'value'});
+                $atts{name} or die 'define: name required';
+                defined $atts{value} or die "define $atts{name}: value required";
+                $self->{defines}->{$atts{name}} = $self->apply_defines($atts{value});
             },
             checker => sub {
-                $self->checkers->{$atts{'name'}} = $self->apply_defines($atts{'exec'});
+                $atts{name} or die 'checker: name required';
+                $atts{exec} or die "checker $atts{name}: exec required";
+                $self->checkers->{$atts{name}} = $self->apply_defines($atts{exec});
             },
         }->{$el} or die "Unknown tag $el";
         $h->();
     });
     $parser->parse($file);
 
-    $self->{$_} = $overrides->{$_} for keys %$overrides;
+    if ($overrides) {
+        $self->{$_} = $overrides->{$_} for keys %$overrides;
+    }
     defined $self->{$_} or die "config: undefined $_" for required_fields;
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
 }
