@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Validator stdin" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="ok.cpp" type="checker" de_code="102" style="testlib" />
+<Validator name="not3" src="not3.cpp" de_code="102" />
+<Test rank="1-4"><In validate="not3"/><Out>3</Out></Test>
+<Test rank="1"><In>1</In></Test>
+<Test rank="2"><In>2</In></Test>
+<Test rank="3"><In>3</In></Test>
+<Test rank="4"><In>4</In></Test>
+
+</Problem>
+</CATS>

@@ -294,7 +294,7 @@ sub validate_test {
         or return log_msg("No validate cmd for: $validator->{de_id}\n");
     my (undef, undef, $t_fname, $t_name, undef) = split_fname(FS->catfile(@$path_to_test));
 
-    my $sp_report = $sp->run_single({},
+    my $sp_report = $sp->run_single({ stdin => $t_fname },
         apply_params($validate_cmd, { %{$validator->{name_parts}}, test_input => $t_fname }),
         [],
         { get_limits_hash($validator, $problem) }

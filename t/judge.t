@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 35;
+use Test::More tests => 36;
 
 use File::Spec;
 
@@ -244,6 +244,14 @@ my $q_validator = FS->catfile($path, 'q_validator');
 maybe_subtest 'failed validator', 5, sub {
     my $r = run_judge(qw(install -p), $q_validator)->stdout;
     like $r->[-2], qr/input validation failed: #2/, 'validation';
+    like $r->[-1], qr/problem.*failed to install/, 'failed';
+};
+
+my $q_validator_stdin = FS->catfile($path, 'q_validator_stdin');
+
+maybe_subtest 'stdin validator', 5, sub {
+    my $r = run_judge(qw(install -p), $q_validator_stdin)->stdout;
+    like $r->[-2], qr/input validation failed: #3/, 'validation';
     like $r->[-1], qr/problem.*failed to install/, 'failed';
 };
 
