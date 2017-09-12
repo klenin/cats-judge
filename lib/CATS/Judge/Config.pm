@@ -67,43 +67,49 @@ sub _read_attributes {
     }
 }
 
-sub read_file {
-    my ($self, $file, $overrides) = @_;
+sub read_part {
+    my ($self, $source) = @_;
+
+    my $handlers = {
+        judge => sub {
+            $self->_read_attributes($self, $_[0], required_fields, optional_fields);
+        },
+        security => sub {
+            $self->_read_attributes($self, $_[0], security_fields);
+        },
+        de => sub {
+            my $code = $_[0]->{code} or die 'de: code required';
+            my $dd = $self->def_DEs;
+            for (split / /, $_[0]->{extension} // '') {
+                die "duplicate default extension $_ for DEs $dd->{$_} and $code" if $dd->{$_};
+                $dd->{$_} = $code;
+            }
+            $self->_read_attributes($self->DEs->{$code} //= {}, $_[0], de_fields);
+        },
+        define => sub {
+            $_[0]->{name} or die 'define: name required';
+            defined $_[0]->{value} or die "define $_[0]->{name}: value required";
+            $self->{defines}->{$_[0]->{name}} = $self->apply_defines($_[0]->{value});
+        },
+        checker => sub {
+            $_[0]->{name} or die 'checker: name required';
+            $_[0]->{exec} or die "checker $_[0]->{name}: exec required";
+            $self->checkers->{$_[0]->{name}} = $self->apply_defines($_[0]->{exec});
+        },
+    };
 
     my $parser = XML::Parser::Expat->new;
     $parser->setHandlers(Start => sub {
-        my ($p, $el, %atts) = @_;
-        my $h = {
-            judge => sub {
-                $self->_read_attributes($self, \%atts, required_fields, optional_fields);
-            },
-            security => sub {
-                $self->_read_attributes($self, \%atts, security_fields);
-            },
-            de => sub {
-                my $code = $atts{code} or die 'de: code required';
-                my $dd = $self->def_DEs;
-                for (split / /, $atts{extension} // '') {
-                    die "duplicate default extension $_ for DEs $dd->{$_} and $code" if $dd->{$_};
-                    $dd->{$_} = $code;
-                }
-                $self->_read_attributes($self->DEs->{$code} //= {}, \%atts, de_fields);
-            },
-            define => sub {
-                $atts{name} or die 'define: name required';
-                defined $atts{value} or die "define $atts{name}: value required";
-                $self->{defines}->{$atts{name}} = $self->apply_defines($atts{value});
-            },
-            checker => sub {
-                $atts{name} or die 'checker: name required';
-                $atts{exec} or die "checker $atts{name}: exec required";
-                $self->checkers->{$atts{name}} = $self->apply_defines($atts{exec});
-            },
-        }->{$el} or die "Unknown tag $el";
-        $h->();
+        my ($p, $el, %attrs) = @_;
+        my $h = $handlers->{$el} or die "Unknown tag $el";
+        $h->(\%attrs);
     });
-    $parser->parse($file);
+    $parser->parse($source);
+}
 
+sub read_file {
+    my ($self, $file, $overrides) = @_;
+    $self->read_part($file);
     if ($overrides) {
         $self->{$_} = $overrides->{$_} for keys %$overrides;
     }
