@@ -6,34 +6,34 @@ use warnings;
 use XML::Parser::Expat;
 use CATS::Config;
 
-sub dir_fields() { qw(workdir cachedir solutionsdir logdir rundir modulesdir resultsdir) }
+sub dir_fields() { qw(cachedir logdir modulesdir solutionsdir resultsdir rundir workdir) }
 sub required_fields() {
     dir_fields, qw(
-    name
-    sleep_time
-    report_file
-    stdout_file
-    stderr_file
-    formal_input_fname
-    cats_url
-    polygon_url
     api
+    name
+    cats_url
+    sleep_time
+    stderr_file
+    stdout_file
+    formal_input_fname
+    polygon_url
+    report_file
 ) }
 sub optional_fields() { qw(
-    show_child_stdout
-    save_child_stdout
-    show_child_stderr
-    save_child_stderr
-    proxy
     columns
     confess
-    no_certificate_check
     log_dump_size
+    no_certificate_check
+    save_child_stderr
+    save_child_stdout
+    show_child_stderr
+    show_child_stdout
+    proxy
 ) }
-sub special_fields() { qw(defines DEs checkers def_DEs) }
+sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
 sub de_fields() { qw(
-    compile encoding run interactor_name run_interactive generate check runfile validate extension) }
+    check compile encoding extension generate interactor_name run run_interactive runfile validate) }
 sub param_fields() { required_fields, optional_fields, special_fields }
 
 sub import {
