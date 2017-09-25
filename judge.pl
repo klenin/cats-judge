@@ -571,7 +571,7 @@ sub run_single_test {
         my @report_items = @{$sp_report->items};
         if ($problem->{run_method} == $cats::rm_interactive || $problem->{run_method} == $cats::rm_competitive) {
             my $interactor_report = shift @report_items;
-            if (!$interactor_report->ok) {
+            if (!$interactor_report->ok && $interactor_report->{terminate_reason} != $TR_IDLENESS_LIMIT) {
                 return;
             }
         }
