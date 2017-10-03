@@ -47,11 +47,17 @@ sub get_json {
     my ($self, $params, $headers) = @_;
     suppress_certificate_check if $self->{no_certificate_check};
 
-    push @$params, 'json', 1;
+    push @$params, json => 1;
     my $request = $self->{agent}->request(
         POST "$self->{cats_url}/", %{$headers // {}}, Content => $params);
+    if ($request->{_rc} == 502) {
+        # May be intermittent crash or proxy error. Retry once.
+        warn "Error: $request->{_rc} '$request->{_msg}', retrying";
+        $request = $self->{agent}->request(
+            POST "$self->{cats_url}/", %{$headers // {}}, Content => $params);
+    }
     die "Error: $request->{_rc} '$request->{_msg}'" unless $request->{_rc} == 200;
-    decode_json($request->{_content});
+    decode_json($request->content);
 }
 
 sub auth {
