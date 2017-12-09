@@ -35,6 +35,10 @@ mkdir C:\Lang\pascalabc
 %PBOX_HOME%\bin\wget --output-document %TEMP%\pabcnet.zip http://pascalabc.net/downloads/PABCNETC.zip
 %PBOX_HOME%\bin\7za x -oC:\Lang\pascalabc %TEMP%\pabcnet.zip
 
+rem LLVM uses NSIS installer
+%PBOX_HOME%\bin\wget --output-document %TEMP%\llvm.exe http://releases.llvm.org/5.0.0/LLVM-5.0.0-win64.exe
+%TEMP%\llvm.exe /S /D=C:\Lang\clang
+
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 
