@@ -911,7 +911,7 @@ sub main_loop {
     log_msg("judge: %s, using api: %s\n", $judge->name, $cfg->api);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
-    for (my $i = 0; ; $i++) {
+    for (my $i = 0; !$cfg->restart_count || $i < $cfg->restart_count; $i++) {
         sleep $cfg->sleep_time;
         $log->rollover;
         syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];

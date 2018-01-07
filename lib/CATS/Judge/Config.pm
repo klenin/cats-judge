@@ -31,6 +31,7 @@ sub optional_fields() { qw(
     show_child_stderr
     show_child_stdout
     proxy
+    restart_count
 ) }
 sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
