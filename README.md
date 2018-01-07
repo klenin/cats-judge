@@ -36,8 +36,9 @@ At least some programming languages, such as C++ and Pascal should be installed 
 
 ## Installation
 
-  * Make sure your `perl` and `git` are in `PATH`
   * Clone this repository
+  * To install development environments and tools on Windows, run scripts in `install` directory
+  * Make sure your `perl` and `git` are in `PATH`
   * Run `perl install.pl`
   * See [Advanced installation](#advanced-installation) in case of problems
 
