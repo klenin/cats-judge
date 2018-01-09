@@ -1,5 +1,6 @@
 set HTTP_PROXY=http://proxy.dvfu.ru:3128
 set HTTPS_PROXY=http://proxy.dvfu.ru:3128
+set _JAVA_OPTIONS=-Dhttp.proxyHost=proxy.dvfu.ru -Dhttp.proxyPort=3128
 
 mkdir C:\Lang\freebasic
 %PBOX_HOME%\bin\wget --output-document %TEMP%\freebasic.7z http://free-basic.ru/user-files/FreeBASIC-1.05.0-win64.7z
