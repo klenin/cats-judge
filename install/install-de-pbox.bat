@@ -2,10 +2,6 @@ set HTTP_PROXY=http://proxy.dvfu.ru:3128
 set HTTPS_PROXY=http://proxy.dvfu.ru:3128
 set _JAVA_OPTIONS=-Dhttp.proxyHost=proxy.dvfu.ru -Dhttp.proxyPort=3128
 
-mkdir C:\Lang\freebasic
-%PBOX_HOME%\bin\wget --output-document %TEMP%\freebasic.7z http://free-basic.ru/user-files/FreeBASIC-1.05.0-win64.7z
-%PBOX_HOME%\bin\7za x -oC:\Lang\freebasic %TEMP%\freebasic.7z
-
 rem Firebird 3.x needs extra config to be able to connect to 2.x
 choco install firebird --version 2.5.7.1000 -y -params "/ClientAndDevTools"
 set FIREBIRD_HOME=C:\Program Files\Firebird\Firebird_2_5
@@ -43,6 +39,11 @@ mkdir C:\Lang\pascalabc
 rem LLVM uses NSIS installer
 %PBOX_HOME%\bin\wget --output-document %TEMP%\llvm.exe http://releases.llvm.org/5.0.0/LLVM-5.0.0-win64.exe
 %TEMP%\llvm.exe /S /D=C:\Lang\clang
+
+mkdir C:\Lang\freebasic
+%PBOX_HOME%\bin\wget --output-document %TEMP%\freebasic.7z http://free-basic.ru/user-files/FreeBASIC-1.05.0-win64.7z
+%PBOX_HOME%\bin\7za x -oC:\Lang %TEMP%\freebasic.7z
+move C:\Lang\FreeBASIC-1.05.0-win64 C:\Lang\freebasic
 
 mkdir C:\git\
 call pbox install git --homedir=C:\git
