@@ -3,6 +3,8 @@ package CATS::DevEnv::Detector::Delphi;
 use strict;
 use warnings;
 
+use File::Spec;
+
 use CATS::DevEnv::Detector::Utils;
 use parent qw(CATS::DevEnv::Detector::Base);
 
@@ -19,16 +21,18 @@ sub _detect {
 }
 
 sub hello_world {
-    my ($self, $dcc) = @_;
+    my ($self, $dcc, $r) = @_;
     my $hello_world =<<'END'
 begin
   write('Hello World')
 end.
 END
 ;
-    my $source = write_temp_file('hello_world.pp', $hello_world);
+    my $source = write_temp_file('hello_world.pas', $hello_world);
     my $exe = temp_file('hello_world.exe');
-    my ($ok, $err, $buf) = run command => [ $dcc, $source ];
+    my $dcc_path = File::Spec->catdir((File::Spec->splitpath($dcc))[0, 1]);
+    $r->{extra_paths}->{units} = $dcc_path;
+    my ($ok, $err, $buf) = run command => [ $dcc, "-U$dcc_path", $source ];
     $ok or die $err;
     ($ok, $err, $buf) = run command => [ $exe ];
     $ok && $buf->[0] eq 'Hello World';

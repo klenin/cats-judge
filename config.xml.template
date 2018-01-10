@@ -61,7 +61,8 @@
 <define name="#bcc" de_code_autodetect="104" value="%comspec% /C ..\bcc.cmd" />
 <define name="#clang" de_code_autodetect="106" value="C:\lang\LLVM\bin\clang++.exe" />
 
-<define name="#delphi" de_code_autodetect="203" value="C:\Program Files\Embarcadero\RAD Studio\7.0\bin\DCC32.EXE" />
+<define name="#delphi" de_code_autodetect="203" value="C:\Lang\delphi\Bin\DCC32.EXE" />
+<define name="#delphi_units" de_code_autodetect="203.units" value="C:\Lang\delphi\Bin" />
 <define name="#fpc" de_code_autodetect="202" value="C:\Lang\FPC\3.0.0\bin\i386-win32\fpc.exe" />
 <define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\PascalABC.NET\3.2\pabcnetcclear.exe" />
 <define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
@@ -238,7 +239,7 @@
 <!-- Delphi -->
 <de
     code="203"
-    compile='"#delphi" -CC "%full_name"'
+    compile='"#delphi" "-U#delphi_units" -CC "%full_name"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
