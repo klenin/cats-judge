@@ -17,6 +17,7 @@ sub _detect {
     drives($self, 'lazarus/fpc/*/bin/i386-win32', 'fpc');
     drives($self, 'FPC/*/bin/*', 'fpc');
     lang_dirs($self, 'fpc', '/bin/i386-win32', 'fpc');
+    pbox($self, 'lazarus', '/fpc/*/bin/i386-win32', 'fpc');
 }
 
 sub hello_world {

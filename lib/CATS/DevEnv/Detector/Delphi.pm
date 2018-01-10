@@ -15,6 +15,7 @@ sub _detect {
     which($self, 'dcc32');
     registry_assoc($self, assoc => 'BDS.DprFile', file => 'dcc32');
     program_files($self, 'Embarcadero/RAD Studio/*/bin', 'dcc32');
+    pbox($self, 'delphi7-compiler', 'bin', 'dcc32');
 }
 
 sub hello_world {

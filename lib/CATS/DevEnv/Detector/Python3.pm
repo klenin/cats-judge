@@ -17,6 +17,7 @@ sub _detect {
     folder($self, '/usr/bin/', 'python3');
     registry_glob($self,
         'Python/PythonCore/3*/InstallPath/', '', 'python');
+    pbox($self, 'python3', '', 'python');
 }
 
 sub hello_world {

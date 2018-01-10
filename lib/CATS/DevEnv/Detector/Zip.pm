@@ -18,6 +18,7 @@ sub _detect {
     registry_glob($self, '7-Zip/Path', '', '7z');
     drives($self, '7-Zip', '7z');
     program_files($self, '7-Zip', '7z');
+    pbox($self, '7zip', '', '7z');
 }
 
 sub hello_world {

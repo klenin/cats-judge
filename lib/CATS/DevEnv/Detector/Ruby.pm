@@ -18,6 +18,7 @@ sub _detect {
     folder($self, '/usr/bin/', 'ruby');
     registry_glob($self,
         'RubyInstaller/MRI/*/InstallLocation/', 'bin', 'ruby');
+    pbox($self, 'ruby', 'bin', 'ruby');
 }
 
 sub hello_world {

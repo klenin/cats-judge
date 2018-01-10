@@ -17,6 +17,7 @@ sub _detect {
     drives($self, 'cygwin/bin/', 'gcc');
     program_files($self, 'MinGW/bin/', 'gcc');
     program_files($self, 'cygwin/bin/', 'gcc');
+    pbox($self, 'mingw-w64', 'bin', 'gcc');
 }
 
 sub hello_world {

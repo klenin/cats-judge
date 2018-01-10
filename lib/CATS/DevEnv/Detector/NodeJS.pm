@@ -18,6 +18,7 @@ sub _detect {
     drives($self, 'NodeJS', 'node');
     lang_dirs($self, 'node', '', 'node');
     lang_dirs($self, 'nodejs', '', 'node');
+    pbox($self, 'nodejs-portable', '', 'node');
 }
 
 sub hello_world {

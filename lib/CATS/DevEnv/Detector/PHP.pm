@@ -16,6 +16,7 @@ sub _detect {
     drives($self, 'php*', 'php');
     lang_dirs($self, 'php*', '', 'php');
     folder($self, '/usr/bin/', 'php');
+    pbox($self, 'php', '', 'php');
 }
 
 sub hello_world {

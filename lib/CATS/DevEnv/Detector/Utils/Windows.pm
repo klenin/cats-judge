@@ -17,6 +17,7 @@ use parent qw(Exporter);
 our @EXPORT = qw(
     registry registry_assoc registry_glob program_files drives lang_dirs
     disable_error_dialogs disable_windows_error_reporting_ui detect_proxy add_to_path
+    pbox
 );
 
 use constant REGISTRY_PREFIX => qw(
@@ -210,6 +211,19 @@ sub add_to_path {
     return ' (already in some other path)' if grep /$dir_re/, FS->path;
     $key->SetValue('PATH', $path . $dir, $type // Win32::TieRegistry::REG_SZ);
     return 'added';
+}
+
+sub pbox {
+    my ($detector, $name, $folder, $file) = @_;
+    $name or die;
+    my $pbox = $ENV{PBOX_HOME} or return;
+    my $fname = FS->catfile($pbox, 'registry', $name, ".$name.pbox");
+    open my $reg, '<', $fname or return;
+    debug_log("pbox: $fname");
+    while (<$reg>) {
+        /^homedir=(.+)$/ or next;
+        folder($detector, FS->catdir($1, $folder), $file);
+    }
 }
 
 1;

@@ -17,6 +17,7 @@ sub _detect {
     drives($self, 'cygwin/bin/', 'g++');
     program_files($self, 'MinGW/bin/', 'g++');
     program_files($self, 'cygwin/bin/', 'g++');
+    pbox($self, 'mingw-w64', 'bin', 'g++');
 }
 
 sub hello_world {
