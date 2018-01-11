@@ -1,12 +1,9 @@
-set HTTP_PROXY=http://proxy.dvfu.ru:3128
-set HTTPS_PROXY=http://proxy.dvfu.ru:3128
-set _JAVA_OPTIONS=-Dhttp.proxyHost=proxy.dvfu.ru -Dhttp.proxyPort=3128
+call set-http-proxy.bat proxy.dvfu.ru 3128
 
 rem Firebird 3.x needs extra config to be able to connect to 2.x
 choco install firebird --version 2.5.7.1000 -y -params "/ClientAndDevTools"
 set FIREBIRD_HOME=C:\Program Files\Firebird\Firebird_2_5
-set PATH=%PATH%;C:\Program Files\Firebird\Firebird_2_5
-rem !!! Need to make fbclient.dll available
+setx FIREBIRD_HOME %FIREBIRD_HOME%
 
 mkdir C:\Lang\
 
@@ -15,7 +12,8 @@ rem Need relatively late Perl, pbox provides only 5.20
 msiexec /i %TEMP%\perl.msi INSTALLDIR=C:\Lang\perl /quiet /passive /norestart
 
 rem Must install DBD::Firebird before MinGW to avoid G++ version clash
-set PATH=%PATH%;C:\Lang\perl\perl\bin
+set PATH=%PATH%;%FIREBIRD_HOME%;C:\Lang\perl\perl\bin
+setx PATH %PATH%
 call cpanm DBD::Firebird
 
 call pbox install mingw-w64 --homedir=C:\Lang\mingw-w64
