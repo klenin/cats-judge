@@ -30,6 +30,7 @@ call pbox install nodejs-portable --homedir=C:\Lang\nodejs
 call pbox install rust --homedir=C:\Lang\rust
 call pbox install delphi7-compiler --homedir=C:\Lang\delphi
 call pbox install 7zip --homedir=C:\Lang\7-zip
+call pbox install go --homedir=C:\Lang\go
 
 rem Pbox provides only PascalABC 2.22
 mkdir C:\Lang\pascalabc

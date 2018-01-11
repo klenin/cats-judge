@@ -42,7 +42,7 @@
 <define name="#javac" de_code_autodetect="403" value="C:\Program Files\Java\jdk1.7.0_03\bin\javac.exe" />
 <define name="#java" de_code_autodetect="403.runtime" value="C:\Program Files\Java\jdk1.7.0_03\bin\java.exe" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
-<define name="#go" de_code_autodetect="404" value="C:\Go\bin\go.exe" />
+<define name="#go" de_code_autodetect="404" value="C:\Lang\go\bin\go.exe" />
 
 <define name="#ruby" de_code_autodetect="504" value="C:\Lang\Ruby\1.9.3\bin\ruby.exe" />
 <define name="#perl" de_code_autodetect="501" value="C:\Lang\Perl\5.14.2\perl\bin\perl.exe" />
@@ -329,7 +329,7 @@
 <!-- The Go Programming Language -->
 <de
     code="404"
-    compile='#go build -o "%name.exe" "%full_name" '
+    compile='"#go" build -o "%name.exe" "%full_name" '
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
