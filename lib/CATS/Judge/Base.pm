@@ -32,6 +32,17 @@ sub select_request { abstract @_ }
 
 sub save_log_dump {}
 
+sub quick_check_de {
+    my ($de) = @_;
+    exists $de->{code} or return 0;
+    # Special and legacy DEs are not checked.
+    my $c = $de->{compile} or return 1;
+    $c =~ /^"([^"]+)"|^(\S+)\s/ or return 0;
+    my $fn = $1 // $2;
+    my $ok = -e $fn or print STDERR "Warning: DE $de->{code} not found at: $fn\n";
+    $ok;
+}
+
 sub set_DEs {
     my ($self, $cfg_de) = @_;
 
@@ -42,7 +53,7 @@ sub set_DEs {
         $cfg_de->{$c} &&= { %{$cfg_de->{$c}}, %$de };
     }
 
-    delete @$cfg_de{grep !exists $cfg_de->{$_}->{code}, keys %$cfg_de};
+    delete @$cfg_de{grep !quick_check_de($cfg_de->{$_}), keys %$cfg_de};
     $self->{supported_DEs} = [ sort { $a <=> $b } keys %$cfg_de ];
     $self->update_de_bitmap;
 }

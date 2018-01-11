@@ -142,7 +142,7 @@
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
-    compile='#gnu_cpp#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    compile='"#gnu_cpp"#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -154,7 +154,7 @@
 <!-- G++ -->
 <de
     code="102"
-    compile='#gnu_cpp -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
+    compile='"#gnu_cpp" -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -188,7 +188,7 @@
 <!-- GCC C only -->
 <de
     code="105"
-    compile='#gnu_c -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    compile='"#gnu_c" -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -200,7 +200,7 @@
 <!-- CLang -->
 <de
     code="106"
-    compile='#clang "%full_name" -o "%name.exe"'
+    compile='"#clang" "%full_name" -o "%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
@@ -419,7 +419,7 @@
 <!-- NodeJS -->
 <de
     code="507"
-    compile='#nodejs -c "%full_name"'
+    compile='"#nodejs" -c "%full_name"'
     run='"#nodejs" "%full_name"'
     generate='"#nodejs" "%name" %args'
     validate='"#nodejs" %full_name "%test_input"'
