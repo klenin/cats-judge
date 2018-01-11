@@ -44,6 +44,9 @@ mkdir C:\Lang\freebasic
 %PBOX_HOME%\bin\7za x -oC:\Lang %TEMP%\freebasic.7z
 move C:\Lang\FreeBASIC-1.05.0-win64 C:\Lang\freebasic
 
+rem Not quite correct, since chocolatey shims will still point to Program Files.
+choco install erlang -ia "'/D=C:\Lang\erlang'"
+
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 
