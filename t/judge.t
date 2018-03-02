@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 36;
+use Test::More tests => 37;
 
 use File::Spec;
 
@@ -253,6 +253,12 @@ maybe_subtest 'stdin validator', 5, sub {
     my $r = run_judge(qw(install -p), $q_validator_stdin)->stdout;
     like $r->[-2], qr/input validation failed: #3/, 'validation';
     like $r->[-1], qr/problem.*failed to install/, 'failed';
+};
+
+my $p_main = FS->catfile($path, 'p_main');
+
+maybe_subtest 'main', 4, sub {
+    like run_judge_sol($p_main, 'test1.h')->stdout->[-1], qr/accepted/, 'main result'
 };
 
 1;
