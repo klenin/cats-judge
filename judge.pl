@@ -830,6 +830,33 @@ sub test_solution {
     return ($result // '') eq 'FALL' ? $solution_status : $result;
 }
 
+sub swap_main {
+    my ($r, $problem_sources) = @_;
+
+    my $main;
+    for my $ps (@$problem_sources) {
+        if ($ps->{main}) {
+            !$main or return $log->error('Duplicate value: only one module can have main');
+            $main = $ps;
+        }
+    }
+    $main or return 1;
+
+    my $old_src = $r->{src};
+    my $old_r = $r->{de_id};
+
+    $r->{fname} = $main->{fname};
+    $r->{src} = $main->{src};
+    $r->{de_id} = $main->{de_id};
+    $r->{code} = $main->{code};
+
+    $main->{name_parts}->{full_name} = $main->{main};
+    $main->{src} = $old_src;
+    $main->{de_id} = $old_r; #for text files
+    #$main->{code} = 1; #for text files
+    1;
+}
+
 sub prepare_problem {
     my $r = $judge->select_request or return;
 
@@ -843,6 +870,7 @@ sub prepare_problem {
 
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
     set_name_parts($_) for @$problem_sources;
+    swap_main($r, $problem_sources) or return;
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
         map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
