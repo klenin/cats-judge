@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Module" lang="ru" tlimit="1" mlimit="256"
+    author="VP" inputFile="input.txt" outputFile="output.txt"
+    saveInputPrefix="500B" saveOutputPrefix="500B" saveAnswerPrefix="500B">
+
+<ProblemStatement>
+</ProblemStatement>
+
+<Module name="test" main="test.h" src="test.cpp" type="solution" de_code="102" />
+
+<Checker name="test" src="ok.cpp" de_code="102" style="testlib" />
+
+<Test rank="1"><In src="1.in" /><Out src="1.out" /></Test>
+</Problem>
+</CATS>

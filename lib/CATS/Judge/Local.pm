@@ -128,6 +128,7 @@ sub pack_problem_source
         src => $s->{src},
         stype => $p{source_type},
         fname => $s->{path},
+        main => $s->{main},
         input_file => $s->{inputFile},
         output_file => $s->{outputFile},
         guid => $s->{guid},
