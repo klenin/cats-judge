@@ -78,6 +78,8 @@ sub answer_file {
 
 sub source_path {
     my ($self, $pid, $source_id, @rest) = @_;
+    # Flatten nested dirs.
+    $source_id =~ s/[\/\\]/__/g;
     [ $self->dir, $pid, $source_dir, $source_id, @rest ];
 }
 

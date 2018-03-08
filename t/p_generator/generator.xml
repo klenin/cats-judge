@@ -4,8 +4,8 @@
   tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
 
 <Checker src="cmp.cpp" type="checker" de_code="102" style="testlib" />
-<Solution name="sol_copy" src="sol_copy.cpp" de_code="102" />
-<Generator name="gen_copy" src="gen_copy.cpp" de_code="102" />
+<Solution name="sol_copy" src="subdir/sol_copy.cpp" de_code="102" />
+<Generator name="gen_copy" src="subdir/gen_copy.cpp" de_code="102" />
 <Generator name="gen_group" src="gen_group.cpp" outputFile="%n.in" de_code="102" />
 <Generator name="gen_stdout" src="gen_stdout.cpp" outputFile="*STDOUT" de_code="102" />
 

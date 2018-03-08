@@ -184,7 +184,7 @@ maybe_subtest 'generator install', 4, sub {
 };
 
 maybe_subtest 'generator', 4, sub {
-    like run_judge_sol($p_generator, 'sol_copy.cpp')->stdout->[-1], qr/accepted/, 'generator';
+    like run_judge_sol($p_generator, 'subdir/sol_copy.cpp')->stdout->[-1], qr/accepted/, 'generator';
 };
 
 maybe_subtest 'answer text', 4, sub {
