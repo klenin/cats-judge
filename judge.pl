@@ -35,6 +35,9 @@ use CATS::Spawner::Const ':all';
 
 use CATS::TestPlan;
 
+use Digest::MD5 qw(md5_hex);
+use Digest::SHA qw(sha1_hex);
+
 use open IN => ':crlf', OUT => ':raw';
 
 my $lh;
@@ -221,10 +224,13 @@ sub generate_test_group {
         $_->{generated} = 1;
         my $tf = $problem_cache->test_file($pid, $_);
         $fu->copy_glob([ $cfg->rundir, sprintf($out, $_->{rank}) ], $tf) or return;
+        my $hash = check_input_hash($pid, $_, $tf);
+        my @input_data =  (undef, 0);
         if ($problem->{save_input_prefix} && !defined $test->{in_file}) {
-            my @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
-            $judge->save_input_test_data($pid, $_->{rank}, @input_data);
+            @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
         }
+        $judge->save_input_test_data($pid, $_->{rank}, @input_data, $hash);
+
     }
     1;
 }
@@ -303,6 +309,27 @@ sub validate_test {
     $sp_report->ok;
 }
 
+sub check_input_hash {
+    my ($pid, $test, $filename) = @_;
+
+    my $data = $fu->read_lines($filename);
+    my $input = join '\n', @$data;
+
+    my $hash = $test->{in_file_hash};
+
+    if (defined $hash) {
+        my ($alg, $hash_val) = $hash =~ /^\$(.*?)\$(.*)$/;
+        my $hash_fn = { md5 => \&md5_hex, sha => \&sha1_hex }->{$alg}
+            or die "Unsupported hash algorithm $alg";
+        $hash_val eq $hash_fn->($input) or die "Invalid hash for test $test->{rank}";
+        return undef;
+    }
+    else {
+        $hash = '$sha$' . sha1_hex($input);
+    }
+    $hash;
+}
+
 sub prepare_tests {
     my ($problem) = @_;
     my $pid = $problem->{id};
@@ -319,6 +346,8 @@ sub prepare_tests {
         log_msg("[prepare $t->{rank}]\n");
         # Create test input file.
         my $tf = $problem_cache->test_file($pid, $t);
+
+        my @input_data = (undef, 0);
         if (defined $t->{in_file} && !defined $t->{in_file_size}) {
             $fu->write_to_file($tf, $t->{in_file}) or return;
         }
@@ -332,8 +361,7 @@ sub prepare_tests {
                 $fu->copy([ $cfg->rundir, $out ], $tf) or return;
 
                 if ($problem->{save_input_prefix} && !defined $t->{in_file}) {
-                    my @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
-                    $judge->save_input_test_data($pid, $t->{rank}, @input_data);
+                    @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
                 }
             }
         }
@@ -341,6 +369,9 @@ sub prepare_tests {
             log_msg("no input defined for test #$t->{rank}\n");
             return undef;
         }
+
+        my $hash = check_input_hash($pid, $t, $tf);
+        $judge->save_input_test_data($pid, $t->{rank}, @input_data, $hash);
 
         validate_test($problem, $t, $tf) or
             return log_msg("input validation failed: #$t->{rank}\n");
