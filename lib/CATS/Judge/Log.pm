@@ -51,9 +51,9 @@ sub _add_dump {
 }
 
 sub msg {
-    my $self = shift;
-    my $fmt = shift;
-    my $s = sprintf $fmt, @_;
+    my ($self, $fmt, @rest) = @_;
+    # In case of message with interpolated string containing %.
+    my $s = @rest ? sprintf $fmt, @rest : $fmt;
     syswrite STDOUT, Encode::encode_utf8($s);
     if ($self->{last_line} ne $s) {
         syswrite $self->{file}, Encode::encode_utf8(strftime('%d.%m %H:%M:%S', localtime) . " $s");
