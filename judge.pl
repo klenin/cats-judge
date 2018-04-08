@@ -318,10 +318,13 @@ sub check_input_hash {
     my $hash = $test->{in_file_hash};
 
     if (defined $hash) {
-        my ($alg, $hash_val) = $hash =~ /^\$(.*?)\$(.*)$/;
+        my ($alg, $old_hash_val) = $hash =~ /^\$(.*?)\$(.*)$/;
+        $alg or die 'No hash algorithm';
         my $hash_fn = { md5 => \&md5_hex, sha => \&sha1_hex }->{$alg}
             or die "Unsupported hash algorithm $alg";
-        $hash_val eq $hash_fn->($input) or die "Invalid hash for test $test->{rank}";
+        my $new_hash_val = $hash_fn->($input);
+        $old_hash_val eq $new_hash_val
+            or die "Invalid hash for test $test->{rank}: old=$old_hash_val new=$new_hash_val";
         return undef;
     }
     else {
