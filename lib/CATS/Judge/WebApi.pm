@@ -238,7 +238,7 @@ sub insert_req_details {
 }
 
 sub save_input_test_data {
-    my ($self, $problem_id, $test_rank, $input, $input_size) = @_;
+    my ($self, $problem_id, $test_rank, $input, $input_size, $hash) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_save_input_test_data',
@@ -246,6 +246,7 @@ sub save_input_test_data {
         test_rank => $test_rank,
         input => $input,
         input_size => $input_size,
+        hash => $hash,
         sid => $self->{sid},
     ]);
 
