@@ -13,11 +13,14 @@ sub _detect {
     my ($self) = @_;
     env_path($self, 'fpc');
     which($self, 'fpc');
-    registry_assoc($self, assoc => 'Lazarus.AssocFile.lpr', local_path => '/fpc/*/bin/i386-win32', file => 'fpc');
-    drives($self, 'lazarus/fpc/*/bin/i386-win32', 'fpc');
     drives($self, 'FPC/*/bin/*', 'fpc');
-    lang_dirs($self, 'fpc', '/bin/i386-win32', 'fpc');
-    pbox($self, 'lazarus', '/fpc/*/bin/i386-win32', 'fpc');
+    for my $w (qw(i386-win32 x86_64-win64)) {
+        registry_assoc($self,
+            assoc => 'Lazarus.AssocFile.lpr', local_path => "/fpc/*/bin/$w", file => 'fpc');
+        drives($self, "lazarus/fpc/*/bin/$w", 'fpc');
+        lang_dirs($self, 'fpc', "/bin/$w", 'fpc');
+        pbox($self, 'lazarus', "/fpc/*/bin/$w", 'fpc');
+    }
 }
 
 sub hello_world {
