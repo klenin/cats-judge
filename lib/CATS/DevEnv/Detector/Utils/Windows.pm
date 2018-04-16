@@ -15,9 +15,17 @@ use CATS::DevEnv::Detector::Utils::Common;
 
 use parent qw(Exporter);
 our @EXPORT = qw(
-    registry registry_assoc registry_glob program_files drives lang_dirs
-    disable_error_dialogs disable_windows_error_reporting_ui detect_proxy add_to_path
+    add_to_path
+    detect_proxy
+    disable_error_dialogs
+    disable_windows_error_reporting_ui
+    drives
+    lang_dirs
     pbox
+    program_files
+    registry
+    registry_assoc
+    registry_glob
 );
 
 use constant REGISTRY_PREFIX => qw(
