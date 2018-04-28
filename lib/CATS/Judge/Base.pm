@@ -30,6 +30,8 @@ sub was_pinged { $_[0]->{was_pinged} }
 
 sub select_request { abstract @_ }
 
+sub finish_job {}
+
 sub save_log_dump {}
 
 sub quick_check_de {

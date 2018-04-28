@@ -893,12 +893,12 @@ sub swap_main {
 
 sub prepare_problem {
     my $r = $judge->select_request or return;
-
     $log->clear_dump;
 
     if (!defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
         $judge->set_request_state($r, $cats::st_unhandled_error);
+        $judge->finish_job($r->{job_id});
         return;
     }
 
@@ -912,6 +912,7 @@ sub prepare_problem {
         log_msg("unsupported DEs for problem %s: %s\n",
             $r->{problem_id}, join ', ', sort keys %unsupported_DEs);
         $judge->set_request_state($r, $cats::st_unhandled_error, %$r);
+        $judge->finish_job($r->{job_id});
         return;
     }
 
@@ -933,7 +934,10 @@ sub prepare_problem {
         log_msg("problem $r->{problem_id} cached\n");
     }
     $judge->save_log_dump($r, $log->get_dump);
+
     $judge->set_request_state($r, $state, %$r);
+    $judge->finish_job($r->{job_id}) if $state == $cats::st_unhandled_error;
+
     ($r, $state);
 }
 
@@ -959,6 +963,7 @@ sub test_problem {
         $state = $cats::st_awaiting_verification;
     }
     $judge->set_request_state($r, $state, %$r);
+    $judge->finish_job($r->{job_id});
 
     my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};
     $state_text =~ s/_/ /g;
@@ -983,6 +988,7 @@ sub main_loop {
         if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
             log_msg("Empty source for problem $r->{problem_id}\n");
             $judge->set_request_state($r, $cats::st_unhandled_error);
+            $judge->finish_job($r->{job_id});
         }
         else {
             test_problem($r);
