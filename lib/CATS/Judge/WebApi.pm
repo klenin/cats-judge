@@ -187,6 +187,17 @@ sub set_request_state {
     die "set_request_state: $response->{error}" if $response->{error};
 }
 
+sub finish_job {
+    my ($self, $job_id) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_finish_job',
+        job_id => $job_id,
+    ]);
+
+    die "finish_job: $response->{error}" if $response->{error};
+}
+
 sub select_request {
     my ($self) = @_;
 

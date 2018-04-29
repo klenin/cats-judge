@@ -63,6 +63,11 @@ sub set_request_state {
     });
 }
 
+sub finish_job {
+    my ($self, $job_id) = @_;
+    CATS::JudgeDB::finish_job($job_id);
+}
+
 sub select_request {
     my ($self) = @_;
 
