@@ -55,7 +55,7 @@ sub set_DEs {
         $cfg_de->{$c} &&= { %{$cfg_de->{$c}}, %$de };
     }
 
-    delete @$cfg_de{grep !quick_check_de($cfg_de->{$_}), keys %$cfg_de};
+    delete @$cfg_de{grep !quick_check_de($cfg_de->{$_}), sort keys %$cfg_de};
     $self->{supported_DEs} = [ sort { $a <=> $b } keys %$cfg_de ];
     $self->update_de_bitmap;
 }
