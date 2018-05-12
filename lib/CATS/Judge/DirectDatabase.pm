@@ -128,6 +128,11 @@ sub insert_req_details {
     CATS::JudgeDB::insert_req_details(%$p, judge_id => $self->{id}) or die 'stolen';
 }
 
+sub save_problem_snippet {
+    my ($self, @rest) = @_;
+    CATS::JudgeDB::save_problem_snippet(@rest);
+}
+
 sub save_input_test_data {
     my ($self, @rest) = @_;
     CATS::JudgeDB::save_input_test_data(@rest);
@@ -141,6 +146,11 @@ sub save_answer_test_data {
 sub get_problem_tests {
     my ($self, $pid) = @_;
     CATS::JudgeDB::get_problem_tests($pid);
+}
+
+sub get_problem_snippets {
+    my ($self, $pid) = @_;
+    CATS::JudgeDB::get_problem_snippets($pid);
 }
 
 sub get_problem {

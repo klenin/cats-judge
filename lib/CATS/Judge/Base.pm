@@ -67,6 +67,8 @@ sub update_de_bitmap {
     $self->{de_bitmap} = [ $self->{dev_env}->bitmap_by_codes(@{$self->{supported_DEs}}) ];
 }
 
+sub save_problem_snippet {}
+
 sub get_problem_sources { [] }
 
 sub delete_req_details {}
@@ -78,6 +80,8 @@ sub save_input_test_data {}
 sub save_answer_test_data {}
 
 sub get_problem_tests { [] }
+
+sub get_problem_snippets { [] }
 
 sub get_problem { {} }
 
