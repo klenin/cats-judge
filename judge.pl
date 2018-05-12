@@ -16,6 +16,7 @@ use sigtrap handler => sub {
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
 
+use CATS::BinaryFile;
 use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
@@ -892,19 +893,20 @@ sub swap_main {
 }
 
 sub prepare_problem {
-    my $r = $judge->select_request or return;
+    my ($r) = @_;
+    $r or return $cats::st_unhandled_error;
+
     $log->clear_dump;
 
-    if (!defined $r->{status}) {
+    if (defined $r->{req_id} && !defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
         $judge->set_request_state($r, $cats::st_unhandled_error);
-        $judge->finish_job($r->{job_id});
-        return;
+        return $cats::st_unhandled_error;
     }
 
     $problem_sources = $judge->get_problem_sources($r->{problem_id});
     set_name_parts($_) for @$problem_sources;
-    swap_main($r, $problem_sources) or return;
+    swap_main($r, $problem_sources) or return $cats::st_unhandled_error;
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
     my %unsupported_DEs =
         map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
@@ -912,8 +914,7 @@ sub prepare_problem {
         log_msg("unsupported DEs for problem %s: %s\n",
             $r->{problem_id}, join ', ', sort keys %unsupported_DEs);
         $judge->set_request_state($r, $cats::st_unhandled_error, %$r);
-        $judge->finish_job($r->{job_id});
-        return;
+        return $cats::st_unhandled_error;
     }
 
     my $state = $cats::st_testing;
@@ -933,12 +934,11 @@ sub prepare_problem {
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    $judge->save_log_dump($r, $log->get_dump);
+    $judge->save_log_dump($r, $log->get_dump) if defined $r->{req_id};
 
     $judge->set_request_state($r, $state, %$r);
-    $judge->finish_job($r->{job_id}) if $state == $cats::st_unhandled_error;
 
-    ($r, $state);
+    $state;
 }
 
 sub test_problem {
@@ -971,6 +971,39 @@ sub test_problem {
     log_msg("==> $state_text\n");
 }
 
+sub generate_snippets {
+    my ($r) = @_;
+    my $snippets = $judge->get_problem_snippets($r->{problem_id});
+    my $generators = {};
+    push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for @$snippets;
+
+    eval {
+        for my $gen_id (keys %$generators) {
+            my ($ps) = grep $_->{id} == $gen_id, @$problem_sources or die;
+
+            clear_rundir or die;
+
+            $fu->copy($problem_cache->source_path($r->{problem_id}, $gen_id, '*'), $cfg->rundir) or die;
+
+            my $generate_cmd = get_cmd('generate', $ps->{de_id})
+                or do { log_msg("No generate cmd for: '%s'\n", $ps->{de_id}); die; };
+
+            my $applied_cmd = apply_params($generate_cmd, { %{$ps->{name_parts}}, args => '' });
+
+            my $sp_report = $sp->run_single({}, $applied_cmd, []) or die; #TODO limits
+
+            for my $sn (@{$generators->{$gen_id}}) {
+                CATS::BinaryFile::load(CATS::FileUtil::fn([$cfg->rundir, $sn]), \my $data);
+                $judge->save_problem_snippet($r->{problem_id}, $r->{contest_id}, $r->{account_id},
+                    $sn, $data) or die;
+            }
+        }
+        1;
+    } or log_msg($@);
+
+    $judge->finish_job($r->{job_id});
+}
+
 sub main_loop {
     chdir $cfg->workdir
         or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
@@ -982,16 +1015,25 @@ sub main_loop {
         sleep $cfg->sleep_time;
         $log->rollover;
         syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];
-        my ($r, $state) = prepare_problem();
+        my $r = $judge->select_request;
         log_msg("pong\n") if $judge->was_pinged;
-        $r && $state != $cats::st_unhandled_error or next;
-        if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
-            log_msg("Empty source for problem $r->{problem_id}\n");
-            $judge->set_request_state($r, $cats::st_unhandled_error);
-            $judge->finish_job($r->{job_id});
+        $r or next;
+        my $state = prepare_problem($r);
+        $state != $cats::st_unhandled_error
+            or do { $judge->finish_job($r->{job_id}); next; };
+
+        if ($r->{type} == $cats::job_type_generate_snippets) {
+            generate_snippets($r);
         }
-        else {
-            test_problem($r);
+        elsif ($r->{type} == $cats::job_type_submission) {
+            if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
+                log_msg("Empty source for problem $r->{problem_id}\n");
+                $judge->set_request_state($r, $cats::st_unhandled_error);
+                $judge->finish_job($r->{job_id});
+            }
+            else {
+                test_problem($r);
+            }
         }
     }
 }
@@ -1092,7 +1134,8 @@ elsif ($cli->command =~ /^(install|run)$/) {
         my $wd = Cwd::cwd();
         $judge->{run} = $rr;
         $judge->set_def_DEs($cfg->def_DEs);
-        my ($r, $state) = prepare_problem();
+        my $r = $judge->select_request;
+        my $state = prepare_problem($r);
         test_problem($r) if $r && ($r->{src} // '') ne '' && $state != $cats::st_unhandled_error;
         $judge->{rid_to_fname}->{$r->{id}} = $rr;
         chdir($wd);
