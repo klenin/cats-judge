@@ -148,6 +148,11 @@ sub get_problem_tests {
     CATS::JudgeDB::get_problem_tests($pid);
 }
 
+sub get_snippet_text {
+    my ($self, @rest) = @_;
+    CATS::JudgeDB::get_snippet_text(@rest);
+}
+
 sub get_problem_snippets {
     my ($self, $pid) = @_;
     CATS::JudgeDB::get_problem_snippets($pid);
