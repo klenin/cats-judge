@@ -338,7 +338,6 @@ sub prepare_tests {
     my ($problem) = @_;
     my $pid = $problem->{id};
     my $tests = $judge->get_problem_tests($pid);
-
     if (!@$tests) {
         log_msg("no tests defined\n");
         return undef;
@@ -412,7 +411,7 @@ sub prepare_tests {
                 $pid, $t->{rank}, $fu->load_file($af, $problem->{save_answer_prefix})
             ) if $problem->{save_answer_prefix} && !defined $t->{out_file};
         }
-        else {
+        elsif (!defined $t->{snippet_name}) {
             log_msg("no output file defined for test #$t->{rank}\n");
             return undef;
         }
@@ -641,6 +640,16 @@ sub run_single_test {
     }
 
     my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
+
+    if (defined $p{snippet_name}) {
+        # @$r[0]
+        my $snippet_answer = $judge->get_snippet_text($problem->{id}, @$r[0]->{contest_id}, 
+            @$r[0]->{account_id}, $p{snippet_name});
+        $snippet_answer or return;
+        my $out = $problem_cache->answer_file($problem->{id}, \%p);
+        $fu->write_to_file($out, $snippet_answer);
+    }
+
     my_safe_copy(
         $problem_cache->answer_file($problem->{id}, \%p),
         [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
@@ -737,14 +746,14 @@ sub compile {
 }
 
 sub run_testplan {
-    my ($tp, $problem, $requests) = @_;
+    my ($tp, $problem, $requests, %tests_snippet_names) = @_;
     $inserted_details{$_->{id}} = {} for @$requests;
     my $run_verdict = $cats::st_accepted;
     my $competitive_outputs = {};
     for ($tp->start; $tp->current; ) {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
-            run_single_test(problem => $problem, requests => $requests, rank => $tp->current)
-                or return;
+            run_single_test(problem => $problem, requests => $requests, rank => $tp->current,
+                snippet_name => $tests_snippet_names{$tp->current}) or return;
         # In case run_single_test returns a list of single undef via log_msg.
         $test_run_details or return;
         my $test_verdict = $cats::st_accepted;
@@ -819,11 +828,13 @@ sub test_solution {
             log_msg("no tests found\n");
             return $cats::st_ignore_submit;
         };
+        my $problem_tests = $judge->get_problem_tests($problem->{id});
+        my %tests_snippet_names = map { $_->{rank} => $_->{snippet_name} } @$problem_tests;
         my %tp_params = (tests => \%tests);
 
         if ($problem->{run_method} == $cats::rm_competitive) {
             my $tp = CATS::TestPlan::All->new(%tp_params);
-            ($solution_status, my $test_outputs) = run_testplan($tp, $problem, \@run_requests) or return;
+            ($solution_status, my $test_outputs) = run_testplan($tp, $problem, \@run_requests, %tests_snippet_names) or return;
             if (my $failed_test = $tp->first_failed) {
                 $r->{failed_test} = $failed_test;
             }
@@ -839,7 +850,7 @@ sub test_solution {
                 my $tp = $r->{run_all_tests} ?
                     CATS::TestPlan::ScoringGroups->new(%tp_params) :
                     CATS::TestPlan::ACM->new(%tp_params);
-                my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ]) or return;
+                my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ], %tests_snippet_names) or return;
                 if (my $failed_test = $tp->first_failed) {
                     $run_req->{failed_test} = $r->{failed_test} = $failed_test;
                 }

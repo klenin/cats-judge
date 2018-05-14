@@ -83,6 +83,8 @@ sub get_problem_tests { [] }
 
 sub get_problem_snippets { [] }
 
+sub get_snippet_text { '' }
+
 sub get_problem { {} }
 
 sub is_problem_uptodate { 0 }
