@@ -910,7 +910,7 @@ sub prepare_problem {
 
     $log->clear_dump;
 
-    if (defined $r->{req_id} && !defined $r->{status}) {
+    if (defined $r->{id} && !defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
         $judge->set_request_state($r, $cats::st_unhandled_error);
         return $cats::st_unhandled_error;
@@ -946,7 +946,7 @@ sub prepare_problem {
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    $judge->save_log_dump($r, $log->get_dump) if defined $r->{req_id};
+    $judge->save_log_dump($r, $log->get_dump) if defined $r->{id};
 
     $judge->set_request_state($r, $state, %$r);
 
