@@ -643,8 +643,8 @@ sub run_single_test {
 
     if (defined $p{snippet_name}) {
         # @$r[0]
-        my $snippet_answer = $judge->get_snippet_text($problem->{id}, @$r[0]->{contest_id}, 
-            @$r[0]->{account_id}, $p{snippet_name});
+        my $snippet_answer = $judge->get_snippet_text(
+            $problem->{id}, @$r[0]->{contest_id}, @$r[0]->{account_id}, $p{snippet_name});
         $snippet_answer or return;
         my $out = $problem_cache->answer_file($problem->{id}, \%p);
         $fu->write_to_file($out, $snippet_answer);
@@ -834,7 +834,8 @@ sub test_solution {
 
         if ($problem->{run_method} == $cats::rm_competitive) {
             my $tp = CATS::TestPlan::All->new(%tp_params);
-            ($solution_status, my $test_outputs) = run_testplan($tp, $problem, \@run_requests, %tests_snippet_names) or return;
+            ($solution_status, my $test_outputs) =
+                run_testplan($tp, $problem, \@run_requests, %tests_snippet_names) or return;
             if (my $failed_test = $tp->first_failed) {
                 $r->{failed_test} = $failed_test;
             }
