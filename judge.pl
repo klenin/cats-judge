@@ -644,8 +644,8 @@ sub run_single_test {
     if (defined $p{snippet_name}) {
         # @$r[0]
         my $snippet_answer = $judge->get_snippet_text(
-            $problem->{id}, @$r[0]->{contest_id}, @$r[0]->{account_id}, $p{snippet_name});
-        $snippet_answer or return;
+            $problem->{id}, $r->[0]->{contest_id}, $r->[0]->{account_id}, $p{snippet_name});
+        defined $snippet_answer or return log_msg('Answer snippet not found');
         my $out = $problem_cache->answer_file($problem->{id}, \%p);
         $fu->write_to_file($out, $snippet_answer);
     }
