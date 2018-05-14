@@ -985,7 +985,12 @@ sub test_problem {
 
 sub generate_snippets {
     my ($r) = @_;
+
+    # TODO: move to select_request
     my $snippets = $judge->get_problem_snippets($r->{problem_id});
+    my $tags = $judge->get_problem_tags($r->{problem_id}, $r->{contest_id}) // '';
+    $tags =~ s/\s+//g;
+
     my $generators = {};
     push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for @$snippets;
 
@@ -1002,7 +1007,7 @@ sub generate_snippets {
 
             my $applied_cmd = apply_params($generate_cmd, { %{$ps->{name_parts}}, args => '' });
 
-            my $sp_report = $sp->run_single({}, $applied_cmd, []) or die; #TODO limits
+            my $sp_report = $sp->run_single({}, $applied_cmd, [ $tags ]) or die; #TODO limits
 
             for my $sn (@{$generators->{$gen_id}}) {
                 CATS::BinaryFile::load(CATS::FileUtil::fn([$cfg->rundir, $sn]), \my $data);
