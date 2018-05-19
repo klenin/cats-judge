@@ -970,6 +970,7 @@ sub test_problem {
 
     # It is too late to report error, since set_request_state might have already been called.
     eval { $judge->save_log_dump($r, $log->get_dump); } or log_msg("$@\n");
+    # eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
 
     if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
         $state = $cats::st_awaiting_verification;
@@ -1018,6 +1019,7 @@ sub generate_snippets {
         1;
     } or log_msg($@);
 
+    $judge->save_logs($r->{job_id}, $log->get_dump);
     $judge->finish_job($r->{job_id});
 }
 
