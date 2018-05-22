@@ -946,7 +946,6 @@ sub prepare_problem {
     else {
         log_msg("problem $r->{problem_id} cached\n");
     }
-    $judge->save_log_dump($r, $log->get_dump) if defined $r->{id};
 
     $judge->set_request_state($r, $state, %$r);
 
@@ -969,8 +968,7 @@ sub test_problem {
     $state //= $cats::st_unhandled_error;
 
     # It is too late to report error, since set_request_state might have already been called.
-    eval { $judge->save_log_dump($r, $log->get_dump); } or log_msg("$@\n");
-    # eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
+    eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
 
     if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
         $state = $cats::st_awaiting_verification;
@@ -1038,8 +1036,11 @@ sub main_loop {
         log_msg("pong\n") if $judge->was_pinged;
         $r or next;
         my $state = prepare_problem($r);
-        $state != $cats::st_unhandled_error
-            or do { $judge->finish_job($r->{job_id}); next; };
+        if ($state == $cats::st_unhandled_error) {
+            $judge->save_logs($r->{job_id}, $log->get_dump);
+            $judge->finish_job($r->{job_id});
+            next;
+        }
 
         if ($r->{type} == $cats::job_type_generate_snippets) {
             generate_snippets($r);

@@ -38,8 +38,8 @@ sub select_request {
     };
 }
 
-sub save_log_dump {
-    my ($self, $req, $dump) = @_;
+sub save_logs {
+    my ($self, $job_id, $dump) = @_;
 }
 
 sub set_DEs {
