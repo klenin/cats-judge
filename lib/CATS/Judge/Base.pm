@@ -32,7 +32,7 @@ sub select_request { abstract @_ }
 
 sub finish_job {}
 
-sub save_log_dump {}
+sub save_logs {}
 
 sub quick_check_de {
     my ($de) = @_;

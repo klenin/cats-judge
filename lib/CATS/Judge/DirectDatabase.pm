@@ -102,9 +102,9 @@ sub select_request {
     $request;
 }
 
-sub save_log_dump {
-    my ($self, $req, $dump) = @_;
-    CATS::JudgeDB::save_log_dump($req->{id}, $dump, $self->{id});
+sub save_logs {
+    my ($self, $job_id, $dump) = @_;
+    CATS::JudgeDB::save_logs($job_id, $dump);
 }
 
 sub update_dev_env {

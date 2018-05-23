@@ -149,8 +149,8 @@ sub is_problem_uptodate {
     $response->{uptodate};
 }
 
-sub save_log_dump {
-    my ($self, $req, $dump) = @_;
+sub save_logs {
+    my ($self, $job_id, $dump) = @_;
 
     # IO::Socket::SSL fails when writing long data blocks.
     # LWP does not provide chunking directly, but
@@ -162,13 +162,13 @@ sub save_log_dump {
 
     local $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
     my $response = $self->get_json([
-        f => 'api_judge_save_log_dump',
-        req_id => $req->{id},
+        f => 'api_judge_save_logs',
+        job_id => $job_id,
         dump => [ $fh->filename, 'log' ],
         sid => $self->{sid},
     ], { Content_Type => 'form-data' } );
 
-    die "save_log_dump: $response->{error}" if $response->{error};
+    die "save_logs: $response->{error}" if $response->{error};
 }
 
 sub set_request_state {
