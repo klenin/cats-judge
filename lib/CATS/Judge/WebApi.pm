@@ -106,6 +106,52 @@ sub get_problem {
     $response->{problem};
 }
 
+sub get_problem_snippets {
+    my ($self, $pid) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_problem_snippets',
+        pid => $pid,
+        sid => $self->{sid},
+    ]);
+
+    die "get_problem_snippets: $response->{error}" if $response->{error};
+
+    $response->{snippets};
+}
+
+sub get_problem_tags {
+    my ($self, $pid, $cid) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_problem_tags',
+        pid => $pid,
+        cid => $cid,
+        sid => $self->{sid},
+    ]);
+
+    die "get_problem_tags: $response->{error}" if $response->{error};
+
+    $response->{tags};
+}
+
+sub get_snippet_text {
+    my ($self, $problem_id, $contest_id, $account_id, $name) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_snippet_text',
+        pid => $problem_id,
+        cid => $contest_id,
+        uid => $account_id,
+        name => $name,
+        sid => $self->{sid},
+    ]);
+
+    die "get_snippet_text: $response->{error}" if $response->{error};
+
+    $response->{text};
+}
+
 sub get_problem_sources {
     my ($self, $pid) = @_;
 
@@ -277,6 +323,23 @@ sub save_answer_test_data {
     ]);
 
     die "save_answer_test_data: $response->{error}" if $response->{error};
+}
+
+sub save_problem_snippet {
+    my ($self, $problem_id, $contest_id, $account_id, $snippet_name, $text) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_save_problem_snippet',
+        problem_id => $problem_id,
+        contest_id => $contest_id,
+        account_id => $account_id,
+        snippet_name => $snippet_name,
+        text => $text,
+        sid => $self->{sid},
+    ]);
+
+    die "save_problem_snippet: $response->{error}" if $response->{error};
+    1;
 }
 
 sub get_testset {
