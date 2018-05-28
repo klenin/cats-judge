@@ -224,7 +224,7 @@ sub get_problem_tests {
             input_validator_id => $_->{input_validator_id},
             rank => $_->{rank},
             param => $_->{param},
-            in_file_hash => $_->{in_file_hash},
+            in_file_hash => $_->{hash},
             std_solution_id => $_->{std_solution_id},
             in_file => $_->{in_file},
             out_file => $_->{out_file},

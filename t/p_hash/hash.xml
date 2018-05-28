@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Hash" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="cmp.cpp" type="checker" de_code="102" style="testlib" />
+<Generator name="gen_copy" src="gen_copy.cpp" de_code="102" />
+
+<Test rank="1"><In use="gen_copy" param="2" hash="$sha$da4b9237bacccdf19c0760cab7aec4a8359010b0"/></Test>
+<Test rank="2"><In use="gen_copy" param="2" hash="$md5$c81e728d9d4c2f636f067f89cc14862c" /></Test>
+<Test rank="3"><In use="gen_copy" param="2" hash="$sha$ea4b9237bacccdf19c0760cab7aec4a8359010b0"/></Test>
+
+<Test rank="*"><Out>1</Out></Test>
+
+</Problem>
+</CATS>

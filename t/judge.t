@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 37;
+use Test::More tests => 38;
 
 use File::Spec;
 
@@ -195,6 +195,13 @@ maybe_subtest 'answer text', 4, sub {
 maybe_subtest 'answer text WA', 4, sub {
     like run_judge_sol($p_generator, '2.out', de => 3, t => '2-3')->stdout->[-1],
         qr/wrong answer on test 3/, 'WA';
+};
+
+my $p_hash = FS->catfile($path, 'p_hash');
+
+maybe_subtest 'hash', 4, sub {
+    like run_judge(qw(i -p), $p_hash)->stdout->[-3],
+        qr/Invalid hash for test 3.*old=ea4.*new=da4/, 'hash';
 };
 
 my $p_module = FS->catfile($path, 'p_module');
