@@ -67,6 +67,7 @@ my $sp;
 my %judge_de_idx;
 
 my $problem_sources;
+my $current_job_id;
 
 sub log_msg { $log->msg(@_); }
 
@@ -151,8 +152,8 @@ sub my_safe_copy {
     log_msg "Trying to reinitialize\n";
     # Either problem cache was damaged or imported module has been changed.
     # Try reinilializing the problem. If that does not help, fail the run.
-    initialize_problem($pid);
-    $fu->copy($src, $dest);
+    initialize_problem_wrapper($pid) or return log_msg("...failed");
+    $fu->copy($src, $dest) or return;
     die 'REINIT';
 }
 
@@ -492,6 +493,30 @@ sub initialize_problem {
         or return undef;
 
     1;
+}
+
+sub initialize_problem_wrapper {
+    my $pid = shift;
+
+    my $prev_dump = $log->get_dump;
+    $log->clear_dump;
+
+    my $job_id = $judge->create_job($cats::job_type_initialize_problem, {
+        problem_id => $pid,
+        state => $cats::job_st_in_progress,
+        parent_id => $current_job_id,
+    });
+
+    log_msg("Created job $job_id\n");
+    my $res = initialize_problem($pid);
+
+    $judge->save_logs($job_id, $log->get_dump);
+    $judge->finish_job($job_id);
+
+    $log->clear_dump;
+    $log->dump_write($prev_dump);
+
+    $res;
 }
 
 my %inserted_details;
@@ -934,7 +959,7 @@ sub prepare_problem {
     if (!$is_ready || $cli->opts->{'force-install'}) {
         log_msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
         eval {
-            initialize_problem($r->{problem_id});
+            initialize_problem_wrapper($r->{problem_id});
         } or do {
             $state = $cats::st_unhandled_error;
             log_msg("error: $@\n") if $@;
@@ -1035,6 +1060,7 @@ sub main_loop {
         my $r = $judge->select_request;
         log_msg("pong\n") if $judge->was_pinged;
         $r or next;
+        $current_job_id = $r->{job_id};
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error) {
             $judge->save_logs($r->{job_id}, $log->get_dump);

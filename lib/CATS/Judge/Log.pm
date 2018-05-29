@@ -42,7 +42,7 @@ sub rollover {
     $self->set_name($new_name);
 }
 
-sub _add_dump {
+sub add_dump {
     my ($self, $s) = @_;
     $self->{dump_size} += length $s;
     my $capacity = $self->{max_dump_size} - length($self->{dump});
@@ -59,7 +59,7 @@ sub msg {
         syswrite $self->{file}, Encode::encode_utf8(strftime('%d.%m %H:%M:%S', localtime) . " $s");
         $self->{last_line} = $s;
     }
-    $self->_add_dump($s);
+    $self->add_dump($s);
     undef;
 }
 
@@ -82,7 +82,7 @@ sub warning {
 sub dump_write {
     my ($self, $data) = @_;
     syswrite $self->{file}, Encode::encode_utf8($data);
-    $self->_add_dump($data);
+    $self->add_dump($data);
 }
 
 sub get_dump {

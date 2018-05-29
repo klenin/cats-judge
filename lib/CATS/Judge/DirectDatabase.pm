@@ -9,6 +9,7 @@ use CATS::DB qw($dbh);
 use CATS::DevEnv;
 use CATS::JudgeDB;
 use CATS::Testset;
+use CATS::Job;
 
 use base qw(CATS::Judge::Base);
 
@@ -61,6 +62,12 @@ sub set_request_state {
         problem_id  => $p{problem_id},
         failed_test => $p{failed_test},
     });
+}
+
+sub create_job {
+    my ($self, $job_type, $p) = @_;
+    $p->{judge_id} = $self->{id};
+    CATS::Job::create($job_type, $p);
 }
 
 sub finish_job {
