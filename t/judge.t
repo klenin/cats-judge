@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 38;
+use Test::More tests => 39;
 
 use File::Spec;
 
@@ -94,6 +94,22 @@ maybe_subtest 'cached minimal', 4, sub {
 
 maybe_subtest 'run minimal', 4, sub {
     like run_judge_sol($p_minimal, 'ok.cpp')->stdout->[-1], qr/accepted/, 'accepted';
+};
+
+maybe_subtest 'reinitialize', 15, sub {
+    my $cache_dir = run_judge(qw(config --print cachedir --bare))->stdout->[0];
+    chomp $cache_dir;
+    ok $cache_dir, 'cache dir';
+    my $install_stdout = run_judge(qw(install -p), $p_minimal)->stdout;
+    my ($cache_name) = $install_stdout->[-1] =~ /problem '(\w+)' (?:cached|installed)/;
+    ok $cache_name,'cache name';
+    my $p = CATS::FileUtil::fn([ $cache_dir, $cache_name, 'temp', '0ok.cpp' ]);
+    ok -d $p, "to remove: $p";
+    $fu->remove($p);
+    ok !-e $p, "removed: $p";
+    my $stdout = run_judge_sol($p_minimal, 'ok.cpp')->stdout;
+    like $stdout->[-1], qr/accepted/, 'accepted';
+    is scalar(grep /reinitialize/, @$stdout), 1, 'reinitialize';
 };
 
 maybe_subtest 'minimal html', 5, sub {
