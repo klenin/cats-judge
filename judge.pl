@@ -156,7 +156,7 @@ sub my_safe_copy {
     die 'REINIT';
 }
 
-sub clear_rundir { $fu->remove([ $cfg->rundir, '*' ]); }
+sub clear_rundir { $fu->remove_all($cfg->rundir); }
 
 sub apply_params {
     my ($str, $params) = @_;
