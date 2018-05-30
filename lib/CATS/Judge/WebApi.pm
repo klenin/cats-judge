@@ -239,6 +239,7 @@ sub finish_job {
     my $response = $self->get_json([
         f => 'api_judge_finish_job',
         job_id => $job_id,
+        sid => $self->{sid},
     ]);
 
     die "finish_job: $response->{error}" if $response->{error};
