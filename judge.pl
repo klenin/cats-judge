@@ -944,7 +944,7 @@ sub prepare_problem {
             ($state != $cats::st_unhandled_error ? "installed\n" : "failed to install\n"));
     }
     else {
-        log_msg("problem $r->{problem_id} cached\n");
+        log_msg("problem '$r->{problem_id}' cached\n");
     }
 
     $judge->set_request_state($r, $state, %$r);
