@@ -54,13 +54,13 @@ maybe_subtest 'usage', 4, sub {
 };
 
 maybe_subtest 'config print', 8, sub {
-    like run_judge('config print', qw(config --print sleep_time))->stdout->[0],
+    like run_judge(qw(config --print sleep_time))->stdout->[0],
         qr/sleep_time = \d+/, 'config print';
-    like run_judge('config print bare', qw(config --bare --print sleep_time))->stdout->[0],
+    like run_judge(qw(config --bare --print sleep_time))->stdout->[0],
         qr/^\d+$/, 'config print bare';
 };
 
-maybe_subtest 'usage', 4, sub {
+maybe_subtest 'config set', 4, sub {
     like run_judge(qw(config --print sleep_time --config-set sleep_time=99))->stdout->[0],
         qr/sleep_time = 99/, 'config set';
 };
