@@ -71,6 +71,15 @@ sub ensure_dir {
     -d $dn or mkdir $dn or die "Can not create $name '$dn': $!";
 }
 
+sub dir_files {
+    my ($self, $dir) = @_;
+
+    my $dir_name = fn $dir;
+    opendir my $dir_handle, $dir_name
+        or return $self->log("opendir: '$dir_name' ($!)\n");
+    [ map File::Spec->catfile($dir_name, $_), grep !/^\.\.?$/, readdir $dir_handle ];
+}
+
 sub remove_file {
     my ($self, $file_name) = @_;
     my $fn = fn($file_name);
@@ -97,11 +106,8 @@ sub _remove_files {
 sub _remove_dir_rec {
     my ($self, $dir_name) = @_;
 
-    opendir my $dir, $dir_name or return $self->log("opendir: '$dir_name' ($!)\n");
-    my @files = map File::Spec->catfile($dir_name, $_), grep !/^\.\.?$/, readdir $dir;
-    closedir $dir;
-
-    $self->_remove_files(@files) or return;
+    my $files = $self->dir_files($dir_name) or return;
+    $self->_remove_files(@$files) or return;
     rmdir $dir_name or return $self->log("remove_dir $dir_name: $!\n");
     1;
 }
@@ -110,6 +116,12 @@ sub remove {
     @_ == 2 or die;
     my ($self, $path) = @_;
     $self->_remove_files(glob fn $path);
+}
+
+sub remove_all {
+    @_ == 2 or die;
+    my ($self, $path) = @_;
+    $self->_remove_files(@{$self->dir_files($path)}) && 1;
 }
 
 sub mkdir_clean {

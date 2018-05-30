@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 72;
+use Test::More tests => 79;
 use Test::Exception;
 
 use File::Spec;
@@ -80,9 +80,22 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
 
 {
     my $fu = make_fu;
+    my $fn = [ $tmpdir, '.dot' ];
+    my $ffn = CATS::FileUtil::fn($fn);
+    ok $fu->write_to_file($fn, 'abc') && -f $ffn, 'remove .dot prepare';
+
+    ok $fu->remove([ $tmpdir, '*' ]), 'remove .dot by glob';
+    ok -f $ffn, 'remove .dot by glob does not work';
+
+    ok $fu->remove_all($tmpdir), 'remove .dot by dir_files';
+    ok !-e $ffn, 'remove .dot by dir_files';
+}
+
+{
+    my $fu = make_fu;
 
     my $fn = FS->catfile($tmpdir, 'f2.exe');
-    $fu->write_to_file($fn, 'MZabc') && -f $fn;
+    ok $fu->write_to_file($fn, 'MZabc') && -f $fn, 'remove_file locked prepare';
     subtest 'remove_file locked ', sub {
         plan $^O eq 'MSWin32' ? (tests => 3) : (skip_all => 'Windows only');
         open my $f, '<', $fn or die "$fn: $!";
@@ -140,9 +153,12 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
 
 {
     my $fu = make_fu;
-    $fu->ensure_dir([ $tmpdir, 'a1' ]);
-    $fu->ensure_dir([ $tmpdir, 'a1', 'b' ]);
-    $fu->ensure_dir([ $tmpdir, 'a1', 'c' ]);
+    map $fu->ensure_dir($_), (
+        my ($a1, $a1_b, $a1_c) =
+        ([ $tmpdir, 'a1' ], [ $tmpdir, 'a1', 'b' ], [ $tmpdir, 'a1', 'c' ]));
+    is_deeply
+        [ sort @{$fu->dir_files($a1)} ],
+        [ map CATS::FileUtil::fn($_), $a1_b, $a1_c ], 'dir_files';
     $fu->write_to_file([ $tmpdir, 'a1', 'b', 'f.txt' ], 'f');
     ok -f FS->catfile($tmpdir, 'a1', 'b', 'f.txt'), 'copy before';
     ok $fu->copy([ $tmpdir, 'a1' ], [ $tmpdir, 'a2' ]), 'copy';
