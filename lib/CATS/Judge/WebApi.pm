@@ -233,6 +233,22 @@ sub set_request_state {
     die "set_request_state: $response->{error}" if $response->{error};
 }
 
+sub create_job {
+    my ($self, $job_type, $p) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_create_job',
+        job_type => $job_type,
+        problem_id => $p->{problem_id},
+        state => $p->{state},
+        parent_id => $p->{parent_id},
+        sid => $self->{sid},
+    ]);
+
+    die "create_job: $response->{error}" if $response->{error};
+    $response->{job_id};
+}
+
 sub finish_job {
     my ($self, $job_id) = @_;
 
