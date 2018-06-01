@@ -959,7 +959,8 @@ sub prepare_problem {
     if (!$is_ready || $cli->opts->{'force-install'}) {
         log_msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
         eval {
-            initialize_problem_wrapper($r->{problem_id});
+            $r->{type} == $cats::job_type_initialize_problem ? 
+            initialize_problem($r->{problem_id}) : initialize_problem_wrapper($r->{problem_id});
         } or do {
             $state = $cats::st_unhandled_error;
             log_msg("error: $@\n") if $@;
@@ -1060,9 +1061,10 @@ sub main_loop {
         my $r = $judge->select_request;
         log_msg("pong\n") if $judge->was_pinged;
         $r or next;
+
         $current_job_id = $r->{job_id};
         my $state = prepare_problem($r);
-        if ($state == $cats::st_unhandled_error) {
+        if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
             $judge->save_logs($r->{job_id}, $log->get_dump);
             $judge->finish_job($r->{job_id});
             next;
