@@ -67,7 +67,9 @@ sub set_request_state {
 sub create_job {
     my ($self, $job_type, $p) = @_;
     $p->{judge_id} = $self->{id};
-    CATS::Job::create($job_type, $p);
+    my $job_id = CATS::Job::create($job_type, $p);
+    $dbh->commit;
+    $job_id;
 }
 
 sub finish_job {
