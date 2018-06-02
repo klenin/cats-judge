@@ -47,8 +47,16 @@ move C:\Lang\FreeBASIC-1.05.0-win64 C:\Lang\freebasic
 rem Not quite correct, since chocolatey shims will still point to Program Files.
 choco install erlang -ia "'/D=C:\Lang\erlang'"
 
+%PBOX_HOME%\bin\wget --output-document %TEMP%\swi-prolog.exe http://www.swi-prolog.org/download/stable/bin/swipl-w64-764.exe
+rem Change Prolog's assocated extension, since default .pl conflicts with Perl.
+%TEMP%\swi-prolog.exe /S /EXT=pro /INSTDIR=C:\Lang\swipl
+
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 
 rem IDE only, separate GUI action required to install C++
 choco install visualstudio2015community -y --execution-timeout 27000
+
+rem Need to be installed Python and PIP
+python -m pip install cython
+copy cython.bat C:\Lang\python3\cython.bat
