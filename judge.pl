@@ -748,11 +748,19 @@ sub compile {
         ) or return (0, undef);
         my $ok = $sp_report->ok;
         if ($ok) {
-            my $runfile = get_cmd('runfile', $r->{de_id});
-            $runfile = apply_params($runfile, $r->{name_parts}) if $runfile;
-            if ($runfile && !(-f $cfg->rundir . "/$runfile")) {
-                $ok = 0;
-                log_msg("Runfile '$runfile' not created\n");
+            my $error_flag = get_cmd('compile_error_flag', $r->{de_id});
+            if ($error_flag) {
+               if ($log->get_dump =~ /\Q$cats::log_section_compile\E\n\Q$error_flag\E/m) {
+                    $ok = 0;
+               }
+            }
+            if ($ok) {
+                my $runfile = get_cmd('runfile', $r->{de_id});
+                $runfile = apply_params($runfile, $r->{name_parts}) if $runfile;
+                if ($runfile && !(-f $cfg->rundir . "/$runfile")) {
+                    $ok = 0;
+                    log_msg("Runfile '$runfile' not created\n");
+                }
             }
         }
         if (!$ok) {

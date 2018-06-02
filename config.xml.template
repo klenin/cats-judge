@@ -430,7 +430,8 @@
 <!-- SWI Prolog -->
 <de
     code="509"
-    compile='"#prolog" -c "%full_name"'
+    compile='"#prolog" -q -c "%full_name"'
+    compile_error_flag='ERROR'
     run='"#prolog" -g main -g halt -l "%full_name"'
     extension='pro'/>
 
