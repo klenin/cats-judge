@@ -1,4 +1,6 @@
 @echo off
+perl -c judge.pl 2>nul || ( perl -c judge.pl || exit /b )
+
 if [%SUPPRESS_TERMINATE_PROMPT%] == [YES] (
     set SUPPRESS_TERMINATE_PROMPT=
 ) else (
@@ -25,7 +27,7 @@ set SP_LEGACY=sp00
 set SP_JSON=1
 
 perl judge.pl config --print "^name$" --bare | ^
-perl -MWin32::API -e "Win32::API->new('kernel32', 'SetConsoleTitle', 'P', 'I')->Call(<STDIN>)"
+perl -MWin32::API -e "($x = <STDIN>) && Win32::API->new('kernel32', 'SetConsoleTitle', 'P', 'I')->Call($x)"
 
 :repeat
 perl judge.pl serve

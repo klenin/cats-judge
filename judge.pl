@@ -8,10 +8,13 @@ use File::Spec;
 use constant FS => 'File::Spec';
 use Fcntl qw(:flock);
 use List::Util qw(max);
-use sigtrap handler => sub {
-    print "\nCtrl+C pressed\n";
+
+sub terminate($) {
+    print "\n$_[0]\n";
     exit 99;
-}, 'INT';
+}
+
+use sigtrap handler => sub { terminate 'Ctrl+C pressed'; }, 'INT';
 
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
 use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
@@ -1088,13 +1091,14 @@ sub main_loop {
 
 $cli->parse;
 
-{
+eval {
     $cfg->load(file => 'config.xml', override => $cli->opts->{'config-set'});
 
     my $cfg_confess = $cfg->confess // '';
     $SIG{__WARN__} = \&confess if $cfg_confess =~ /w/i;
     $SIG{__DIE__} = \&confess if $cfg_confess =~ /d/i;
-}
+    1;
+} or terminate $@;
 
 if ($cli->command eq 'config') {
     $cfg->print_params($cli->opts->{'print'}, $cli->opts->{bare});
@@ -1126,12 +1130,12 @@ if ($cli->command ne 'serve') {
         resultsdir => $cfg->resultsdir, columns => $cfg->columns, logger => $log, %{$cli->opts});
 }
 elsif ($api =~ /^(WebApi|DirectDatabase)$/) {
-    eval { require "CATS/Judge/$api.pm"; 1; } or die "Can't load $api module: $@";
+    eval { require "CATS/Judge/$api.pm"; 1; } or terminate "Can't load $api module: $@";
     no strict 'refs';
     $judge = "CATS::Judge::$api"->new_from_cfg($cfg);
 }
 else {
-    die "Unknown api '$api'\n";
+    terminate "Unknown api '$api'";
 }
 
 $problem_cache = CATS::Judge::ProblemCache->new(
@@ -1145,7 +1149,8 @@ $judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
     my $cfg_dirs = {};
     $cfg_dirs->{$_} = $cfg->{$_} for $cfg->dir_fields;
 
-    my $sp_define = $cfg->defines->{'#spawner'} or die 'No #spawner define in config';
+    my $sp_define = $cfg->defines->{'#spawner'}
+        or terminate 'No #spawner define in config';
     $sp = CATS::Spawner::Default->new({
         %$cfg,
         logger => $log,
