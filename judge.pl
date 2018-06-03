@@ -514,7 +514,7 @@ sub initialize_problem_wrapper {
     my $res = initialize_problem($pid);
 
     $judge->save_logs($job_id, $log->get_dump);
-    $judge->finish_job($job_id);
+    $judge->finish_job($job_id, $res ? $cats::job_st_finished : $cats::job_st_failed);
 
     $log->clear_dump;
     $log->dump_write($prev_dump);
@@ -1011,7 +1011,8 @@ sub test_problem {
         $state = $cats::st_awaiting_verification;
     }
     $judge->set_request_state($r, $state, %$r);
-    $judge->finish_job($r->{job_id});
+    $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
+        $cats::job_st_failed : $cats::job_st_finished);
 
     my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};
     $state_text =~ s/_/ /g;
@@ -1030,6 +1031,7 @@ sub generate_snippets {
     my $generators = {};
     push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for @$snippets;
 
+    my $job_state = $cats::job_st_finished;
     eval {
         for my $gen_id (keys %$generators) {
             my ($ps) = grep $_->{id} == $gen_id, @$problem_sources or die;
@@ -1052,10 +1054,10 @@ sub generate_snippets {
             }
         }
         1;
-    } or log_msg($@);
+    } or do { log_msg($@); $job_state = $cats::job_st_failed; };
 
     $judge->save_logs($r->{job_id}, $log->get_dump);
-    $judge->finish_job($r->{job_id});
+    $judge->finish_job($r->{job_id}, $job_state);
 }
 
 sub main_loop {
@@ -1077,7 +1079,8 @@ sub main_loop {
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
             $judge->save_logs($r->{job_id}, $log->get_dump);
-            $judge->finish_job($r->{job_id});
+            $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
+                $cats::job_st_failed : $cats::job_st_finished);
             next;
         }
 
@@ -1088,7 +1091,7 @@ sub main_loop {
             if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
                 log_msg("Empty source for problem $r->{problem_id}\n");
                 $judge->set_request_state($r, $cats::st_unhandled_error);
-                $judge->finish_job($r->{job_id});
+                $judge->finish_job($r->{job_id}, $cats::job_st_failed);
             }
             else {
                 test_problem($r);

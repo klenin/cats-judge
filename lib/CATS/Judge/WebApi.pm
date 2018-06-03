@@ -250,11 +250,12 @@ sub create_job {
 }
 
 sub finish_job {
-    my ($self, $job_id) = @_;
+    my ($self, $job_id, $job_state) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_finish_job',
         job_id => $job_id,
+        job_state => $job_state,
         sid => $self->{sid},
     ]);
 
