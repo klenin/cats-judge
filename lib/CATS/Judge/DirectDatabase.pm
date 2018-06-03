@@ -73,8 +73,8 @@ sub create_job {
 }
 
 sub finish_job {
-    my ($self, $job_id) = @_;
-    CATS::JudgeDB::finish_job($job_id);
+    my ($self, $job_id, $job_state) = @_;
+    CATS::JudgeDB::finish_job($job_id, $job_state);
 }
 
 sub select_request {
