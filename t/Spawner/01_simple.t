@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 87;
+use Test::More tests => 102;
 
 use File::Spec;
 use constant FS => 'File::Spec';
@@ -98,12 +98,25 @@ sub write_limit {
     my ($s, $msg) = @_;
     $msg .= ' WL';
     my $wl = $^O eq 'MSWin32' ? 5 : 20;
-    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{print 2 x 10_000 while 1;}' ], { stdout => '*f:' . FS->catfile($tmpdir, 'stdout.txt') });
+    my $app = CATS::Spawner::Program->new($perl, [ '-e', '{print 2 x 10_000 while 1;}' ],
+        { stdout => '*f:' . FS->catfile($tmpdir, 'stdout.txt') });
     my $r = $s->run({ write_limit => $wl }, $app);
     $wl *= 1024 * 1024;
     my $ri = single_item_ok($r, $msg, $TR_WRITE_LIMIT);
     is 1*$ri->{limits}->{write}, $wl, "$msg limit";
     cmp_ok abs($ri->{consumed}->{write} - $wl) / $wl, '<', 0.15, "$msg consumed";
+}
+
+sub environment {
+    my ($s, $msg) = @_;
+    $msg .= ' ENV';
+    ok !$ENV{ZZZ}, "$msg env clean";
+    my $app = CATS::Spawner::Program->new($perl, [ '-e',
+        # Avoid braces to work around quote_braced.
+        '{/^(PATH|ZZZ)$/ and push @r, qq~$_=$v\n~ while ($_, $v) = each %ENV; print sort @r;}' ]);
+    my $r = $s->run({ env => { ZZZ => 333, PATH => 'home' } }, $app);
+    my $ri = single_item_ok($r, $msg, $TR_OK);
+    is_deeply $s->stdout_lines_chomp, [ 'PATH=home', 'ZZZ=333' ], "$msg stdout";
 }
 
 my $bi = CATS::Spawner::Builtin->new({
@@ -122,15 +135,18 @@ my $dj = CATS::Spawner::Default->new({ %p, json => 1 });
 
 simple($bi, 'bi');
 out_err($bi, 'bi');
+environment($bi, 'bi');
 
 simple($bs, 'bs');
 out_err($bs, 'bs');
+#environment($bs, 'bs');
 
 simple($dt, 'dt');
 out_err($dt, 'dt');
 time_limit($dt, 'dt');
 memory_limit($dt, 'dt');
 write_limit($dt, 'dt');
+environment($dt, 'dt');
 
 simple($dj, 'dj');
 out_err($dj, 'dj');
@@ -139,5 +155,6 @@ deadline($dj, 'dj');
 idle_time_limit($dj, 'dj');
 memory_limit($dj, 'dj');
 write_limit($dj, 'dj');
+environment($dj, 'dj');
 
 $fu->remove([ $tmpdir, '*.txt' ]);

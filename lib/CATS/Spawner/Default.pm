@@ -63,6 +63,7 @@ sub make_sp_params {
         d  => $p->{deadline},
         ml => $p->{memory_limit},
         wl => $p->{write_limit},
+        (map { +D => "{$_=$p->{env}->{$_}}" } sort keys %{$p->{env} // {}}),
     );
     ($p->{json} // $self->opts->{json} ? '--json' : ()),
     map {

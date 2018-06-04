@@ -21,7 +21,14 @@ sub _run {
     die 'Programs count not equal 1' if @programs != 1;
 
     my $program = $programs[0];
+    my $env = $globals->{env} // {};
+    my %old_env;
+    for (keys %$env) {
+        $old_env{$_} = $ENV{$_};
+        $ENV{$_} = $env->{$_};
+    }
     my $run = $self->{fu}->run([ $program->application, @{$program->arguments} ]);
+    $ENV{$_} = $old_env{$_} for keys %old_env;
     $self->{stdout} = $run->stdout;
     $self->{stderr} = $run->stderr;
     my $report = CATS::Spawner::Report->new;
@@ -45,7 +52,7 @@ sub _run {
 
 sub stdout_lines { $_[0]->{stdout} }
 sub stderr_lines { $_[0]->{stderr} }
-sub stdout_lines_chomp { croak 'Not implemented' }
+sub stdout_lines_chomp { chomp for @{$_[0]->{stdout}}; $_[0]->{stdout}; }
 sub stderr_lines_chomp { croak 'Not implemented' }
 
 1;
