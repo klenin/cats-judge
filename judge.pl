@@ -742,8 +742,14 @@ sub compile {
     defined $compile_cmd or return (0, undef);
 
     if ($compile_cmd ne '') {
-        my $sp_report = $sp->run_single(
-            { section => $cats::log_section_compile, encoding => $judge_de_idx{$r->{de_id}}->{encoding} },
+        my %env;
+        if (my $add_path = get_cmd('compile_add_path', $r->{de_id})) {
+            %env = (env => { PATH => apply_params($add_path, { %{$r->{name_parts}}, PATH => $ENV{PATH} }) });
+        }
+        my $sp_report = $sp->run_single({
+            section => $cats::log_section_compile,
+            encoding => $judge_de_idx{$r->{de_id}}->{encoding},
+            %env },
             apply_params($compile_cmd, $r->{name_parts})
         ) or return (0, undef);
         my $ok = $sp_report->ok;

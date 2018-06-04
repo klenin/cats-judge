@@ -38,6 +38,7 @@ sub security_fields() { qw(cats_password) }
 sub de_fields() { qw(
     check
     compile
+    compile_add_path
     compile_error_flag
     encoding
     extension
