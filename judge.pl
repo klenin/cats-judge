@@ -64,7 +64,7 @@ my $cfg = CATS::Judge::Config->new(root => cats_dir);
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
-my $src_proc = CATS::Judge::SourceProcessor->new(cfg => $cfg, fu => $fu, log => $log);
+my $src_proc;
 
 my $judge;
 my $problem_cache;
@@ -726,58 +726,29 @@ sub run_single_test {
 
 sub compile {
     my ($r, $problem) = @_;
-    clear_rundir or return (0, undef);
+    clear_rundir or return;
 
-    prepare_modules($cats::solution_module) or return (0, undef);
-    $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src}) or return (0, undef);
+    prepare_modules($cats::solution_module) or return;
+    $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src})
+        or return;
 
-    my $compile_cmd = get_cmd('compile', $r->{de_id});
-    defined $compile_cmd or return (0, undef);
+    my $result = $src_proc->compile($r) or return;
 
-    if ($compile_cmd ne '') {
-        my %env;
-        if (my $add_path = get_cmd('compile_add_path', $r->{de_id})) {
-            %env = (env => { PATH => apply_params($add_path, { %{$r->{name_parts}}, PATH => $ENV{PATH} }) });
-        }
-        my $sp_report = $sp->run_single({
-            section => $cats::log_section_compile,
-            encoding => $src_proc->encoding($r->{de_id}),
-            %env },
-            apply_params($compile_cmd, $r->{name_parts})
-        ) or return (0, undef);
-        my $ok = $sp_report->ok;
-        if ($ok) {
-            my $error_flag = get_cmd('compile_error_flag', $r->{de_id});
-            if ($error_flag) {
-               if ($log->get_dump =~ /\Q$cats::log_section_compile\E\n\Q$error_flag\E/m) {
-                    $ok = 0;
-               }
-            }
-            if ($ok) {
-                my $runfile = get_cmd('runfile', $r->{de_id});
-                $runfile = apply_params($runfile, $r->{name_parts}) if $runfile;
-                if ($runfile && !(-f $cfg->rundir . "/$runfile")) {
-                    $ok = 0;
-                    log_msg("Runfile '$runfile' not created\n");
-                }
-            }
-        }
-        if (!$ok) {
-            insert_test_run_details(req_id => $r->{id}, test_rank => 1, result => $cats::st_compilation_error);
-            log_msg("compilation error\n");
-            return (0, $cats::st_compilation_error);
-        }
+    if ($result == $cats::st_compilation_error) {
+        insert_test_run_details(
+            req_id => $r->{id}, test_rank => 1, result => $cats::st_compilation_error);
+        return $result;
     }
-
+    $result == $cats::st_testing or die;
     if ($r->{status} == $cats::problem_st_compile) {
         log_msg("accept compiled solution\n");
-        return (0, $cats::st_accepted);
+        return $cats::st_accepted;
     }
 
     my $sd = [ $cfg->solutionsdir, $r->{id} ];
-    $fu->mkdir_clean($sd) or return (0, undef);
-    $fu->copy([ $cfg->rundir, '*' ], $sd) or return (0, undef);
-    (1, undef);
+    $fu->mkdir_clean($sd) or return;
+    $fu->copy([ $cfg->rundir, '*' ], $sd) or return;
+    $cats::st_testing;
 }
 
 sub run_testplan {
@@ -855,8 +826,8 @@ sub test_solution {
 
     my $try = sub {
         for my $run_req (@run_requests) {
-            my ($ret, $st) = compile($run_req, $problem);
-            return $st unless $ret;
+            my $st = compile($run_req, $problem);
+            return $st if !$st || $st != $cats::st_testing;
         }
 
         my %tests = $judge->get_testset($r->{id}, 1) or do {
@@ -1152,7 +1123,6 @@ $problem_cache = CATS::Judge::ProblemCache->new(
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
-$src_proc->init_DEs;
 
 {
     my $cfg_dirs = {};
@@ -1168,6 +1138,9 @@ $src_proc->init_DEs;
         json => 1,
     });
 }
+
+$src_proc = CATS::Judge::SourceProcessor->new(
+    cfg => $cfg, fu => $fu, log => $log, sp => $sp);
 
 sub make_backend() {
     CATS::Backend->new(
