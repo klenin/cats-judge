@@ -181,4 +181,11 @@ sub print_params {
     print_helper($self, [ grep /$r/, keys %$self ], '', $bare);
 }
 
+sub apply_params {
+    my ($str, $params) = @_;
+    $str =~ s/%$_/$params->{$_}/g
+        for sort { length $b <=> length $a } keys %$params;
+    $str;
+}
+
 1;

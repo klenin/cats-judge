@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 20;
+use Test::More tests => 23;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -110,4 +110,11 @@ my $end = q~</judge>~;
     throws_ok { $c->load(file => 'loop') } qr/loop/, 'include recursive';
     $c->load(src => qq~$default<include file="level2"/>$end~);
     is $c->name, 'included', 'include nested';
+}
+
+{
+    *ap = *CATS::Judge::Config::apply_params;
+    is ap('zzz', {}), 'zzz', 'no params';
+    is ap('z%zz', { z => 1 }), 'z1z', 'apply 1';
+    is ap('z%zz', { zz => 2, z => 1 }), 'z2', 'apply length';
 }

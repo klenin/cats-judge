@@ -77,6 +77,8 @@ sub log_msg { $log->msg(@_); }
 
 sub get_cmd { $src_proc->property(@_); }
 
+*apply_params = *CATS::Judge::Config::apply_params;
+
 sub get_run_cmd {
     my ($de_id, $opts) = @_;
     my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id");
@@ -158,13 +160,6 @@ sub my_safe_copy {
 }
 
 sub clear_rundir { $fu->remove_all($cfg->rundir); }
-
-sub apply_params {
-    my ($str, $params) = @_;
-    $str =~ s/%$_/$params->{$_}/g
-        for sort { length $b <=> length $a } keys %$params;
-    $str;
-}
 
 sub get_limits_hash {
     my ($ps, $problem) = @_;
