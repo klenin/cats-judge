@@ -32,6 +32,7 @@ use CATS::Judge::CommandLine;
 use CATS::Judge::Log;
 use CATS::Judge::Local;
 use CATS::Judge::ProblemCache;
+use CATS::Judge::SourceProcessor;
 
 use CATS::Spawner::Default;
 use CATS::Spawner::Program;
@@ -63,22 +64,18 @@ my $cfg = CATS::Judge::Config->new(root => cats_dir);
 my $log = CATS::Judge::Log->new;
 my $cli = CATS::Judge::CommandLine->new;
 my $fu = CATS::FileUtil->new({ logger => $log });
+my $src_proc = CATS::Judge::SourceProcessor->new(cfg => $cfg, fu => $fu, log => $log);
 
 my $judge;
 my $problem_cache;
 my $sp;
-my %judge_de_idx;
 
 my $problem_sources;
 my $current_job_id;
 
 sub log_msg { $log->msg(@_); }
 
-sub get_cmd {
-    my ($action, $de_id) = @_;
-    exists $judge_de_idx{$de_id} or die "undefined de_id: $de_id";
-    $judge_de_idx{$de_id}->{$action};
-}
+sub get_cmd { $src_proc->property(@_); }
 
 sub get_run_cmd {
     my ($de_id, $opts) = @_;
@@ -175,8 +172,9 @@ sub get_limits_hash {
     my %res = map { $_ => $ps->{"req_$_"} || $ps->{"cp_$_"} || $ps->{$_} || $problem->{$_} } @cats::limits_fields;
     $res{deadline} = $res{time_limit}
         if $res{time_limit} && (!defined $ENV{SP_DEADLINE} || $res{time_limit} > $ENV{SP_DEADLINE});
-    my $memory_handicap = $judge_de_idx{$ps->{de_id}}->{memory_handicap} if $ps->{de_id};
-    $res{memory_limit} += $memory_handicap // 0 if $res{memory_limit};
+    if ($res{memory_limit} && $ps->{de_id}) {
+        $res{memory_limit} += $src_proc->memory_handicap($ps->{de_id});
+    }
     $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
     %res;
 }
@@ -748,7 +746,7 @@ sub compile {
         }
         my $sp_report = $sp->run_single({
             section => $cats::log_section_compile,
-            encoding => $judge_de_idx{$r->{de_id}}->{encoding},
+            encoding => $src_proc->encoding($r->{de_id}),
             %env },
             apply_params($compile_cmd, $r->{name_parts})
         ) or return (0, undef);
@@ -962,8 +960,7 @@ sub prepare_problem {
     set_name_parts($_) for @$problem_sources;
     swap_main($r, $problem_sources) or return $cats::st_unhandled_error;
     # Ignore unsupported DEs for requests, but demand every problem to be installable on every judge.
-    my %unsupported_DEs =
-        map { $_->{code} => 1 } grep !exists $judge_de_idx{$_->{de_id}}, @$problem_sources;
+    my %unsupported_DEs = $src_proc->unsupported_DEs($problem_sources);
     if (%unsupported_DEs) {
         log_msg("unsupported DEs for problem %s: %s\n",
             $r->{problem_id}, join ', ', sort keys %unsupported_DEs);
@@ -1160,7 +1157,7 @@ $problem_cache = CATS::Judge::ProblemCache->new(
 
 $judge->auth;
 $judge->set_DEs($cfg->DEs);
-$judge_de_idx{$_->{id}} = $_ for values %{$cfg->DEs};
+$src_proc->init_DEs;
 
 {
     my $cfg_dirs = {};
