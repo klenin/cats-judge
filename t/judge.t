@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 39;
+use Test::More tests => 40;
 
 use File::Spec;
 
@@ -126,6 +126,13 @@ maybe_subtest 'minimal html', 5, sub {
 
 maybe_subtest 'no tests', 4, sub {
     like run_judge_sol($p_minimal, 'ok.cpp', t => 99)->stdout->[-1], qr/ignore submit/, 'ignored';
+};
+
+my $p_unsupported = FS->catfile($path, 'p_unsupported');
+
+maybe_subtest 'unsupported DEs', 4, sub {
+    like run_judge(qw(install -p), $p_unsupported)->stdout->[-1],
+        qr/unsupported.*999/, 'unsupported';
 };
 
 my $p_verdicts = FS->catfile($path, 'p_verdicts');

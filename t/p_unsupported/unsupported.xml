@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Unsupported" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="ok.cpp" type="checker" de_code="999" style="testlib" />
+<Test rank="1-1"><In>in</In><Out>out</Out></Test>
+</Problem>
+</CATS>
