@@ -570,8 +570,7 @@ sub run_checker {
 
     my $sp_report = $sp->run_single({ duplicate_output => \my $output },
         apply_params($checker_cmd, $checker_params), [], { %limits }) or return;
-
-    @{$sp_report->{errors}} == 0 && $sp_report->{terminate_reason} == $TR_OK or return;
+    $sp_report->tr_ok or return;
 
     [ $sp_report, $output ];
 }
