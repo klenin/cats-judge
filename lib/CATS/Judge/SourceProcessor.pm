@@ -67,8 +67,9 @@ sub compile {
         %env },
         apply_params($de->{compile}, $name_parts)
     ) or return;
+    $sp_report->tr_ok or return;
 
-    my $ok = $sp_report->ok;
+    my $ok = $sp_report->{exit_code} == 0;
 
     if ($ok && $de->{compile_error_flag}) {
         my $re = qr/\Q$cats::log_section_compile\E\n\Q$de->{compile_error_flag}\E/m;
