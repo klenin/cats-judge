@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 41;
+use Test::More tests => 42;
 
 use File::Spec;
 
@@ -101,6 +101,12 @@ maybe_subtest 'UH on bad compiler', 4, sub {
         qr/problem.*(cached|installed)/, 'minimal';
     like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => "DEs.102.compile=zzz")->stdout->[-1],
         qr/unhandled error/, 'unhandled';
+};
+
+maybe_subtest 'compile_error_flag', 4, sub {
+    like run_judge_sol($p_minimal, 'warn.pl',
+        de => 501, 'config-set' => "DEs.501.compile_error_flag=FLAG")->stdout->[-1],
+        qr/compilation error/, 'compilation error';
 };
 
 maybe_subtest 'reinitialize', 15, sub {
