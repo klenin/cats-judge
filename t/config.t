@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 23;
+use Test::More tests => 24;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -48,6 +48,14 @@ my $end = q~</judge>~;
     $c->load(src => "$default$end", override => { cats_url => 'rrr' });
     is $c->name, 'test', 'read';
     is $c->cats_url, 'rrr', 'override';
+}
+
+{
+    my $c = make_cfg;
+    $c->load(
+        src => qq~$default<de code="333" run="aaa"/>$end~,
+        override => { 'DEs.333.run' => 'bbb' });
+    is $c->DEs->{333}->{run}, 'bbb', 'override path';
 }
 
 {

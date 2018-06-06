@@ -148,14 +148,22 @@ sub load_file {
     pop @$stack;
 }
 
+sub _override {
+    my ($self, $override) = @_;
+    $override or return;
+    for my $k (keys %$override) {
+        my $h = \$self;
+        $h = \$$h->{$_} for split '\.', $k;
+        $$h = $override->{$k};
+    }
+}
+
 sub load {
     my ($self, %p) = @_;
     $p{file} ? $self->load_file($p{file}) :
     $p{src} ? $self->load_part($p{src}) :
     die 'file or src required';
-    if (my $ov = $p{override}) {
-        $self->{$_} = $ov->{$_} for keys %$ov;
-    }
+    $self->_override($p{override});
     defined $self->{$_} or die "config: undefined $_" for required_fields;
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
 }
@@ -165,11 +173,11 @@ sub print_helper {
     for my $k (sort @$keys) {
         print "$depth$k =" unless $bare;
         my $v = $val->{$k};
-        if (ref $v) {
+        if (ref $v eq 'HASH') {
             print "\n";
             print_helper($v, [ keys %$v ], "$depth    ");
         }
-        else {
+        elsif (!ref $v) {
             print $bare ? "$v\n" : " $v\n";
         }
     }
