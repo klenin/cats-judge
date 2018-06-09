@@ -249,13 +249,15 @@ sub get_interactor {
     if (!@interactors) {
         log_msg("Interactor is not defined, try search in solution modules (legacy)\n");
         # Suppose that interactor is the sole compilable solution module.
-        @interactors = grep $_->{stype} == $cats::solution_module && get_cmd('compile', $_->{de_id}), @$problem_sources;
+        @interactors = grep
+            $_->{stype} == $cats::solution_module &&
+            $src_proc->property('compile', $_->{de_id}), @$problem_sources;
         $interactors[0]->{legacy} = 1 if @interactors;
     }
 
     @interactors == 0 ? log_msg("Unable to find interactor\n") :
-        @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
-            $interactors[0];
+    @interactors > 1 ? log_msg('Ambiguous interactors: ' . join(',', map $_->{fname}, @interactors) . "\n") :
+    $interactors[0];
 }
 
 sub prepare_solution_environment {
@@ -424,12 +426,7 @@ sub prepare_modules {
         my $fname = $m->{name_parts}->{full_name};
         log_msg("module: $fname\n");
         $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
-
-        # If compile_cmd is absent, module does not need compilation (de_code=1).
-        my $compile_cmd = get_cmd('compile', $m->{de_id})
-            or next;
-        $sp->run_single({}, apply_params($compile_cmd, $m->{name_parts}))
-            or return undef;
+        ($src_proc->compile($m) // -1) == $cats::st_testing or return;
     }
     1;
 }
@@ -457,14 +454,7 @@ sub initialize_problem {
 
         $fu->write_to_file([ $cfg->rundir, $ps->{name_parts}->{full_name} ], $ps->{src}) or return;
 
-        if (my $compile_cmd = get_cmd('compile', $ps->{de_id})) {
-            my $sp_report = $sp->run_single({}, apply_params($compile_cmd, $ps->{name_parts}))
-                or return undef;
-            if (!$sp_report->ok) {
-                log_msg("*** compilation error ***\n");
-                return undef;
-            }
-        }
+        ($src_proc->compile($ps) // -1) == $cats::st_testing or return;
 
         if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
            $fu->write_to_file([ $cfg->rundir, $cfg->formal_input_fname ], $p->{formal_input}) or return;
@@ -731,7 +721,7 @@ sub compile {
     $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src})
         or return;
 
-    my $result = $src_proc->compile($r) or return;
+    my $result = $src_proc->compile($r, { section => 1 }) or return;
 
     if ($result == $cats::st_compilation_error) {
         insert_test_run_details(

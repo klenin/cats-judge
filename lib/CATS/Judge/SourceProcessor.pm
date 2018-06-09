@@ -47,7 +47,7 @@ sub unsupported_DEs {
 # source: { de_id, name_parts }
 # => undef | $cats::st_testing | $cats::st_compilation_error
 sub compile {
-    my ($self, $source) = @_;
+    my ($self, $source, $opt) = @_;
     my $de_id = $source->{de_id} or die;
     my $name_parts = $source->{name_parts} or die;
     my $de = $self->{de_idx}->{$de_id} or die "undefined de_id: $de_id";
@@ -62,7 +62,7 @@ sub compile {
         %env = (env => { PATH => $path });
     }
     my $sp_report = $self->sp->run_single({
-        section => $cats::log_section_compile,
+        ($opt->{section} ? (section => $cats::log_section_compile) : ()),
         encoding => $de->{encoding},
         %env },
         apply_params($de->{compile}, $name_parts)
