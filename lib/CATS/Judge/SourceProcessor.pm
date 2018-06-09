@@ -35,10 +35,12 @@ sub property {
 
 # ps: { de_id, code }
 sub require_property {
-    my ($self, $name, $ps) = @_;
-    $self->property($name, $ps->{de_id}) ||
-        $self->log->msg("No '%s' action for DE: %s\n",
+    my ($self, $name, $ps, $opts) = @_;
+    my $value = $self->property($name, $ps->{de_id})
+        or return $self->log->msg("No '%s' action for DE: %s\n",
             $name, $ps->{code} // 'id=' . $ps->{de_id});
+    $ps->{name_parts} or return $self->log->msg("No name parts\n");
+    apply_params($value, { %{$ps->{name_parts}}, %$opts });
 }
 
 # sources: [ { de_id, code } ]

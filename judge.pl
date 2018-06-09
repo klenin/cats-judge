@@ -75,14 +75,6 @@ my $current_job_id;
 
 sub log_msg { $log->msg(@_); }
 
-*apply_params = *CATS::Judge::Config::apply_params;
-
-sub get_run_cmd {
-    my ($r, $opts) = @_;
-    my $run_cmd = $src_proc->require_property(run => $r) or return;
-    apply_params($run_cmd, $opts);
-}
-
 sub set_name_parts {
     my ($r) = @_;
     (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($r->{fname})
@@ -113,9 +105,8 @@ sub get_run_params {
             $solution_opts = {
                 %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
-        my $names = $r->{name_parts} or return log_msg("No name parts\n");
-        my $run_cmd = get_run_cmd($r, {
-            %$names, %$run_cmd_opts, output_file => output_or_default($problem->{output_file}),
+        my $run_cmd = $src_proc->require_property(run => $r, {
+            %$run_cmd_opts, output_file => output_or_default($problem->{output_file}),
         }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
     }
@@ -135,7 +126,7 @@ sub get_run_params {
         delete $limits{deadline};
         $global_opts->{idle_time_limit} = $limits{time_limit} + 1 if $limits{time_limit};
 
-        my $run_cmd = get_run_cmd($i, $i->{name_parts}) or return;
+        my $run_cmd = $src_proc->require_property(run => $i, {}) or return;
 
         unshift @programs, CATS::Spawner::Program->new($run_cmd,
             $is_competititve ? [ scalar @programs ] : [],
@@ -171,8 +162,6 @@ sub generate_test {
     $fu->copy($problem_cache->source_path($pid, $test->{generator_id}, '*'), $cfg->rundir)
         or return;
 
-    my $generate_cmd = $src_proc->require_property(generate => $ps) or return;
-
     my $redir;
     my $out = $ps->{output_file} // $input_fname;
     if ($out =~ /^\*STD(IN|OUT)$/) {
@@ -180,10 +169,11 @@ sub generate_test {
         $out = 'stdout1.txt';
         $redir = $out;
     }
-    my $applied_cmd = apply_params(
-        $generate_cmd, { %{$ps->{name_parts}}, args => $test->{param} // ''});
+
+    my $generate_cmd = $src_proc->require_property(
+        generate => $ps, { args => $test->{param} // '' }) or return;
     my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
-        $applied_cmd,
+        $generate_cmd,
         [],
         { $src_proc->get_limits($ps, $problem), stdout => $redir }
     ) or return undef;
@@ -280,11 +270,12 @@ sub validate_test {
     $fu->copy($path_to_test, $cfg->rundir) or return;
     $fu->copy($problem_cache->source_path($pid, $in_v_id, '*'), $cfg->rundir) or return;
 
-    my $validate_cmd = $src_proc->require_property(validate => $validator) or return;
     my (undef, undef, $t_fname, $t_name, undef) = split_fname(FS->catfile(@$path_to_test));
+    my $validate_cmd = $src_proc->require_property(
+        validate => $validator, { test_input => $t_fname }) or return;
 
     my $sp_report = $sp->run_single({ stdin => $t_fname },
-        apply_params($validate_cmd, { %{$validator->{name_parts}}, test_input => $t_fname }),
+        $validate_cmd,
         [],
         { $src_proc->get_limits($validator, $problem) }
     ) or return;
@@ -520,6 +511,7 @@ sub run_checker {
     if (defined $problem->{std_checker}) {
         $checker_cmd = $cfg->checkers->{$problem->{std_checker}}
             or return log_msg("unknown std checker: $problem->{std_checker}\n");
+        $checker_cmd = CATS::Judge::Config::apply_params($checker_cmd, $checker_params);
         %limits = $src_proc->get_limits({}, $problem);
     }
     else {
@@ -537,11 +529,11 @@ sub run_checker {
 
         %limits = $src_proc->get_limits($ps, $problem);
 
-        $checker_cmd = $src_proc->require_property(check => $ps) or return;
+        $checker_cmd = $src_proc->require_property(check => $ps, $checker_params) or return;
     }
 
     my $sp_report = $sp->run_single({ duplicate_output => \my $output },
-        apply_params($checker_cmd, $checker_params), [], { %limits }) or return;
+        $checker_cmd, [], { %limits }) or return;
     $sp_report->tr_ok or return;
 
     [ $sp_report, $output ];
@@ -980,9 +972,8 @@ sub generate_snippets {
 
             $fu->copy($problem_cache->source_path($r->{problem_id}, $gen_id, '*'), $cfg->rundir) or die;
 
-            my $generate_cmd = $src_proc->require_property(generate => $ps) or die;
-            my $applied_cmd = apply_params($generate_cmd, { %{$ps->{name_parts}}, args => '' });
-            my $sp_report = $sp->run_single({}, $applied_cmd, [ $tags ]) or die; #TODO limits
+            my $generate_cmd = $src_proc->require_property(generate => $ps, { args => '' }) or die;
+            my $sp_report = $sp->run_single({}, $generate_cmd, [ $tags ]) or die; #TODO limits
 
             for my $sn (@{$generators->{$gen_id}}) {
                 CATS::BinaryFile::load(CATS::FileUtil::fn([$cfg->rundir, $sn]), \my $data);
@@ -1101,7 +1092,7 @@ $judge->set_DEs($cfg->DEs);
     $sp = CATS::Spawner::Default->new({
         %$cfg,
         logger => $log,
-        path => apply_params($sp_define, $cfg_dirs),
+        path => CATS::Judge::Config::apply_params($sp_define, $cfg_dirs),
         run_dir => $cfg->rundir,
         json => 1,
     });
