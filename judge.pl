@@ -75,14 +75,12 @@ my $current_job_id;
 
 sub log_msg { $log->msg(@_); }
 
-sub get_cmd { $src_proc->property(@_); }
-
 *apply_params = *CATS::Judge::Config::apply_params;
 
 sub get_run_cmd {
-    my ($de_id, $opts) = @_;
-    my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id\n");
-    return apply_params($run_cmd, $opts);
+    my ($r, $opts) = @_;
+    my $run_cmd = $src_proc->require_property(run => $r) or return;
+    apply_params($run_cmd, $opts);
 }
 
 sub set_name_parts {
@@ -116,7 +114,7 @@ sub get_run_params {
                 %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
         my $names = $r->{name_parts} or return log_msg("No name parts\n");
-        my $run_cmd = get_run_cmd($r->{de_id}, {
+        my $run_cmd = get_run_cmd($r, {
             %$names, %$run_cmd_opts, output_file => output_or_default($problem->{output_file}),
         }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
@@ -137,7 +135,7 @@ sub get_run_params {
         delete $limits{deadline};
         $global_opts->{idle_time_limit} = $limits{time_limit} + 1 if $limits{time_limit};
 
-        my $run_cmd = get_run_cmd($i->{de_id}, $i->{name_parts}) or return;
+        my $run_cmd = get_run_cmd($i, $i->{name_parts}) or return;
 
         unshift @programs, CATS::Spawner::Program->new($run_cmd,
             $is_competititve ? [ scalar @programs ] : [],
@@ -173,8 +171,7 @@ sub generate_test {
     $fu->copy($problem_cache->source_path($pid, $test->{generator_id}, '*'), $cfg->rundir)
         or return;
 
-    my $generate_cmd = get_cmd('generate', $ps->{de_id})
-        or do { print "No generate cmd for: $ps->{de_id}\n"; return undef; };
+    my $generate_cmd = $src_proc->require_property(generate => $ps) or return;
 
     my $redir;
     my $out = $ps->{output_file} // $input_fname;
@@ -283,8 +280,7 @@ sub validate_test {
     $fu->copy($path_to_test, $cfg->rundir) or return;
     $fu->copy($problem_cache->source_path($pid, $in_v_id, '*'), $cfg->rundir) or return;
 
-    my $validate_cmd = get_cmd('validate', $validator->{de_id})
-        or return log_msg("No validate cmd for: $validator->{de_id}\n");
+    my $validate_cmd = $src_proc->require_property(validate => $validator) or return;
     my (undef, undef, $t_fname, $t_name, undef) = split_fname(FS->catfile(@$path_to_test));
 
     my $sp_report = $sp->run_single({ stdin => $t_fname },
@@ -541,8 +537,7 @@ sub run_checker {
 
         %limits = $src_proc->get_limits($ps, $problem);
 
-        $checker_cmd = get_cmd('check', $ps->{de_id})
-            or return log_msg("No 'check' action for DE: $ps->{code}\n");
+        $checker_cmd = $src_proc->require_property(check => $ps) or return;
     }
 
     my $sp_report = $sp->run_single({ duplicate_output => \my $output },
@@ -985,11 +980,8 @@ sub generate_snippets {
 
             $fu->copy($problem_cache->source_path($r->{problem_id}, $gen_id, '*'), $cfg->rundir) or die;
 
-            my $generate_cmd = get_cmd('generate', $ps->{de_id})
-                or do { log_msg("No generate cmd for: '%s'\n", $ps->{de_id}); die; };
-
+            my $generate_cmd = $src_proc->require_property(generate => $ps) or die;
             my $applied_cmd = apply_params($generate_cmd, { %{$ps->{name_parts}}, args => '' });
-
             my $sp_report = $sp->run_single({}, $applied_cmd, [ $tags ]) or die; #TODO limits
 
             for my $sn (@{$generators->{$gen_id}}) {

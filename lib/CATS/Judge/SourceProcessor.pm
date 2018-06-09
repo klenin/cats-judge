@@ -33,6 +33,14 @@ sub property {
     $self->{de_idx}->{$de_id}->{$name};
 }
 
+# ps: { de_id, code }
+sub require_property {
+    my ($self, $name, $ps) = @_;
+    $self->property($name, $ps->{de_id}) ||
+        $self->log->msg("No '%s' action for DE: %s\n",
+            $name, $ps->{code} // 'id=' . $ps->{de_id});
+}
+
 # sources: [ { de_id, code } ]
 sub unsupported_DEs {
     my ($self, $sources) = @_;
