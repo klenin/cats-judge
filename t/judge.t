@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 42;
+use Test::More tests => 43;
 
 use File::Spec;
 
@@ -99,7 +99,7 @@ maybe_subtest 'run minimal', 4, sub {
 maybe_subtest 'UH on bad compiler', 8, sub {
     like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
         qr/problem.*(cached|installed)/, 'minimal';
-    like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => "DEs.102.compile=zzz")->stdout->[-1],
+    like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => 'DEs.102.compile=zzz')->stdout->[-1],
         qr/unhandled error/, 'unhandled';
 };
 
@@ -201,10 +201,15 @@ maybe_subtest 'verdicts multiple', 5, sub {
 };
 
 SKIP: {
-    skip 'ML under linux is unstable', 1 if $^O ne 'MSWin32';
+    skip 'ML under linux is unstable', 2 if $^O ne 'MSWin32';
     maybe_subtest 'verdicts ML', 4, sub {
         like run_judge_sol($p_verdicts, 'allocate.cpp')->stdout->[-1],
             qr/memory limit exceeded/, 'ML';
+    };
+    maybe_subtest 'verdicts ML handicap', 4, sub {
+        like run_judge_sol($p_verdicts, 'allocate.cpp',
+            'config-set' => 'DEs.102.memory_handicap=600')->stdout->[-1],
+            qr/accept/, 'no ML handicap';
     };
 }
 

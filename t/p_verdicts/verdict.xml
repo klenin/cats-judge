@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CATS version="1.8">
 <Problem title="Verdicts" lang="en"
-  tlimit="1" mlimit="256" wlimit="1" inputFile="*STDIN" outputFile="*STDOUT" >
+  tlimit="1" mlimit="64" wlimit="1" inputFile="*STDIN" outputFile="*STDOUT" >
 
 <Checker src="out_verdict.cpp" type="checker" de_code="102" style="testlib" />
 <Solution name="sol" src="print0.cpp" de_code="102" />

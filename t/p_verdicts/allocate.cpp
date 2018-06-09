@@ -1,1 +1,4 @@
-int main() { while (1) new char[1000]; return 0; }
+int main() {
+    for (int i = 0; i < 500 * 1000; ++i) new char[1000];
+    return 0;
+}

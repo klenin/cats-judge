@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv) {
     std::ifstream fout(argv[2]);
-    int x;
+    int x = 0;
     fout >> x;
     return x;
 }

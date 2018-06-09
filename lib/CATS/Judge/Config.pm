@@ -44,6 +44,7 @@ sub de_fields() { qw(
     extension
     generate
     interactor_name
+    memory_handicap
     run
     run_interactive
     runfile
