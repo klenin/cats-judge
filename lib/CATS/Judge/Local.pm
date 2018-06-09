@@ -65,10 +65,10 @@ sub select_request {
         import_source => $import_source,
     );
     my $p = {
-        'cats' => 'CATS::Problem::Parser',
-        'polygon' => 'CATS::Problem::PolygonParser',
-    }->{$self->{format} // 'cats'};
-    $p or die "Unknown problem format: '$self->{format}'";
+        cats => 'CATS::Problem::Parser',
+        polygon => 'CATS::Problem::PolygonParser',
+    }->{$self->{format} // 'cats'}
+        or die "Unknown problem format: '$self->{format}'";
     $self->{parser} = $p->new(%opts);
 
     eval { $self->{parser}->parse; };
@@ -78,7 +78,9 @@ sub select_request {
         id => 0,
         problem_id => $self->get_problem_id,
         contest_id => 0,
-        state => 1,
+        type => $cats::job_type_submission,
+        job_state => $cats::job_st_in_progress,
+        req_state => $cats::st_testing,
         is_jury => 0,
         run_all_tests => ($self->{'use-plan'} eq 'all' ? 1 : 0),
         status => $cats::problem_st_ready,
@@ -92,8 +94,11 @@ sub select_request {
     my $r = $self->{run};
     $r =~ tr{:/\\}{~};
     $req->{id} = $opts{id_gen}->($self, $r);
-    open my $run_file, $self->{run} or die "Couldn't open file '$self->{run}': $!";
-    $req->{src} = join '', <$run_file>;
+    open my $run_file, '<', $self->{run} or die "Couldn't open file '$self->{run}': $!";
+    {
+        local $/ = undef;
+        $req->{src} = <$run_file>;
+    }
     $req;
 }
 

@@ -81,7 +81,7 @@ sub get_cmd { $src_proc->property(@_); }
 
 sub get_run_cmd {
     my ($de_id, $opts) = @_;
-    my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id");
+    my $run_cmd = get_cmd('run', $de_id) or return log_msg("No run cmd for DE: $de_id\n");
     return apply_params($run_cmd, $opts);
 }
 
