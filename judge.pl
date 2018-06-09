@@ -104,7 +104,7 @@ sub get_run_params {
 
     my $time_limit_sum = 0;
     for my $r (@$rs) {
-        my %limits = get_limits_hash($r, $problem);
+        my %limits = $src_proc->get_limits($r, $problem);
         $time_limit_sum += $limits{time_limit};
 
         my $solution_opts;
@@ -133,7 +133,7 @@ sub get_run_params {
     if ($is_interactive || $is_competititve) {
         my $i = $run_info->{interactor}
             or return log_msg("No interactor specified in get_run_params\n");
-        my %limits = get_limits_hash($run_info->{interactor}, $problem);
+        my %limits = $src_proc->get_limits($run_info->{interactor}, $problem);
         delete $limits{deadline};
         $global_opts->{idle_time_limit} = $limits{time_limit} + 1 if $limits{time_limit};
 
@@ -160,19 +160,6 @@ sub my_safe_copy {
 }
 
 sub clear_rundir { $fu->remove_all($cfg->rundir); }
-
-sub get_limits_hash {
-    my ($ps, $problem) = @_;
-    $problem //= {};
-    my %res = map { $_ => $ps->{"req_$_"} || $ps->{"cp_$_"} || $ps->{$_} || $problem->{$_} } @cats::limits_fields;
-    $res{deadline} = $res{time_limit}
-        if $res{time_limit} && (!defined $ENV{SP_DEADLINE} || $res{time_limit} > $ENV{SP_DEADLINE});
-    if ($res{memory_limit} && $ps->{de_id}) {
-        $res{memory_limit} += $src_proc->memory_handicap($ps->{de_id});
-    }
-    $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
-    %res;
-}
 
 sub generate_test {
     my ($problem, $test, $input_fname) = @_;
@@ -201,7 +188,7 @@ sub generate_test {
     my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
         $applied_cmd,
         [],
-        { get_limits_hash($ps, $problem), stdout => $redir }
+        { $src_proc->get_limits($ps, $problem), stdout => $redir }
     ) or return undef;
 
     $sp_report->ok ? $out : undef;
@@ -303,7 +290,7 @@ sub validate_test {
     my $sp_report = $sp->run_single({ stdin => $t_fname },
         apply_params($validate_cmd, { %{$validator->{name_parts}}, test_input => $t_fname }),
         [],
-        { get_limits_hash($validator, $problem) }
+        { $src_proc->get_limits($validator, $problem) }
     ) or return;
 
     $sp_report->ok;
@@ -537,7 +524,7 @@ sub run_checker {
     if (defined $problem->{std_checker}) {
         $checker_cmd = $cfg->checkers->{$problem->{std_checker}}
             or return log_msg("unknown std checker: $problem->{std_checker}\n");
-        %limits = get_limits_hash({}, $problem);
+        %limits = $src_proc->get_limits({}, $problem);
     }
     else {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
@@ -552,7 +539,7 @@ sub run_checker {
         $checker_params->{checker_args} =
             $ps->{stype} == $cats::checker ? qq~"$a" "$o" "$i"~ : qq~"$i" "$o" "$a"~;
 
-        %limits = get_limits_hash($ps, $problem);
+        %limits = $src_proc->get_limits($ps, $problem);
 
         $checker_cmd = get_cmd('check', $ps->{de_id})
             or return log_msg("No 'check' action for DE: $ps->{code}\n");

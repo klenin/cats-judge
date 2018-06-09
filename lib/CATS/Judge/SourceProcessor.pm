@@ -33,11 +33,6 @@ sub property {
     $self->{de_idx}->{$de_id}->{$name};
 }
 
-sub memory_handicap {
-    my ($self, $de_id) = @_;
-    $self->{de_idx}->{$de_id}->{memory_handicap} // 0;
-}
-
 # sources: [ { de_id, code } ]
 sub unsupported_DEs {
     my ($self, $sources) = @_;
@@ -86,6 +81,20 @@ sub compile {
 
     $ok or $self->log->msg("compilation error\n");
     $ok ? $cats::st_testing : $cats::st_compilation_error;
+}
+
+sub get_limits {
+    my ($self, $ps, $problem) = @_;
+    $problem //= {};
+    my %res = map { $_ => $ps->{"req_$_"} || $ps->{"cp_$_"} || $ps->{$_} || $problem->{$_} }
+        @cats::limits_fields;
+    $res{deadline} = $res{time_limit}
+        if $res{time_limit} && (!defined $ENV{SP_DEADLINE} || $res{time_limit} > $ENV{SP_DEADLINE});
+    if ($res{memory_limit} && $ps->{de_id}) {
+        $res{memory_limit} += $self->property(memory_handicap => $ps->{de_id}) // 0;
+    }
+    $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
+    %res;
 }
 
 1;
