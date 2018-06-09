@@ -96,7 +96,7 @@ maybe_subtest 'run minimal', 4, sub {
     like run_judge_sol($p_minimal, 'ok.cpp')->stdout->[-1], qr/accepted/, 'accepted';
 };
 
-maybe_subtest 'UH on bad compiler', 4, sub {
+maybe_subtest 'UH on bad compiler', 8, sub {
     like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
         qr/problem.*(cached|installed)/, 'minimal';
     like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => "DEs.102.compile=zzz")->stdout->[-1],
