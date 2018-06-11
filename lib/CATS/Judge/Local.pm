@@ -43,6 +43,11 @@ sub get_problem_id {
     $pid ||= Digest::MD5::md5_hex(Encode::encode_utf8($t))
 }
 
+sub get_tests_req_details {
+    my ($self, $req_id) = @_;
+    [ sort { $a->{test_rank} <=> $b->{test_rank} } @{$self->{results}->{$req_id} // []} ];
+}
+
 sub set_request_state {
     my ($self, $req, $state, %p) = @_;
 }
@@ -265,7 +270,7 @@ sub is_problem_uptodate {
 }
 
 sub get_testset {
-    my ($self, $rid, $update) = @_;
+    my ($self, $table, $id, $update) = @_;
     $self->{testset} or return map { $_->{rank} => undef } values %{$self->{parser}{problem}{tests}};
 
     my @all_tests = map { $_->{rank} } values %{$self->{parser}{problem}{tests}};

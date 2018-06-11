@@ -51,6 +51,8 @@ sub auth {
 
 sub is_locked { $_[0]->{lock_counter} }
 
+sub can_split { 1 }
+
 sub set_request_state {
     my ($self, $req, $state, %p) = @_;
 
@@ -64,6 +66,12 @@ sub set_request_state {
     });
 }
 
+sub create_splitted_jobs {
+    my ($self, $job_type, $testsets, $p) = @_;
+    CATS::Job::create_splitted_jobs($job_type, $testsets, $p);
+    $dbh->commit;
+}
+
 sub create_job {
     my ($self, $job_type, $p) = @_;
     $p->{judge_id} = $self->{id};
@@ -75,6 +83,16 @@ sub create_job {
 sub finish_job {
     my ($self, $job_id, $job_state) = @_;
     CATS::JudgeDB::finish_job($job_id, $job_state);
+}
+
+sub get_tests_req_details {
+    my ($self, $req_id) = @_;
+    CATS::JudgeDB::get_tests_req_details($req_id);
+}
+
+sub is_set_req_state_allowed {
+    my ($self, $job_id, $force) = @_;
+    CATS::JudgeDB::is_set_req_state_allowed($job_id, $force);
 }
 
 sub select_request {
@@ -183,8 +201,8 @@ sub is_problem_uptodate {
 }
 
 sub get_testset {
-    my ($self, $rid, $update) = @_;
-    CATS::Testset::get_testset($dbh, $rid, $update);
+    my ($self, $table, $id, $update) = @_;
+    CATS::Testset::get_testset($dbh, $table, $id, $update);
 }
 
 sub finalize {
