@@ -79,6 +79,8 @@ sub auth {
     $self->{id} = $response->{id};
 }
 
+sub can_split { 1 }
+
 sub update_dev_env {
     my ($self) = @_;
 
@@ -233,6 +235,38 @@ sub set_request_state {
     die "set_request_state: $response->{error}" if $response->{error};
 }
 
+sub is_set_req_state_allowed {
+    my ($self, $job_id, $force) = @_;
+    my $response = $self->get_json([
+        f => 'api_judge_is_set_req_state_allowed',
+        job_id => $job_id,
+        force => $force,
+        sid => $self->{sid},
+    ]);
+
+    die "is_set_req_state_allowed: $response->{error}" if $response->{error};
+
+    ($response->{parent_id}, $response->{allow_set_req_state});
+}
+
+sub create_splitted_jobs {
+    my ($self, $job_type, $testsets, $p) = @_;
+    warn join(' ', @$testsets);
+    my $response = $self->get_json([
+        f => 'api_judge_create_splitted_jobs',
+        job_type => $job_type,
+        problem_id => $p->{problem_id},
+        contest_id => $p->{contest_id},
+        req_id => $p->{req_id},
+        state => $p->{state},
+        parent_id => $p->{parent_id},
+        sid => $self->{sid},
+        (map +(testsets => $_), @$testsets),
+    ]);
+
+    die "create_splitted_jobs: $response->{error}" if $response->{error};
+}
+
 sub create_job {
     my ($self, $job_type, $p) = @_;
 
@@ -300,6 +334,20 @@ sub delete_req_details {
     die "delete_req_details: $response->{error}" if $response->{error};
 }
 
+sub get_tests_req_details {
+    my ($self, $req_id) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_get_tests_req_details',
+        req_id => $req_id,
+        sid => $self->{sid},
+    ]);
+
+    die "get_tests_req_details: $response->{error}" if $response->{error};
+
+    $response->{req_details};
+}
+
 sub insert_req_details {
     my ($self, $p) = @_;
 
@@ -361,11 +409,12 @@ sub save_problem_snippet {
 }
 
 sub get_testset {
-    my ($self, $req_id, $update) = @_;
+    my ($self, $table, $id, $update) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_get_testset',
-        req_id => $req_id,
+        table => $table,
+        id => $id,
         update => $update,
         sid => $self->{sid},
     ]);

@@ -7,7 +7,7 @@ use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
 use Fcntl qw(:flock);
-use List::Util qw(max);
+use List::Util qw(max min);
 
 sub terminate($) {
     print "\n$_[0]\n";
@@ -744,14 +744,8 @@ sub run_testplan {
     ($run_verdict, $competitive_outputs);
 }
 
-sub test_solution {
+sub get_run_reqs {
     my ($r) = @_;
-
-    log_msg("Testing solution: $r->{id} for problem: $r->{problem_id}\n");
-    my $problem = $judge->get_problem($r->{problem_id});
-
-    $problem->{run_info} = get_run_info($problem->{run_method});
-
     my @run_requests;
     my $is_group_req = 0;
     if ($r->{elements_count} && $r->{elements_count} > 0) {
@@ -769,6 +763,49 @@ sub test_solution {
     } else {
         push @run_requests, $r;
     }
+    ($is_group_req, @run_requests);
+}
+
+sub split_solution {
+    my ($r) = @_;
+    log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
+    my ($is_group_req, @run_requests) = get_run_reqs($r);
+
+    for (@run_requests) {
+        $judge->delete_req_details($_->{id});
+        $judge->set_request_state($_, $cats::st_testing);
+    }
+
+    $judge->delete_req_details($r->{id}) if $is_group_req;
+
+    my %tests = $judge->get_testset('reqs', $r->{id}, 1) or do {
+        log_msg("no tests found\n");
+        return $cats::st_ignore_submit;
+    };
+
+    my $tests_count = keys %tests;
+    my $subtasks_amount = min(4, max(1, $tests_count / 5));
+
+    my @tests;
+    push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
+
+    $judge->create_splitted_jobs($cats::job_type_submission_part, [ map(join(',', @$_), @tests) ], {
+        problem_id => $r->{problem_id},
+        contest_id => $r->{contest_id},
+        state => $cats::job_st_waiting,
+        parent_id => $r->{job_id},
+        req_id => $r->{id},
+    });
+
+    $cats::st_testing;
+}
+
+sub test_solution {
+    my ($r, $problem) = @_;
+
+    log_msg("Testing solution part: $r->{id} for problem: $r->{problem_id}\n");
+
+    $problem->{run_info} = get_run_info($problem->{run_method});
 
     ($problem->{checker_id}) = map $_->{id}, grep
         { ($cats::source_modules{$_->{stype}} || -1) == $cats::checker_module }
@@ -779,21 +816,19 @@ sub test_solution {
         return undef;
     }
 
-    for my $run_req (@run_requests) {
-        $judge->delete_req_details($run_req->{id});
-        set_name_parts($run_req);
-    }
-    $judge->delete_req_details($r->{id}) if $is_group_req;
+    my ($is_group_req, @run_requests) = get_run_reqs($r);
+    set_name_parts($_) for @run_requests;
 
     my $solution_status = $cats::st_accepted;
-
     my $try = sub {
         for my $run_req (@run_requests) {
             my $st = compile($run_req, $problem);
             return $st if !$st || $st != $cats::st_testing;
         }
+        my %tests = ($problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission) ?
+            $judge->get_testset('reqs', $r->{id}, 1) : $judge->get_testset('jobs', $r->{job_id});
 
-        my %tests = $judge->get_testset($r->{id}, 1) or do {
+        %tests or do {
             log_msg("no tests found\n");
             return $cats::st_ignore_submit;
         };
@@ -826,8 +861,6 @@ sub test_solution {
                 }
                 # For a group request, set group verdict to the first non-accepted run verdict.
                 $solution_status = $run_verdict if $solution_status == $cats::st_accepted;
-                # For a single request, state will be set by test_solution.
-                $judge->set_request_state($run_req, $run_verdict, %$run_req) if @run_requests > 1;
             }
         }
         'FALL';
@@ -916,13 +949,58 @@ sub prepare_problem {
         log_msg("problem '$r->{problem_id}' cached\n");
     }
 
-    $judge->set_request_state($r, $state, %$r);
-
     $state;
 }
 
+sub log_state_text {
+    my ($state, $failed_test) = @_;
+
+    my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};
+    $state_text =~ s/_/ /g;
+    $state_text .= " on test $failed_test" if $failed_test;
+    log_msg("==> $state_text\n");
+}
+
+sub set_verdict {
+    my ($r, $parent_id, $state) = @_;
+    $state = $cats::st_accepted if $state != $cats::st_unhandled_error &&
+        $state != $cats::st_ignore_submit && $state != $cats::st_compilation_error;
+
+    my ($is_group_req, @run_requests) = get_run_reqs($r);
+
+    for my $req (@run_requests) {
+        if ($state == $cats::st_unhandled_error) {
+            $judge->set_request_state($req, $state, %$req);
+            next;
+        }
+
+        my $req_details = $judge->get_tests_req_details($req->{id});
+        my $tp = CATS::TestPlan->new;
+        my $cur_req_state = $tp->get_state($req_details);
+        $req->{failed_test} = $tp->first_failed;
+
+        if ($state == $cats::st_accepted) {
+            $state = $cur_req_state;
+            $r->{failed_test} = $req->{failed_test};
+        }
+
+        if ($req->{status} == $cats::problem_st_manual && $cur_req_state == $cats::st_accepted) {
+            $cur_req_state = $cats::st_awaiting_verification;
+        }
+
+        $judge->set_request_state($req, $cur_req_state, %$req);
+    }
+
+    $judge->set_request_state($r, $state, %$r) if $is_group_req;
+
+    $judge->finish_job($parent_id, $state == $cats::st_unhandled_error ?
+        $cats::job_st_failed : $cats::job_st_finished);
+
+    log_state_text($state, $r->{failed_test});
+}
+
 sub test_problem {
-    my ($r) = @_;
+    my ($r, $problem) = @_;
 
     log_msg("test log:\n");
     my $orig_name = $r->{fname};
@@ -930,7 +1008,7 @@ sub test_problem {
 
     my $state;
     eval {
-        $state = test_solution($r); 1;
+        $state = test_solution($r, $problem); 1;
     } or do {
         log_msg("error: $@\n");
     };
@@ -939,17 +1017,16 @@ sub test_problem {
     # It is too late to report error, since set_request_state might have already been called.
     eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
 
-    if ($r->{status} == $cats::problem_st_manual && $state == $cats::st_accepted) {
-        $state = $cats::st_awaiting_verification;
-    }
-    $judge->set_request_state($r, $state, %$r);
-    $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
-        $cats::job_st_failed : $cats::job_st_finished);
+    return set_verdict($r, $r->{job_id}, $state) if $r->{type} == $cats::job_type_submission;
 
-    my $state_text = { map {; /^st_(.+)$/ ? (eval('$cats::' . $_) => $1) : (); } keys %cats:: }->{$state};
-    $state_text =~ s/_/ /g;
-    $state_text .= " on test $r->{failed_test}" if $r->{failed_test};
-    log_msg("==> $state_text\n");
+    my $UH = $state == $cats::st_unhandled_error;
+    # In case of UH, prevent other judges from setting verdict,
+    # otherwise make sure at least one judge will set verdict.
+    $judge->finish_job($r->{job_id}, $cats::job_st_finished) if !$UH;
+    my ($parent_id, $is_set_req_state_allowed) = $judge->is_set_req_state_allowed($r->{job_id}, $UH);
+    $judge->finish_job($r->{job_id}, $cats::job_st_failed) if $UH;
+
+    set_verdict($r, $parent_id, $state) if $is_set_req_state_allowed;
 }
 
 sub generate_snippets {
@@ -1015,14 +1092,18 @@ sub main_loop {
         if ($r->{type} == $cats::job_type_generate_snippets) {
             generate_snippets($r);
         }
-        elsif ($r->{type} == $cats::job_type_submission) {
+        elsif ($r->{type} == $cats::job_type_submission || $r->{type} == $cats::job_type_submission_part) {
             if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
                 log_msg("Empty source for problem $r->{problem_id}\n");
                 $judge->set_request_state($r, $cats::st_unhandled_error);
                 $judge->finish_job($r->{job_id}, $cats::job_st_failed);
             }
             else {
-                test_problem($r);
+                my $problem = $judge->get_problem($r->{problem_id});
+                $problem->{run_method} == $cats::rm_competitive ||
+                $r->{type} == $cats::job_type_submission_part || !$judge->can_split ?
+                    test_problem($r, $problem) :
+                    $judge->set_request_state($r, split_solution($r));
             }
         }
     }
@@ -1130,7 +1211,8 @@ elsif ($cli->command =~ /^(install|run)$/) {
         $judge->set_def_DEs($cfg->def_DEs);
         my $r = $judge->select_request;
         my $state = prepare_problem($r);
-        test_problem($r) if $r && ($r->{src} // '') ne '' && $state != $cats::st_unhandled_error;
+        my $problem = $judge->get_problem($r->{problem_id});
+        test_problem($r, $problem) if $r && ($r->{src} // '') ne '' && $state != $cats::st_unhandled_error;
         $judge->{rid_to_fname}->{$r->{id}} = $rr;
         chdir($wd);
     }

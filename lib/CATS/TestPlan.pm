@@ -4,6 +4,7 @@ use warnings;
 package CATS::TestPlan;
 
 use CATS::Testset;
+use CATS::Constants;
 
 sub new {
     my ($class, %p) = @_;
@@ -24,6 +25,18 @@ sub set_test_result {
     !exists $self->{state}->{$c} or die "Test $c is planned twice";
     $self->{state}->{$c} = $result;
     $self->{first_failed} = $c if !$result && ($self->first_failed // 1e10) > $c;
+}
+
+sub get_state {
+    my ($self, $results) = @_;
+    return $cats::st_ignore_submit if !@$results;
+    for (@$results) {
+        if ($_->{result} != $cats::st_accepted) {
+            $self->{first_failed} = $_->{test_rank};
+            return $_->{result};
+        }
+    }
+    $cats::st_accepted;
 }
 
 sub _get_next {
