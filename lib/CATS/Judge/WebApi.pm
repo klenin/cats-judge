@@ -220,12 +220,13 @@ sub save_logs {
 }
 
 sub set_request_state {
-    my ($self, $req, $state, %p) = @_;
+    my ($self, $req, $state, $job_id, %p) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_set_request_state',
         req_id => $req->{id},
         state => $state,
+        job_id => $job_id,
         problem_id => $p{problem_id},
         contest_id => $p{contest_id},
         failed_test => $p{failed_test} // '',
@@ -233,6 +234,8 @@ sub set_request_state {
     ]);
 
     die "set_request_state: $response->{error}" if $response->{error};
+
+    $response->{result};
 }
 
 sub is_set_req_state_allowed {
@@ -294,6 +297,7 @@ sub finish_job {
     ]);
 
     die "finish_job: $response->{error}" if $response->{error};
+    $response->{result};
 }
 
 sub select_request {
@@ -323,15 +327,18 @@ sub select_request {
 }
 
 sub delete_req_details {
-    my ($self, $req_id) = @_;
+    my ($self, $req_id, $job_id) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_delete_req_details',
         req_id => $req_id,
+        job_id => $job_id,
         sid => $self->{sid},
     ]);
 
     die "delete_req_details: $response->{error}" if $response->{error};
+
+    $response->{result};
 }
 
 sub get_tests_req_details {
@@ -349,15 +356,18 @@ sub get_tests_req_details {
 }
 
 sub insert_req_details {
-    my ($self, $p) = @_;
+    my ($self, $job_id, $p) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_insert_req_details',
+        job_id => $job_id,
         params => encode_json($p),
         sid => $self->{sid},
     ]);
 
     die "insert_req_details: $response->{error}" if $response->{error};
+
+    $response->{result};
 }
 
 sub save_input_test_data {

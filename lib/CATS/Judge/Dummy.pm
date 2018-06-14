@@ -19,7 +19,7 @@ sub auth {
 }
 
 sub set_request_state {
-    my ($self, $req, $state, %p) = @_;
+    my ($self, $req, $state, $job_id, %p) = @_;
 }
 
 sub select_request {
@@ -70,11 +70,11 @@ sub get_problem_sources {
 }
 
 sub delete_req_details {
-    my ($self, $req_id) = @_;
+    my ($self, $req_id, $job_id) = @_;
 }
 
 sub insert_req_details {
-    my ($self, $p) = @_;
+    my ($self, $job_id, $p) = @_;
 }
 
 sub get_problem_tests {
