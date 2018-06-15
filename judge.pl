@@ -470,8 +470,10 @@ sub initialize_problem_wrapper {
     log_msg("Created job $job_id\n");
     my $res = initialize_problem($pid);
 
+    $judge->finish_job($job_id, $res ? $cats::job_st_finished : $cats::job_st_failed) or
+        log_msg("Job canceled\n");
+
     $judge->save_logs($job_id, $log->get_dump);
-    $judge->finish_job($job_id, $res ? $cats::job_st_finished : $cats::job_st_failed);
 
     $log->clear_dump;
     $log->dump_write($prev_dump);
@@ -484,10 +486,10 @@ my %inserted_details;
 sub insert_test_run_details {
     my %p = @_;
     for ($inserted_details{$p{req_id}}->{$p{test_rank}}) {
-        return if $_;
+        return 1 if $_;
         $_ = $p{result};
     }
-    $judge->insert_req_details(\%p);
+    $judge->insert_req_details($current_job_id, \%p);
 }
 
 sub run_checker {
@@ -730,9 +732,9 @@ sub run_testplan {
             my $details = $test_run_details->[$i];
             # For a test, set verdict to the first non-accepted of agent verdicts.
             $test_verdict = $details->{result} if $test_verdict == $cats::st_accepted;
-            insert_test_run_details(%$details);
+            insert_test_run_details(%$details) or return;
             $inserted_details{$details->{req_id}}->{$tp->current} = $details->{result};
-            $judge->set_request_state($requests->[$i], $details->{result}, %{$requests->[$i]})
+            $judge->set_request_state($requests->[$i], $details->{result}, $current_job_id, %{$requests->[$i]})
                 if $problem->{run_method} == $cats::rm_competitive;
         }
 
@@ -772,14 +774,15 @@ sub split_solution {
     my ($is_group_req, @run_requests) = get_run_reqs($r);
 
     for (@run_requests) {
-        $judge->delete_req_details($_->{id});
-        $judge->set_request_state($_, $cats::st_testing);
+        $judge->delete_req_details($_->{id}, $current_job_id) or return;
+        $judge->set_request_state($_, $cats::st_testing, $current_job_id) or return;
     }
 
-    $judge->delete_req_details($r->{id}) if $is_group_req;
+    $judge->delete_req_details($r->{id}, $current_job_id) or return if $is_group_req;
 
     my %tests = $judge->get_testset('reqs', $r->{id}, 1) or do {
         log_msg("no tests found\n");
+        $judge->save_logs($r->{job_id}, $log->get_dump);
         return $cats::st_ignore_submit;
     };
 
@@ -789,7 +792,8 @@ sub split_solution {
     my @tests;
     push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
 
-    $judge->create_splitted_jobs($cats::job_type_submission_part, [ map(join(',', @$_), @tests) ], {
+    $judge->create_splitted_jobs($cats::job_type_submission_part,
+        [ map(join(',', sort { $a <=> $b } @$_), @tests) ], {
         problem_id => $r->{problem_id},
         contest_id => $r->{contest_id},
         state => $cats::job_st_waiting,
@@ -797,6 +801,7 @@ sub split_solution {
         req_id => $r->{id},
     });
 
+    $judge->save_logs($r->{job_id}, $log->get_dump);
     $cats::st_testing;
 }
 
@@ -847,7 +852,7 @@ sub test_solution {
             for my $test_rank (keys %$test_outputs) {
                 my $outputs = $test_outputs->{$test_rank} or next;
                 insert_test_run_details(req_id => $r->{id}, test_rank => $test_rank,
-                    result => $solution_status, %$outputs);
+                    result => $solution_status, %$outputs) or return;
                 $inserted_details{$r->{id}}->{$test_rank} = $solution_status;
             }
         } else {
@@ -914,7 +919,7 @@ sub prepare_problem {
 
     if (defined $r->{id} && !defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
-        $judge->set_request_state($r, $cats::st_unhandled_error);
+        $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id);
         return $cats::st_unhandled_error;
     }
 
@@ -926,7 +931,7 @@ sub prepare_problem {
     if (%unsupported_DEs) {
         log_msg("unsupported DEs for problem %s: %s\n",
             $r->{problem_id}, join ', ', sort keys %unsupported_DEs);
-        $judge->set_request_state($r, $cats::st_unhandled_error, %$r);
+        $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id, %$r);
         return $cats::st_unhandled_error;
     }
 
@@ -949,6 +954,8 @@ sub prepare_problem {
         log_msg("problem '$r->{problem_id}' cached\n");
     }
 
+    $judge->set_request_state($r, $state, $current_job_id, %$r) if $state == $cats::st_unhandled_error;
+
     $state;
 }
 
@@ -970,7 +977,7 @@ sub set_verdict {
 
     for my $req (@run_requests) {
         if ($state == $cats::st_unhandled_error) {
-            $judge->set_request_state($req, $state, %$req);
+            $judge->set_request_state($req, $state, $parent_id, %$req);
             next;
         }
 
@@ -988,13 +995,13 @@ sub set_verdict {
             $cur_req_state = $cats::st_awaiting_verification;
         }
 
-        $judge->set_request_state($req, $cur_req_state, %$req);
+        $judge->set_request_state($req, $cur_req_state, $parent_id, %$req);
     }
 
-    $judge->set_request_state($r, $state, %$r) if $is_group_req;
+    $judge->set_request_state($r, $state, $parent_id, %$r) if $is_group_req;
 
     $judge->finish_job($parent_id, $state == $cats::st_unhandled_error ?
-        $cats::job_st_failed : $cats::job_st_finished);
+        $cats::job_st_failed : $cats::job_st_finished) or log_msg("Job canceled\n");
 
     log_state_text($state, $r->{failed_test});
 }
@@ -1014,17 +1021,21 @@ sub test_problem {
     };
     $state //= $cats::st_unhandled_error;
 
-    # It is too late to report error, since set_request_state might have already been called.
-    eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
-
     return set_verdict($r, $r->{job_id}, $state) if $r->{type} == $cats::job_type_submission;
 
     my $UH = $state == $cats::st_unhandled_error;
     # In case of UH, prevent other judges from setting verdict,
     # otherwise make sure at least one judge will set verdict.
-    $judge->finish_job($r->{job_id}, $cats::job_st_finished) if !$UH;
+    my $job_finished;
+    $job_finished = $judge->finish_job($r->{job_id}, $cats::job_st_finished) if !$UH;
     my ($parent_id, $is_set_req_state_allowed) = $judge->is_set_req_state_allowed($r->{job_id}, $UH);
-    $judge->finish_job($r->{job_id}, $cats::job_st_failed) if $UH;
+    $job_finished = $judge->finish_job($r->{job_id}, $cats::job_st_failed) if $UH;
+    log_msg("Job canceled\n") if !$job_finished;
+
+    # It is too late to report error, since set_request_state might have already been called.
+    eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
+
+    $job_finished or return;
 
     set_verdict($r, $parent_id, $state) if $is_set_req_state_allowed;
 }
@@ -1061,8 +1072,8 @@ sub generate_snippets {
         1;
     } or do { log_msg($@); $job_state = $cats::job_st_failed; };
 
+    $judge->finish_job($r->{job_id}, $job_state) or log_msg("Job canceled\n");
     $judge->save_logs($r->{job_id}, $log->get_dump);
-    $judge->finish_job($r->{job_id}, $job_state);
 }
 
 sub main_loop {
@@ -1083,9 +1094,9 @@ sub main_loop {
         $current_job_id = $r->{job_id};
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
-            $judge->save_logs($r->{job_id}, $log->get_dump);
             $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
-                $cats::job_st_failed : $cats::job_st_finished);
+                $cats::job_st_failed : $cats::job_st_finished) or log_msg("Job canceled\n");
+            $judge->save_logs($r->{job_id}, $log->get_dump);
             next;
         }
 
@@ -1095,7 +1106,7 @@ sub main_loop {
         elsif ($r->{type} == $cats::job_type_submission || $r->{type} == $cats::job_type_submission_part) {
             if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
                 log_msg("Empty source for problem $r->{problem_id}\n");
-                $judge->set_request_state($r, $cats::st_unhandled_error);
+                $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id);
                 $judge->finish_job($r->{job_id}, $cats::job_st_failed);
             }
             else {
@@ -1103,7 +1114,7 @@ sub main_loop {
                 $problem->{run_method} == $cats::rm_competitive ||
                 $r->{type} == $cats::job_type_submission_part || !$judge->can_split ?
                     test_problem($r, $problem) :
-                    $judge->set_request_state($r, split_solution($r));
+                    $judge->set_request_state($r, split_solution($r), $current_job_id);
             }
         }
     }

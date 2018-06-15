@@ -40,7 +40,7 @@ sub get_tests_req_details { [] }
 
 sub is_set_req_state_allowed { (0, 1) }
 
-sub finish_job {}
+sub finish_job { 1 }
 
 sub save_logs {}
 
@@ -81,9 +81,9 @@ sub save_problem_snippet {}
 
 sub get_problem_sources { [] }
 
-sub delete_req_details {}
+sub delete_req_details { 1 }
 
-sub insert_req_details {}
+sub insert_req_details { 1 }
 
 sub save_input_test_data {}
 

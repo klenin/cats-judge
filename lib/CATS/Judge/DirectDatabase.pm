@@ -54,12 +54,13 @@ sub is_locked { $_[0]->{lock_counter} }
 sub can_split { 1 }
 
 sub set_request_state {
-    my ($self, $req, $state, %p) = @_;
+    my ($self, $req, $state, $job_id, %p) = @_;
 
     CATS::JudgeDB::set_request_state({
         jid         => $self->{id},
         req_id      => $req->{id},
         state       => $state,
+        job_id      => $job_id,
         contest_id  => $p{contest_id},
         problem_id  => $p{problem_id},
         failed_test => $p{failed_test},
@@ -82,7 +83,7 @@ sub create_job {
 
 sub finish_job {
     my ($self, $job_id, $job_state) = @_;
-    CATS::JudgeDB::finish_job($job_id, $job_state);
+    CATS::Job::finish($job_id, $job_state);
 }
 
 sub get_tests_req_details {
@@ -146,13 +147,13 @@ sub get_problem_sources {
 }
 
 sub delete_req_details {
-    my ($self, $req_id) = @_;
-    CATS::JudgeDB::delete_req_details($req_id, $self->{id}) or die 'stolen';
+    my ($self, $req_id, $job_id) = @_;
+    CATS::JudgeDB::delete_req_details($req_id, $self->{id}, $job_id);
 }
 
 sub insert_req_details {
-    my ($self, $p) = @_;
-    CATS::JudgeDB::insert_req_details(%$p, judge_id => $self->{id}) or die 'stolen';
+    my ($self, $job_id, $p) = @_;
+    CATS::JudgeDB::insert_req_details($job_id, %$p, judge_id => $self->{id});
 }
 
 sub save_problem_snippet {
