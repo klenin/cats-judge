@@ -7,6 +7,7 @@ use File::Spec;
 use XML::Parser::Expat;
 
 use CATS::Config;
+use CATS::Constants;
 
 sub dir_fields() { qw(cachedir logdir modulesdir solutionsdir resultsdir rundir workdir) }
 sub required_fields() {
@@ -35,6 +36,7 @@ sub optional_fields() { qw(
 ) }
 sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
+sub compile_fields() { @cats::limit_fields }
 sub de_fields() { qw(
     check
     compile
@@ -53,7 +55,7 @@ sub de_fields() { qw(
 sub param_fields() { required_fields, optional_fields, special_fields }
 
 sub import {
-    for (required_fields, optional_fields, special_fields, security_fields) {
+    for (required_fields, optional_fields, special_fields, security_fields, 'compile') {
         no strict 'refs';
         my $x = $_;
         *{"$_[0]::$_"} = sub { $_[0]->{$x} };
@@ -96,6 +98,9 @@ sub load_part {
         },
         security => sub {
             $self->_read_attributes($self, $_[0], security_fields);
+        },
+        compile => sub {
+            $self->_read_attributes($self, $_[0], compile_fields);
         },
         de => sub {
             my $code = $_[0]->{code} or die 'de: code required';

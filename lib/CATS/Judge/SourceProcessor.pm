@@ -7,6 +7,7 @@ use File::Spec;
 
 use CATS::Constants;
 use CATS::Judge::Config ();
+use CATS::Spawner::Const ':all';
 
 *apply_params = *CATS::Judge::Config::apply_params;
 
@@ -66,15 +67,23 @@ sub compile {
         my $path = apply_params($add_path, { %$name_parts, PATH => $ENV{PATH} });
         %env = (env => { PATH => $path });
     }
+
+    my $compile_limits = $self->cfg->compile;
+    my %limits = map { $compile_limits->{$_} ? ($_ => $compile_limits->{$_}) : () }
+        @cats::limits_fields;
+
     my $sp_report = $self->sp->run_single({
         ($opt->{section} ? (section => $cats::log_section_compile) : ()),
         encoding => $de->{encoding},
-        %env },
+        %limits, %env },
         apply_params($de->{compile}, $name_parts)
     ) or return;
-    $sp_report->tr_ok or return;
 
-    my $ok = $sp_report->{exit_code} == 0;
+    return if @{$sp_report->errors} ||
+        0 == grep $sp_report->{terminate_reason} == $_,
+            $TR_OK, $TR_TIME_LIMIT, $TR_MEMORY_LIMIT, $TR_WRITE_LIMIT;
+
+    my $ok = $sp_report->ok;
 
     if ($ok && $de->{compile_error_flag}) {
         my $re = qr/\Q$cats::log_section_compile\E\n\Q$de->{compile_error_flag}\E/m;

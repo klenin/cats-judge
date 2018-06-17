@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 43;
+use Test::More tests => 44;
 
 use File::Spec;
 
@@ -101,6 +101,13 @@ maybe_subtest 'UH on bad compiler', 8, sub {
         qr/problem.*(cached|installed)/, 'minimal';
     like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => 'DEs.102.compile=zzz')->stdout->[-1],
         qr/unhandled error/, 'unhandled';
+};
+
+maybe_subtest 'compiler limits', 8, sub {
+    like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
+        qr/problem.*(cached|installed)/, 'minimal';
+    like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => 'compile.memory_limit=1')->stdout->[-1],
+        qr/compilation error/, 'CE on memory limit';
 };
 
 maybe_subtest 'compile_error_flag', 4, sub {

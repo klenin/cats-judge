@@ -31,6 +31,8 @@
     cats_password="fox"
 />
 
+<compile time_limit="30" memory_limit="512" write_limit="128M" />
+
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp.exe"/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#move" value="C:\WINDOWS\system32\cmd.exe /c move /y"/>

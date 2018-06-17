@@ -47,7 +47,8 @@ sub new {
     bless $self, $class;
 }
 
-sub tr_ok { !@{$_[0]->{errors}} && $_[0]->{terminate_reason} == $TR_OK }
+sub errors { $_[0]->{errors} }
+sub tr_ok { !@{$_[0]->errors} && $_[0]->{terminate_reason} == $TR_OK }
 sub ok { $_[0]->tr_ok && $_[0]->{exit_code} == 0 }
 
 package CATS::Spawner::Report;
