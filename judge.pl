@@ -6,7 +6,6 @@ use Carp;
 use Cwd;
 use Fcntl;
 use File::Spec;
-use constant FS => 'File::Spec';
 use FindBin;
 use List::Util qw(max min);
 
@@ -49,7 +48,7 @@ use open IN => ':crlf', OUT => ':raw';
 my %lock;
 
 INIT {
-    $lock{file_name} = FS->catfile(cats_dir, 'judge.lock');
+    $lock{file_name} = File::Spec->catfile(cats_dir, 'judge.lock');
     open $lock{handle}, '>', $lock{file_name}
         or terminate "Can not open $lock{file_name}: $!";
     flock $lock{handle}, Fcntl::LOCK_EX | Fcntl::LOCK_NB
@@ -216,8 +215,8 @@ sub generate_test_group {
 sub input_or { $_[0] eq '*STDIN' ? 'input.txt' : $_[1] }
 sub output_or { $_[0] eq '*STDOUT' ? 'output.txt' : $_[1] }
 
-sub input_or_default { FS->catfile($cfg->rundir, input_or($_[0], $_[0])) }
-sub output_or_default { FS->catfile($cfg->rundir, output_or($_[0], $_[0])) }
+sub input_or_default { File::Spec->catfile($cfg->rundir, input_or($_[0], $_[0])) }
+sub output_or_default { File::Spec->catfile($cfg->rundir, output_or($_[0], $_[0])) }
 
 sub input_output_redir {
     stdin => input_or($_[0], undef), stdout => output_or($_[1], undef),
@@ -276,7 +275,7 @@ sub validate_test {
     $fu->copy($path_to_test, $cfg->rundir) or return;
     $fu->copy($problem_cache->source_path($pid, $in_v_id, '*'), $cfg->rundir) or return;
 
-    my (undef, undef, $t_fname, $t_name, undef) = split_fname(FS->catfile(@$path_to_test));
+    my (undef, undef, $t_fname, $t_name, undef) = split_fname(File::Spec->catfile(@$path_to_test));
     my $validate_cmd = $src_proc->require_property(
         validate => $validator, { test_input => $t_fname }) or return;
 
@@ -448,7 +447,8 @@ sub initialize_problem {
             next if !$guided_source->{guid} || $guided_source->{is_imported};
             my $path = CATS::FileUtil::fn [ @$tmp, $guided_source->{fname} ];
             if (-e $path) {
-                CATS::SourceManager::save($guided_source, $cfg->modulesdir, FS->rel2abs($path));
+                CATS::SourceManager::save(
+                    $guided_source, $cfg->modulesdir, File::Spec->rel2abs($path));
                 log_msg("save source $guided_source->{guid}\n");
             }
         }
