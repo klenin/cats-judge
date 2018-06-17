@@ -6,7 +6,7 @@ use Carp;
 use Cwd;
 use File::Spec;
 use constant FS => 'File::Spec';
-use Fcntl qw(:flock);
+use Fcntl;
 use List::Util qw(max min);
 
 sub terminate($) {
@@ -45,19 +45,24 @@ use Digest::SHA qw(sha1_hex);
 
 use open IN => ':crlf', OUT => ':raw';
 
-my $lh;
-my $lock_file;
+my %lock;
 
 INIT {
-    $lock_file = FS->catfile(cats_dir, 'judge.lock');
-    open $lh, '>', $lock_file or die "Can not open $lock_file: $!";
-    flock $lh, LOCK_EX | LOCK_NB or die "Can not lock $lock_file: $!\n";
+    $lock{file_name} = FS->catfile(cats_dir, 'judge.lock');
+    open $lock{handle}, '>', $lock{file_name}
+        or terminate "Can not open $lock{file_name}: $!";
+    flock $lock{handle}, Fcntl::LOCK_EX | Fcntl::LOCK_NB
+        or terminate "Can not lock $lock{file_name}: $!";
+    $lock{is_locked} = 1;
 }
 
 END {
-    flock $lh, LOCK_UN or die "Can not unlock $lock_file: $!\n";
-    close $lh;
-    unlink $lock_file or die $!;
+    if ($lock{is_locked}) {
+        flock $lock{handle}, Fcntl::LOCK_UN
+            or terminate "Can not unlock $lock{file_name}: $!";
+        close $lock{handle};
+        unlink $lock{file_name} or terminate $!;
+    }
 }
 
 my $cfg = CATS::Judge::Config->new(root => cats_dir);
