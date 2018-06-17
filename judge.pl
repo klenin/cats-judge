@@ -705,8 +705,6 @@ sub compile {
     my $result = $src_proc->compile($r, { section => 1 }) or return;
 
     if ($result == $cats::st_compilation_error) {
-        insert_test_run_details(
-            req_id => $r->{id}, test_rank => 1, result => $cats::st_compilation_error);
         return $result;
     }
     $result == $cats::st_testing or die;
@@ -833,6 +831,7 @@ sub test_solution {
     my $try = sub {
         for my $run_req (@run_requests) {
             my $st = compile($run_req, $problem);
+            $run_req->{compilation_error} = 1 if $st == $cats::st_compilation_error;
             return $st if !$st || $st != $cats::st_testing;
         }
         my %tests = ($problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission) ?
@@ -975,14 +974,20 @@ sub log_state_text {
 
 sub set_verdict {
     my ($r, $parent_id, $state) = @_;
-    $state = $cats::st_accepted if $state != $cats::st_unhandled_error &&
-        $state != $cats::st_ignore_submit && $state != $cats::st_compilation_error;
+
+    $state = $cats::st_accepted
+        if $state != $cats::st_unhandled_error && $state != $cats::st_compilation_error;
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
 
     for my $req (@run_requests) {
         if ($state == $cats::st_unhandled_error) {
             $judge->set_request_state($req, $state, $parent_id, %$req);
+            next;
+        }
+
+        if ($req->{compilation_error}) {
+            $judge->set_request_state($req, $cats::st_compilation_error, $parent_id, %$req);
             next;
         }
 
