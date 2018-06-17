@@ -4,9 +4,10 @@ use strict;
 
 use Carp;
 use Cwd;
+use Fcntl;
 use File::Spec;
 use constant FS => 'File::Spec';
-use Fcntl;
+use FindBin;
 use List::Util qw(max min);
 
 sub terminate($) {
@@ -16,8 +17,8 @@ sub terminate($) {
 
 use sigtrap handler => sub { terminate 'Ctrl+C pressed'; }, 'INT';
 
-use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib');
-use lib FS->catdir((FS->splitpath(FS->rel2abs($0)))[0,1], 'lib', 'cats-problem');
+use lib File::Spec->catdir($FindBin::Bin, 'lib');
+use lib File::Spec->catdir($FindBin::Bin, 'lib', 'cats-problem');
 
 use CATS::BinaryFile;
 use CATS::Config;
