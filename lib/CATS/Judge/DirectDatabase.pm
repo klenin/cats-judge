@@ -18,35 +18,41 @@ sub new_from_cfg {
     $class->SUPER::new(name => $cfg->name);
 }
 
-sub auth {
+sub _set_sid {
     my ($self) = @_;
-
-    ($self->{id}, $self->{uid}, my $nick) = $dbh->selectrow_array(q~
-        SELECT J.id, A.id, J.nick FROM judges J INNER JOIN accounts A ON J.account_id = A.id
-        WHERE A.login = ?~, undef,
-        $self->name);
-    $self->{id} or die sprintf "unknown judge name: '%s'", $self->name;
-
-    $nick eq $self->{name}
-        or die "bad judge nick: $nick != $self->{name}";
-
     for (1..20) {
         $self->{sid} = $self->make_sid;
-        if ($dbh->do(q~
+        return 1 if $dbh->do(q~
             UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP,
                 last_ip = (
                     SELECT mon$remote_address
                     FROM mon$attachments M
                     WHERE M.mon$attachment_id = CURRENT_CONNECTION)
             WHERE id = ?~, undef,
-            $self->{sid}, $self->{uid})
-        ) {
-            $dbh->commit;
-            return;
-        }
+            $self->{sid}, $self->{uid});
         sleep 1;
     }
+
     die "login failed\n";
+}
+
+sub auth {
+    my ($self) = @_;
+
+    ($self->{id}, $self->{uid}, my $nick, my $old_version) = $dbh->selectrow_array(q~
+        SELECT J.id, A.id, J.nick, J.version
+        FROM judges J INNER JOIN accounts A ON J.account_id = A.id
+        WHERE A.login = ?~, undef,
+        $self->name);
+    $self->{id} or die sprintf "unknown judge name: '%s'", $self->name;
+
+    $nick eq $self->{name}
+        or die "bad judge nick: $nick != $self->{name}";
+    $self->_set_sid;
+    $dbh->do(q~
+        UPDATE judges SET version = ? WHERE id = ?~, undef,
+        $self->version, $self->{id}) if ($old_version // '') ne $self->version;
+    $dbh->commit;
 }
 
 sub is_locked { $_[0]->{lock_counter} }

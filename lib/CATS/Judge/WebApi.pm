@@ -74,6 +74,7 @@ sub auth {
     $response = $self->get_json([
         f => 'get_judge_id',
         sid => $self->{sid},
+        version => $self->version,
     ]);
     die "get_judge_id: $response->{error}" if $response->{error};
     $self->{id} = $response->{id};
