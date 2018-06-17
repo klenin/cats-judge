@@ -18,9 +18,18 @@ sub init {}
 sub abstract { die sprintf "%s::%s is abstract", ref $_[0], (caller 1)[3] =~ /([^:]+)$/; }
 
 sub name { $_[0]->{name} }
+sub version { $_[0]->{version} //= $_[0]->_check_version }
 
 my @sid_alph = ('0'..'9', 'A'..'Z', 'a'..'z');
 sub make_sid { join '', map $sid_alph[rand @sid_alph], 1..30 }
+
+sub _check_version {
+    my ($self) = @_;
+    my $version = `git log -1 --format="%h %ai"`;
+    chomp $version;
+    $version .= ' dirty' if `git ls-files -md`;
+    $self->{version} = $version;
+}
 
 sub auth { $_[0]->{sid} = $_[0]->make_sid; 1; }
 

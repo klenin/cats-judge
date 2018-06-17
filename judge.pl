@@ -1091,7 +1091,7 @@ sub main_loop {
     chdir $cfg->workdir
         or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
 
-    log_msg("judge: %s, using api: %s\n", $judge->name, $cfg->api);
+    log_msg("judge: %s, api: %s, version: %s\n", $judge->name, $cfg->api, $judge->version);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
     for (my $i = 0; !$cfg->restart_count || $i < $cfg->restart_count; $i++) {
