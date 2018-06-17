@@ -103,12 +103,16 @@ maybe_subtest 'UH on bad compiler', 8, sub {
         qr/unhandled error/, 'unhandled';
 };
 
-maybe_subtest 'compiler limits', 8, sub {
-    like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
-        qr/problem.*(cached|installed)/, 'minimal';
-    like run_judge_sol($p_minimal, 'ok.cpp', 'config-set' => 'compile.memory_limit=1')->stdout->[-1],
-        qr/compilation error/, 'CE on memory limit';
-};
+SKIP: {
+    skip 'ML under linux is unstable', 1 if $^O ne 'MSWin32';
+    maybe_subtest 'compiler limits', 8, sub {
+        like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
+            qr/problem.*(cached|installed)/, 'minimal';
+        like run_judge_sol(
+            $p_minimal, 'ok.cpp', 'config-set' => 'compile.memory_limit=1')->stdout->[-1],
+            qr/compilation error/, 'CE on memory limit';
+    };
+}
 
 maybe_subtest 'compile_error_flag', 4, sub {
     like run_judge_sol($p_minimal, 'warn.pl',
