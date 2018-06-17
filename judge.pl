@@ -80,6 +80,19 @@ my $current_job_id;
 
 sub log_msg { $log->msg(@_); }
 
+sub update_self {
+    log_msg("Updating myself\n");
+    my @commands = ([ qw(git pull) ], [ qw(git submodule update --init) ]);
+    for my $cmd (@commands) {
+        log_msg(join(' ', @$cmd) . "\n");
+        my $rr = $fu->run($cmd);
+        log_msg("git> $_\n") for @{$rr->stdout};
+        return log_msg("failure: %s\n", $rr->exit_code) if $rr->exit_code;
+    }
+    log_msg("success\n");
+    1;
+}
+
 sub set_name_parts {
     my ($r) = @_;
     (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($r->{fname})
@@ -1103,6 +1116,14 @@ sub main_loop {
         $r or next;
 
         $current_job_id = $r->{job_id};
+
+        if ($r->{type} == $cats::job_type_update_self) {
+            my $updated = update_self;
+            $judge->finish_job($r->{job_id}, $updated ? $cats::job_st_finished : $cats::job_st_failed);
+            $judge->save_logs($r->{job_id}, $log->get_dump);
+            $updated ? exit : next;
+        }
+
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
             $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
