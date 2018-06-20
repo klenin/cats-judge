@@ -87,6 +87,11 @@ sub create_job {
     $job_id;
 }
 
+sub cancel_all {
+    my ($self, $req_id) = @_;
+    CATS::Job::cancel_all($req_id);
+}
+
 sub finish_job {
     my ($self, $job_id, $job_state) = @_;
     CATS::Job::finish($job_id, $job_state);
