@@ -45,6 +45,8 @@ sub create_splitted_jobs {}
 
 sub create_job { 0 }
 
+sub cancel_all {}
+
 sub get_tests_req_details { [] }
 
 sub is_set_req_state_allowed { (0, 1) }

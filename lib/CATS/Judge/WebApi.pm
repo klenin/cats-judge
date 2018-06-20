@@ -271,6 +271,18 @@ sub create_splitted_jobs {
     die "create_splitted_jobs: $response->{error}" if $response->{error};
 }
 
+sub cancel_all {
+    my ($self, $req_id) = @_;
+
+    my $response = $self->get_json([
+        f => 'api_judge_cancel_all',
+        req_id => $req_id,
+        sid => $self->{sid},
+    ]);
+
+    die "cancel_all: $response->{error}" if $response->{error};
+}
+
 sub create_job {
     my ($self, $job_type, $p) = @_;
 

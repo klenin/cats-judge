@@ -155,6 +155,11 @@ sub get_run_params {
     ($global_opts, @programs);
 }
 
+sub determine_job_state {
+    my ($req_state) = @_;
+    $req_state == $cats::st_unhandled_error ? $cats::job_st_failed : $cats::job_st_finished;
+}
+
 sub my_safe_copy {
     my ($src, $dest, $pid) = @_;
     $fu->copy($src, $dest) and return 1;
@@ -984,11 +989,15 @@ sub log_state_text {
     log_msg("==> $state_text\n");
 }
 
+sub is_UH_or_CE {
+    my ($state) = @_;
+    $state == $cats::st_compilation_error || $state == $cats::st_unhandled_error;
+}
+
 sub set_verdict {
     my ($r, $parent_id, $state) = @_;
 
-    $state = $cats::st_accepted
-        if $state != $cats::st_unhandled_error && $state != $cats::st_compilation_error;
+    $state = $cats::st_accepted if !is_UH_or_CE($state);
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
 
@@ -1022,10 +1031,10 @@ sub set_verdict {
 
     $judge->set_request_state($r, $state, $parent_id, %$r) if $is_group_req;
 
-    $judge->finish_job($parent_id, $state == $cats::st_unhandled_error ?
-        $cats::job_st_failed : $cats::job_st_finished) or log_msg("Job canceled\n");
+    $judge->finish_job($parent_id, determine_job_state($state)) or log_msg("Job canceled\n");
 
     log_state_text($state, $r->{failed_test});
+    $judge->cancel_all($r->{id}) if is_UH_or_CE($state);
 }
 
 sub test_problem {
@@ -1045,13 +1054,13 @@ sub test_problem {
 
     return set_verdict($r, $r->{job_id}, $state) if $r->{type} == $cats::job_type_submission;
 
-    my $UH = $state == $cats::st_unhandled_error;
+    my $stop_now = is_UH_or_CE($state);
     # In case of UH, prevent other judges from setting verdict,
     # otherwise make sure at least one judge will set verdict.
     my $job_finished;
-    $job_finished = $judge->finish_job($r->{job_id}, $cats::job_st_finished) if !$UH;
-    my ($parent_id, $is_set_req_state_allowed) = $judge->is_set_req_state_allowed($r->{job_id}, $UH);
-    $job_finished = $judge->finish_job($r->{job_id}, $cats::job_st_failed) if $UH;
+    $job_finished = $judge->finish_job($r->{job_id}, $cats::job_st_finished) if !$stop_now;
+    my ($parent_id, $is_set_req_state_allowed) = $judge->is_set_req_state_allowed($r->{job_id}, $stop_now);
+    $job_finished = $judge->finish_job($r->{job_id}, determine_job_state($state)) if $stop_now;
     log_msg("Job canceled\n") if !$job_finished;
 
     # It is too late to report error, since set_request_state might have already been called.
@@ -1125,8 +1134,7 @@ sub main_loop {
 
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
-            $judge->finish_job($r->{job_id}, $state == $cats::st_unhandled_error ?
-                $cats::job_st_failed : $cats::job_st_finished) or log_msg("Job canceled\n");
+            $judge->finish_job($r->{job_id}, determine_job_state($state)) or log_msg("Job canceled\n");
             $judge->save_logs($r->{job_id}, $log->get_dump);
             next;
         }
