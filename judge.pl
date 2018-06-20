@@ -933,8 +933,6 @@ sub prepare_problem {
     my ($r) = @_;
     $r or return $cats::st_unhandled_error;
 
-    $log->clear_dump;
-
     if (defined $r->{id} && !defined $r->{status}) {
         log_msg("security: problem $r->{problem_id} is not included in contest $r->{contest_id}\n");
         $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id);
@@ -1116,6 +1114,7 @@ sub main_loop {
         $r or next;
 
         $current_job_id = $r->{job_id};
+        $log->clear_dump;
 
         if ($r->{type} == $cats::job_type_update_self) {
             my $updated = update_self;
