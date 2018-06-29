@@ -24,6 +24,7 @@ use CATS::Config;
 use CATS::Constants;
 use CATS::SourceManager;
 use CATS::FileUtil;
+use CATS::Testset;
 use CATS::Utils qw(sanitize_file_name split_fname);
 
 use CATS::Backend;
@@ -815,7 +816,7 @@ sub split_solution {
     push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
 
     $judge->create_splitted_jobs($cats::job_type_submission_part,
-        [ map(join(',', sort { $a <=> $b } @$_), @tests) ], {
+        [ map CATS::Testset::pack_rank_spec(@$_), @tests ], {
         problem_id => $r->{problem_id},
         contest_id => $r->{contest_id},
         state => $cats::job_st_waiting,
