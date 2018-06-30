@@ -226,7 +226,6 @@ sub generate_test_group {
             @input_data = $fu->load_file($tf, $problem->{save_input_prefix}) or return;
         }
         $judge->save_input_test_data($pid, $_->{rank}, @input_data, $hash);
-
     }
     1;
 }
@@ -791,17 +790,22 @@ sub get_run_reqs {
     ($is_group_req, @run_requests);
 }
 
-sub split_solution {
-    my ($r) = @_;
-    log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
-    my ($is_group_req, @run_requests) = get_run_reqs($r);
+sub delete_req_details {
+    my ($r, $is_group_req, @run_requests) = @_;
 
     for (@run_requests) {
         $judge->delete_req_details($_->{id}, $current_job_id) or return;
         $judge->set_request_state($_, $cats::st_testing, $current_job_id) or return;
     }
-
     $judge->delete_req_details($r->{id}, $current_job_id) or return if $is_group_req;
+    1;
+}
+
+sub split_solution {
+    my ($r) = @_;
+    log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
+    my ($is_group_req, @run_requests) = get_run_reqs($r);
+    delete_req_details($r, $is_group_req, @run_requests) or return $cats::st_unhandled_error;
 
     my %tests = $judge->get_testset('reqs', $r->{id}, 1) or do {
         log_msg("no tests found\n");
@@ -841,11 +845,13 @@ sub test_solution {
 
     if (!defined $problem->{checker_id} && !defined $problem->{std_checker}) {
         log_msg("no checker defined!\n");
-        return undef;
+        return;
     }
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
     set_name_parts($_) for @run_requests;
+    delete_req_details($r, $is_group_req, @run_requests) or return
+        if $r->{type} == $cats::job_type_submission;
 
     my $solution_status = $cats::st_accepted;
     my $try = sub {
@@ -1053,7 +1059,11 @@ sub test_problem {
     };
     $state //= $cats::st_unhandled_error;
 
-    return set_verdict($r, $r->{job_id}, $state) if $r->{type} == $cats::job_type_submission;
+    if ($r->{type} == $cats::job_type_submission) {
+        set_verdict($r, $r->{job_id}, $state);
+        eval { $judge->save_logs($r->{job_id}, $log->get_dump); } or log_msg("$@\n");
+        return;
+    }
 
     my $stop_now = is_UH_or_CE($state);
     # In case of UH, prevent other judges from setting verdict,
@@ -1152,7 +1162,8 @@ sub main_loop {
             else {
                 my $problem = $judge->get_problem($r->{problem_id});
                 $problem->{run_method} == $cats::rm_competitive ||
-                $r->{type} == $cats::job_type_submission_part || !$judge->can_split ?
+                $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
+                    ($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'none' ?
                     test_problem($r, $problem) :
                     $judge->set_request_state($r, split_solution($r), $current_job_id);
             }
