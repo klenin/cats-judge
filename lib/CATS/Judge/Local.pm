@@ -50,6 +50,7 @@ sub get_tests_req_details {
 
 sub set_request_state {
     my ($self, $req, $state, $job_id, %p) = @_;
+    1;
 }
 
 sub select_request {
@@ -218,6 +219,7 @@ sub get_problem_sources {
 sub delete_req_details {
     my ($self, $req_id, $job_id) = @_;
     delete $self->{results}->{$req_id};
+    1;
 }
 
 sub insert_req_details {
