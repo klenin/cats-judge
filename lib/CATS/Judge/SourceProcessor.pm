@@ -86,7 +86,7 @@ sub compile {
     my $ok = $sp_report->ok;
 
     if ($ok && $de->{compile_error_flag}) {
-        my $re = qr/\Q$cats::log_section_compile\E\n\Q$de->{compile_error_flag}\E/m;
+        my $re = qr/\Q$cats::log_section_start_prefix$cats::log_section_compile\E\n\Q$de->{compile_error_flag}\E/m;
         $ok = 0 if $self->log->get_dump =~ $re;
     }
 

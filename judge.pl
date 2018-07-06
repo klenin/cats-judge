@@ -728,7 +728,9 @@ sub lint {
             $lint_dir, $problem->{id}) or return;
         my $run_cmd = $src_proc->require_property(run => $linter, {}) or return;
 
-        my $sp_report = $sp->run_single({}, $run_cmd,
+        my $sp_report = $sp->run_single(
+            { section => $cats::log_section_lint },
+            $run_cmd,
             [ $r->{name_parts}->{full_name} ],
             { $src_proc->get_limits($linter, $problem) }
         ) or return;
