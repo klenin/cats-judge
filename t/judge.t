@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 44;
+use Test::More tests => 45;
 
 use File::Spec;
 
@@ -318,6 +318,14 @@ my $p_main = FS->catfile($path, 'p_main');
 
 maybe_subtest 'main', 4, sub {
     like run_judge_sol($p_main, 'test1.h', de => 1)->stdout->[-1], qr/accepted/, 'main result'
+};
+
+my $p_linter = FS->catfile($path, 'p_linter');
+
+maybe_subtest 'linter', 12, sub {
+    like run_judge_sol($p_linter, 'ok.cpp')->stdout->[-1], qr/accepted/, 'ok';
+    like run_judge_sol($p_linter, 'sol_a.cpp')->stdout->[-1], qr/lint error/, 'before';
+    like run_judge_sol($p_linter, 'sol_b.cpp')->stdout->[-1], qr/lint error/, 'after';
 };
 
 1;

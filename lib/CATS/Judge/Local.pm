@@ -192,6 +192,13 @@ sub get_problem_sources {
         );
     }
 
+    my $stages = { before => $cats::linter_before, after => $cats::linter_after };
+    for (@{$problem->{linters}}) {
+        push @$problem_sources, $self->pack_problem_source(
+            source_object => $_, source_type => $stages->{$_->{stage}} // die,
+        );
+    }
+
     for (@{$problem->{solutions}}) {
         push @$problem_sources, $self->pack_problem_source(
             source_object => $_, source_type => $_->{checkup} ? $cats::adv_solution : $cats::solution,

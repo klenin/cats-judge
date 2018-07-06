@@ -713,20 +713,53 @@ sub run_single_test {
     ($test_run_details, $competitive_test_output);
 }
 
+sub lint {
+    my ($r, $problem, $stage) = @_;
+
+    my @linters = grep $_->{stype} == $stage, @$problem_sources or return $cats::st_testing;
+
+    my $lint_dir = $cfg->rundir; # /_lint
+    #$fu->mkdir_clean($lint_dir);
+
+    for my $linter (@linters) {
+        log_msg("lint: $linter->{fname}\n");
+        my_safe_copy(
+            $problem_cache->source_path($problem->{id}, $linter->{id}, '*'),
+            $lint_dir, $problem->{id}) or return;
+        my $run_cmd = $src_proc->require_property(run => $linter, {}) or return;
+
+        my $sp_report = $sp->run_single({}, $run_cmd,
+            [ $r->{name_parts}->{full_name} ],
+            { $src_proc->get_limits($linter, $problem) }
+        ) or return;
+        $sp_report->ok or return $cats::st_lint_error;
+    }
+    $cats::st_testing;
+}
+
 sub compile {
     my ($r, $problem) = @_;
+
     clear_rundir or return;
 
     prepare_modules($cats::solution_module) or return;
     $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src})
         or return;
 
+    {
+        my $lint_result = lint($r, $problem, $cats::linter_before) or return;
+        $lint_result == $cats::st_testing or return $lint_result;
+    }
     my $result = $src_proc->compile($r, { section => 1 }) or return;
-
     if ($result == $cats::st_compilation_error) {
         return $result;
     }
     $result == $cats::st_testing or die;
+    {
+        my $lint_result = lint($r, $problem, $cats::linter_after) or return;
+        $lint_result == $cats::st_testing or return $lint_result;
+    }
+
     if ($r->{status} == $cats::problem_st_compile) {
         log_msg("accept compiled solution\n");
         return $cats::st_accepted;
@@ -857,7 +890,7 @@ sub test_solution {
     my $try = sub {
         for my $run_req (@run_requests) {
             my $st = compile($run_req, $problem);
-            $run_req->{compilation_error} = 1 if $st == $cats::st_compilation_error;
+            $run_req->{pre_run_error} = $st if $st == $cats::st_compilation_error || $st == $cats::st_lint_error;
             return $st if !$st || $st != $cats::st_testing;
         }
         my %tests = ($problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission) ?
@@ -998,7 +1031,9 @@ sub log_state_text {
 
 sub is_UH_or_CE {
     my ($state) = @_;
-    $state == $cats::st_compilation_error || $state == $cats::st_unhandled_error;
+    $state == $cats::st_compilation_error ||
+    $state == $cats::st_lint_error ||
+    $state == $cats::st_unhandled_error;
 }
 
 sub set_verdict {
@@ -1014,8 +1049,8 @@ sub set_verdict {
             next;
         }
 
-        if ($req->{compilation_error}) {
-            $judge->set_request_state($req, $cats::st_compilation_error, $parent_id, %$req);
+        if ($req->{pre_run_error}) {
+            $judge->set_request_state($req, $req->{pre_run_error}, $parent_id, %$req);
             next;
         }
 

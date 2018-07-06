@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.10">
+<Problem title="Linter" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="ok.cpp" type="checker" de_code="102" style="testlib" />
+<Linter name="b" src="linter_b.pl" stage="before" />
+<Linter name="a" src="linter_a.pl" stage="after" />
+<Test rank="1"><In>1</In><Out>2</Out></Test>
+
+</Problem>
+</CATS>
