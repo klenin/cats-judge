@@ -91,7 +91,7 @@ Run one or more problem solutions.
 Running includes folowing steps:
   * install problem as per `install` command
   * detect compiler/interpreter (aka *development environment*)
-  * compile solution
+  * compile and lint solution
   * run solution on problem tests
   * display results
 
@@ -224,6 +224,13 @@ Absence of any required module will not allow `cats-judge` to run at all.
 Absence of an optional module will result in some capability reduction.
 For example, without `WWW::Mechanize` module Polygon backend will fail,
 but all other features should still work.
+
+### Tests
+
+Tests should be run after installation.
+To run all tests, execute  `prove -r t` from the top level directory.
+Some tests (for example `judge.t`), if given command-line argument,
+run only subtests with names containing this argument as a substring.
 
 ### Installation options
 
