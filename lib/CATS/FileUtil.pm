@@ -46,7 +46,7 @@ sub read_lines {
     my ($self, $file_name) = @_;
     my $fn = fn($file_name);
     open my $f, '<', $fn or return $self->log("read_lines failed: '$fn' ($!)\n");
-    [ map $_, <$f> ];
+    [ <$f> ];
 }
 
 sub load_file {

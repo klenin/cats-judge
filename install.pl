@@ -105,7 +105,7 @@ step 'Verify git', sub {
 };
 
 step 'Verify required modules', sub {
-    my $lines = $fu->read_lines('cpanfile');
+    my $lines = $fu->read_lines_chomp('cpanfile');
     my @missing = grep !eval "require $_; 1;", map /^requires '(.+)';$/ && $1, @$lines;
     maybe_die join "\n", 'Some required modules not found:', @missing, '' if @missing;
 };
