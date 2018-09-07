@@ -848,14 +848,31 @@ sub split_solution {
         return $cats::st_ignore_submit;
     };
 
-    my $tests_count = keys %tests;
-    my $subtasks_amount = min(4, max(1, $tests_count / 5));
+    my $testsets;
+    if (($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'subtasks') {
+        my (@other, %subtasks);
+        for (keys %tests) {
+            if (CATS::Testset::is_scoring_group($tests{$_})) {
+                $subtasks{$tests{$_}->{name}} = 1;
+            }
+            else {
+                push @other, $_;
+            }
+        }
+        $testsets = [ keys %subtasks, @other ? CATS::Testset::pack_rank_spec(@other) : () ];
+    }
+    else {
+        my $tests_count = keys %tests;
+        my $subtasks_amount = min(4, max(1, $tests_count / 5));
 
-    my @tests;
-    push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
+        my @tests;
+        push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
+
+        $testsets = [ map CATS::Testset::pack_rank_spec(@$_), @tests ];
+    }
 
     $judge->create_splitted_jobs($cats::job_type_submission_part,
-        [ map CATS::Testset::pack_rank_spec(@$_), @tests ], {
+        $testsets, {
         problem_id => $r->{problem_id},
         contest_id => $r->{contest_id},
         state => $cats::job_st_waiting,
