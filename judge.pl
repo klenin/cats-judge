@@ -87,7 +87,7 @@ sub update_self {
     for my $cmd (@commands) {
         log_msg(join(' ', @$cmd) . "\n");
         my $rr = $fu->run($cmd);
-        log_msg("git> $_\n") for @{$rr->stdout};
+        log_msg("git> $_") for @{$rr->stdout}, @{$rr->stderr};
         return log_msg("failure: %s\n", $rr->exit_code) if $rr->exit_code;
     }
     log_msg("success\n");
