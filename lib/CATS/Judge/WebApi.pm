@@ -368,13 +368,16 @@ sub get_tests_req_details {
     $response->{req_details};
 }
 
+my @req_retails_params = qw(
+    output output_size req_id test_rank result time_used memory_used disk_used checker_comment points);
+
 sub insert_req_details {
     my ($self, $job_id, $p) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_insert_req_details',
         job_id => $job_id,
-        params => encode_json($p),
+        (map { exists $p->{$_} ? ($_ => $p->{$_}) : () } @req_retails_params),
         sid => $self->{sid},
     ]);
 
