@@ -871,6 +871,8 @@ sub split_solution {
         $testsets = [ map CATS::Testset::pack_rank_spec(@$_), @tests ];
     }
 
+    @$testsets > 1 or return log_msg("Too few solution parts: no need to split solution\n");
+
     $judge->create_splitted_jobs($cats::job_type_submission_part,
         $testsets, {
         problem_id => $r->{problem_id},
@@ -1215,11 +1217,16 @@ sub main_loop {
             }
             else {
                 my $problem = $judge->get_problem($r->{problem_id});
-                $problem->{run_method} == $cats::rm_competitive ||
-                $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
-                    ($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'none' ?
-                    test_problem($r, $problem) :
-                    $judge->set_request_state($r, split_solution($r), $current_job_id);
+                if ($problem->{run_method} == $cats::rm_competitive ||
+                    $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
+                    ($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'none') {
+                        test_problem($r, $problem)
+                    }
+                    else {
+                        my $state = split_solution($r);
+                        $state ? $judge->set_request_state($r, $state, $current_job_id) :
+                            test_problem($r, $problem);
+                    }
             }
         }
     }
