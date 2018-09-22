@@ -1,14 +1,15 @@
 @echo off
 
+set VS=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
+set WK=C:\Program Files (x86)\Windows Kits
+set P3=%PYTHON3_HOME%
+
 rem Compile:
 if "%1" == "-c" (
     rem echo from distutils.core import setup; from Cython.Build import cythonize > setup.py
     rem echo setup(ext_modules = cythonize(r"%2"^)^) >> setup.py
     rem python setup.py build_ext --inplace
-    set VS=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
-    set WK=C:\Program Files (x86)\Windows Kits
-    set P3=%PYTHON3_HOME%
-    python -m cython %2 --embed -3
+    %PYTHON3_HOME%\python -m cython %2 --embed -3
     if errorlevel 1 exit 1
     "%VS%\BIN\x86_amd64\cl.exe" /c /nologo /Ox /W3 /GL /DNDEBUG ^
         -I%P3%\include -I%P3%\include "-I%VS%\INCLUDE" "-I%VS%\ATLMFC\INCLUDE" ^
