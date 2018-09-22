@@ -57,8 +57,8 @@ call pbox install git --homedir=C:\git
 rem PYTHON3_HOME is set by pbox installer.
 if exist "%PYTHON3_HOME%\python.exe" (
     "%PYTHON3_HOME%\python.exe" -m pip install cython
+    rem Includes numpy
     "%PYTHON3_HOME%\python.exe" -m pip install pandas
-    "%PYTHON3_HOME%\python.exe" -m pip install numpy
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
 )
 
