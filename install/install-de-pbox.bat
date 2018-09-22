@@ -54,9 +54,13 @@ rem Change Prolog's assocated extension, since default .pl conflicts with Perl.
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 
+rem PYTHON3_HOME is set by pbox installer.
+if exist "%PYTHON3_HOME%\python.exe" (
+    "%PYTHON3_HOME%\python.exe" -m pip install cython
+    "%PYTHON3_HOME%\python.exe" -m pip install pandas
+    "%PYTHON3_HOME%\python.exe" -m pip install numpy
+    copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
+)
+
 rem IDE only, separate GUI action required to install C++
 choco install visualstudio2015community -y --execution-timeout 27000
-
-rem Need to be installed Python and PIP
-python -m pip install cython
-copy cython.bat C:\Lang\python3\cython.bat
