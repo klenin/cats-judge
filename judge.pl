@@ -423,9 +423,10 @@ sub prepare_modules {
         my $fname = $m->{name_parts}->{full_name};
         log_msg("module: $fname\n");
         $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
-        ($src_proc->compile($m) // -1) == $cats::st_testing or return;
+        my $r = $src_proc->compile($m, { section => !!$m->{main} });
+        defined $r && $r == $cats::st_testing or return $r;
     }
-    1;
+    $cats::st_testing;
 }
 
 sub initialize_problem {
@@ -446,8 +447,8 @@ sub initialize_problem {
     for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources) {
         clear_rundir or return undef;
 
-        prepare_modules($cats::source_modules{$ps->{stype}} || 0)
-            or return undef;
+        (prepare_modules($cats::source_modules{$ps->{stype}} || 0) // -1) == $cats::st_testing
+            or return;
 
         $fu->write_to_file([ $cfg->rundir, $ps->{name_parts}->{full_name} ], $ps->{src}) or return;
 
@@ -744,7 +745,9 @@ sub compile {
 
     clear_rundir or return;
 
-    prepare_modules($cats::solution_module) or return;
+    my $modules_result = prepare_modules($cats::solution_module) or return;
+    $modules_result == $cats::st_testing or return $modules_result;
+
     $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src})
         or return;
 
