@@ -2,7 +2,7 @@
 use v5.10;
 use strict;
 
-use Carp;
+use Carp qw(longmess shortmess confess);
 use Cwd;
 use Fcntl;
 use File::Spec;
@@ -1241,7 +1241,7 @@ eval {
     $cfg->load(file => 'config.xml', override => $cli->opts->{'config-set'});
 
     my $cfg_confess = $cfg->confess // '';
-    $SIG{__WARN__} = \&confess if $cfg_confess =~ /w/i;
+    $SIG{__WARN__} = sub { log_msg($cfg_confess =~ /w/i ? longmess(@_) : shortmess(@_)) };
     $SIG{__DIE__} = \&confess if $cfg_confess =~ /d/i;
     1;
 } or terminate $@;
