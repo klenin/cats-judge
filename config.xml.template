@@ -210,6 +210,16 @@
     validate='"%name.exe" "%test_input"'
     check='"%name.exe" %checker_args'/>
 
+<!-- CLang with Address Sanitizer-->
+<de
+    code="107"
+    compile='"#clang" "%full_name" -o "%name.exe" -fsanitize=address'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input"'
+    check='"%name.exe" %checker_args'/>
+
 <!-- Visual C++ 2003 compatible -->
 <de
     code="113"
