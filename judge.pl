@@ -732,7 +732,7 @@ sub lint {
         my $sp_report = $sp->run_single(
             { section => $cats::log_section_lint },
             $run_cmd,
-            [ $r->{name_parts}->{full_name} ],
+            [ ($r->{main} // $r)->{name_parts}->{full_name} ],
             { $src_proc->get_limits($linter, $problem) }
         ) or return;
         $sp_report->ok or return $cats::st_lint_error;
@@ -990,6 +990,7 @@ sub swap_main {
     $r->{src} = $main->{src};
     $r->{de_id} = $main->{de_id};
     $r->{code} = $main->{code};
+    $r->{main} = $main;
 
     $main->{name_parts}->{full_name} = $main->{main};
     $main->{src} = $old_src;
