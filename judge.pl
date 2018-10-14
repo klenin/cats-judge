@@ -1205,8 +1205,11 @@ sub main_loop {
 
         my $state = prepare_problem($r);
         if ($state == $cats::st_unhandled_error || $r->{type} == $cats::job_type_initialize_problem) {
+            my ($parent_id, $is_set_req_state_allowed) =
+                $judge->is_set_req_state_allowed($r->{job_id}, 1) if $state == $cats::st_unhandled_error;
             $judge->finish_job($r->{job_id}, determine_job_state($state)) or log_msg("Job canceled\n");
             $judge->save_logs($r->{job_id}, $log->get_dump);
+            $judge->cancel_all($r->{id}) if $is_set_req_state_allowed;
             next;
         }
 
