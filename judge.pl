@@ -625,15 +625,15 @@ sub run_single_test {
         for my $i (0 .. $#report_items) {
             my $solution_report = $report_items[$i];
             return if @{$solution_report->{errors}};
+            my $d = $test_run_details->[$i];
 
-            $test_run_details->[$i]->{time_used} = $solution_report->{consumed}->{user_time};
-            $test_run_details->[$i]->{memory_used} = $solution_report->{consumed}->{memory};
-            $test_run_details->[$i]->{disk_used} = $solution_report->{consumed}->{write};
+            $d->{time_used} = $solution_report->{consumed}->{user_time};
+            $d->{memory_used} = $solution_report->{consumed}->{memory};
+            $d->{disk_used} = $solution_report->{consumed}->{write};
 
             my $tr = $solution_report->{terminate_reason};
             if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
                 if ($solution_report->{exit_code} != 0) {
-                    my $d = $test_run_details->[$i];
                     $d->{checker_comment} = $solution_report->{exit_code};
                     $result = $d->{result} = $cats::st_runtime_error;
                     my $stderr_file = File::Spec->catfile($cfg->rundir, $cfg->stderr_file);
@@ -641,7 +641,7 @@ sub run_single_test {
                         $fu->load_file($stderr_file, $cfg->runtime_stderr_size);
                 }
             } else {
-                $result = $test_run_details->[$i]->{result} = $get_tr_status->($tr) or return;
+                $result = $d->{result} = $get_tr_status->($tr) or return;
             }
 
             save_output_prefix($test_run_details->[$i], $problem, $r->[$i])
