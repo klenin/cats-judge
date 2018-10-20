@@ -23,6 +23,7 @@
     api="DirectDatabase"
     columns="RVTMWCO"
     log_dump_size="200000"
+    runtime_stderr_size="10000"
     confess=""
 >
 <!-- api: WebApi | DirectDatabase -->

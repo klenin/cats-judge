@@ -568,6 +568,7 @@ sub run_checker {
 
 sub save_output_prefix {
     my ($dest, $problem, $req) = @_;
+    return if $dest->{output_size}; # Runtime error message
     my $len =
         $req->{req_save_output_prefix} //
         $req->{cp_save_output_prefix} //
@@ -632,8 +633,12 @@ sub run_single_test {
             my $tr = $solution_report->{terminate_reason};
             if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
                 if ($solution_report->{exit_code} != 0) {
-                    $test_run_details->[$i]->{checker_comment} = $solution_report->{exit_code};
-                    $result = $test_run_details->[$i]->{result} = $cats::st_runtime_error;
+                    my $d = $test_run_details->[$i];
+                    $d->{checker_comment} = $solution_report->{exit_code};
+                    $result = $d->{result} = $cats::st_runtime_error;
+                    my $stderr_file = File::Spec->catfile($cfg->rundir, $cfg->stderr_file);
+                    ($d->{output}, $d->{output_size}) =
+                        $fu->load_file($stderr_file, $cfg->runtime_stderr_size);
                 }
             } else {
                 $result = $test_run_details->[$i]->{result} = $get_tr_status->($tr) or return;
