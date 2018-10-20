@@ -56,9 +56,13 @@ call pbox install git --homedir=C:\git
 
 rem PYTHON3_HOME is set by pbox installer.
 if exist "%PYTHON3_HOME%\python.exe" (
-    "%PYTHON3_HOME%\python.exe" -m pip install cython
+    rem Update sqlite3 library
+    %PBOX_HOME%\bin\wget --output-document %TEMP%\sqlite3.zip http://www.sqlite.org/2018/sqlite-dll-win64-x64-3250200.zip
+    %PBOX_HOME%\bin\7za x -y -o"%PYTHON3_HOME%\DLLs" %TEMP%\sqlite3.zip
     rem Includes numpy
     "%PYTHON3_HOME%\python.exe" -m pip install pandas
+    rem Install cython
+    "%PYTHON3_HOME%\python.exe" -m pip install cython
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
 )
 
