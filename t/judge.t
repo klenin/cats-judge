@@ -317,7 +317,7 @@ maybe_subtest 'stdin validator', 5, sub {
 my $p_main = FS->catfile($path, 'p_main');
 
 maybe_subtest 'main', 4, sub {
-    like run_judge_sol($p_main, 'test1.h', de => 1)->stdout->[-1], qr/accepted/, 'main result'
+    like run_judge_sol($p_main, 'test1.h', de => 102)->stdout->[-1], qr/accepted/, 'main result'
 };
 
 my $p_linter = FS->catfile($path, 'p_linter');
