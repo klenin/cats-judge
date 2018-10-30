@@ -637,14 +637,15 @@ sub run_single_test {
             my $tr = $solution_report->{terminate_reason};
             if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
                 if ($solution_report->{exit_code} != 0) {
-                    $d->{checker_comment} = $solution_report->{exit_code};
                     $result = $d->{result} = $cats::st_runtime_error;
-                    my $stderr_file = File::Spec->catfile($cfg->rundir, $cfg->stderr_file);
-                    ($d->{output}, $d->{output_size}) =
-                        $fu->load_file($stderr_file, $cfg->runtime_stderr_size);
                 }
             } else {
                 $result = $d->{result} = $get_tr_status->($tr) or return;
+            }
+            if ($result == $cats::st_runtime_error) {
+                $d->{checker_comment} = $solution_report->{exit_code};
+                my $stderr_file = File::Spec->catfile($cfg->rundir, $cfg->stderr_file);
+                ($d->{output}, $d->{output_size}) = $fu->load_file($stderr_file, $cfg->runtime_stderr_size);
             }
 
             save_output_prefix($test_run_details->[$i], $problem, $r->[$i])
