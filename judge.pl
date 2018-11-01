@@ -454,7 +454,7 @@ sub initialize_problem {
 
         $fu->write_to_file([ $cfg->rundir, $ps->{name_parts}->{full_name} ], $ps->{src}) or return;
 
-        my ($main) = grep $_->{main} eq $ps->{fname}, @$problem_sources;
+        my ($main) = grep $ps->{fname} eq ($_->{main} // ''), @$problem_sources;
         ($src_proc->compile($main // $ps) // -1) == $cats::st_testing or return;
 
         if ($ps->{stype} == $cats::generator && $p->{formal_input}) {
