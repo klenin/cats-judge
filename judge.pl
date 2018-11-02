@@ -386,7 +386,7 @@ sub prepare_tests {
             }
 
             my ($ps) = grep $_->{id} eq $t->{std_solution_id}, @$problem_sources;
-            my ($main) = grep $_->{main} eq $ps->{fname}, @$problem_sources;
+            my ($main) = grep $ps->{fname} eq ($_->{main} // ''), @$problem_sources;
 
             clear_rundir or return undef;
 
