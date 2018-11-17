@@ -332,16 +332,16 @@
     check='"#java" -Xss64m "%name" %checker_args'
     extension='java'/>
 
-<!-- C# 1.1 -->
+<!-- C# -->
 <de
     code="402"
-    compile='"#ms_csc" "%full_name"'
-    run='"%name.exe"'
-    run_interactive='"%name.exe"'
-    runfile='%name.exe'
-    generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
-    check='"%name.exe" %checker_args'
+    compile='"#ms_csc" -out:main.exe "*.cs"'
+    run='"main.exe"'
+    run_interactive='"main.exe"'
+    runfile='main.exe'
+    generate='"main.exe" %args'
+    validate='"main.exe" "%test_input"'
+    check='"main.exe" %checker_args'
     extension='cs'/>
 
 <!-- Java + testlib4j.jar -->
