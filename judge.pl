@@ -425,7 +425,7 @@ sub prepare_modules {
         log_msg("module: $fname\n");
         $fu->write_to_file([ $cfg->rundir, $fname ], $m->{src}) or return;
 
-        $m->{main} // (grep $_->{main} eq $m->{fname}, @$problem_sources) and next;
+        $m->{main} // (grep $m->{fname} eq ($_->{main} // ''), @$problem_sources) and next;
         my $r = $src_proc->compile($m);
         defined $r && $r == $cats::st_testing or return $r;
     }
