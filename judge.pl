@@ -22,8 +22,9 @@ use lib File::Spec->catdir($FindBin::Bin, 'lib', 'cats-problem');
 use CATS::BinaryFile;
 use CATS::Config;
 use CATS::Constants;
-use CATS::SourceManager;
 use CATS::FileUtil;
+use CATS::Problem::TestsParser;
+use CATS::SourceManager;
 use CATS::Testset;
 use CATS::Utils qw(sanitize_file_name split_fname);
 
@@ -212,14 +213,12 @@ sub generate_test_group {
     return 1 if $test->{generated};
     my $out = generate_test($problem, $test, 'in')
         or return log_msg("failed to generate test group $test->{gen_group}\n");
-    $out =~ s/%n/%d/g;
-    $out =~ s/%0n/%02d/g;
-    #$out =~ s/%(0*)n/length($1) ? '%0' . length($1) . 'd' : '%d'/eg;
     for (@$tests) {
         next unless ($_->{gen_group} || 0) == $test->{gen_group};
         $_->{generated} = 1;
         my $tf = $problem_cache->test_file($pid, $_);
-        $fu->copy_glob([ $cfg->rundir, sprintf($out, $_->{rank}) ], $tf) or return;
+        my $applied_out = CATS::Problem::Parser::apply_test_rank($out, $_->{rank});
+        $fu->copy_glob([ $cfg->rundir, $applied_out ], $tf) or return;
         my $hash = check_input_hash($pid, $_, $tf);
         my @input_data =  (undef, 0);
         if ($problem->{save_input_prefix} && !defined $test->{in_file}) {
