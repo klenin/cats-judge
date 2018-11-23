@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 79;
+use Test::More tests => 89;
 use Test::Exception;
 
 use File::Spec;
@@ -105,6 +105,26 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
     };
     ok $fu->remove_file($fn), 'remove_file unlocked';
     ok ! -f $fn, 'remove_file unlocked ok';
+}
+
+{
+    my $fu = make_fu;
+
+    my @r = ([], [ $tmpdir, 'aa' ], [ $tmpdir, 'bb' ]);
+    my @f = ('', 'a$a.txt', 'b$b.txt');
+    ok $fu->ensure_dir($r[1]) && -d CATS::FileUtil::fn($r[1]), 'remove_rec 1 ensure_dir';
+    ok $fu->write_to_file([ @{$r[1]}, $f[1] ], 'qqq') && -f CATS::FileUtil::fn([ @{$r[1]}, $f[1] ]),
+        'remove_rec 1 prepare';
+    ok $fu->remove_all($tmpdir), 'remove_rec 1 ok';
+    ok ! @{$fu->dir_files($tmpdir)}, 'remove_rec 1 works';
+
+    for (1..2) {
+        ok $fu->ensure_dir($r[$_]) && -d CATS::FileUtil::fn($r[$_]), "remove_rec 2 ensure_dir $_";
+        my $ff = [ @{$r[$_]}, $f[$_] ];
+        ok $fu->write_to_file($ff, 'qqq') && -f CATS::FileUtil::fn($ff), "remove_rec 2 prepare $_";
+    }
+    ok $fu->remove_all($tmpdir), 'remove_rec 2 ok';
+    ok ! @{$fu->dir_files($tmpdir)}, 'remove_rec 2 works';
 }
 
 {
