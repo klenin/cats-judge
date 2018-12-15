@@ -37,7 +37,7 @@ sub optional_fields() { qw(
 ) }
 sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
-sub compile_fields() { @cats::limit_fields }
+sub compile_fields() { @cats::limits_fields }
 sub de_fields() { qw(
     check
     compile
@@ -101,7 +101,7 @@ sub load_part {
             $self->_read_attributes($self, $_[0], security_fields);
         },
         compile => sub {
-            $self->_read_attributes($self, $_[0], compile_fields);
+            $self->_read_attributes($self->{compile} //= {}, $_[0], compile_fields);
         },
         de => sub {
             my $code = $_[0]->{code} or die 'de: code required';
