@@ -72,6 +72,8 @@
 <define name="#fpc" de_code_autodetect="202" value="C:\Lang\lazarus\fpc\3.0.2\bin\i386-win32\fpc.exe" />
 <define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\pascalabc\pabcnetcclear.exe" />
 <define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
+
+<define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
 <!-- END -->
 
 <!-- standart checkers -->
@@ -447,5 +449,12 @@
     compile_error_flag='ERROR'
     run='"#prolog" -g main -g halt -l "%full_name"'
     extension='pro'/>
+
+<!-- Unity -->
+<de
+    code="602"
+    compile='"#unity" -batchmode -quit -projectPath "project" -nographics -buildWindowsPlayer ./build/main.exe -logFile out.txt'
+    run='./project/build/main.exe -batchmode -nographics'
+    extension=''/>
 
 </judge>
