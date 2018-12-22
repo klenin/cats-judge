@@ -928,10 +928,12 @@ sub test_solution {
     my $try = sub {
         for my $run_req (@run_requests) {
             my $st = compile($run_req, $problem);
-            $run_req->{pre_run_error} = $st if $st == $cats::st_compilation_error || $st == $cats::st_lint_error;
+            $run_req->{pre_run_error} = $st
+                if $st && ($st == $cats::st_compilation_error || $st == $cats::st_lint_error);
             return $st if !$st || $st != $cats::st_testing;
         }
-        my %tests = ($problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission) ?
+        my %tests =
+            $problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission ?
             $judge->get_testset('reqs', $r->{id}, 1) : $judge->get_testset('jobs', $r->{job_id});
 
         %tests or do {
