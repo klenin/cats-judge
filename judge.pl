@@ -229,8 +229,8 @@ sub generate_test_group {
     1;
 }
 
-sub input_or { $_[0] eq '*STDIN' ? 'input.txt' : $_[1] }
-sub output_or { $_[0] eq '*STDOUT' ? 'output.txt' : $_[1] }
+sub input_or { $_[0] =~ /^\*(?:STDIN|NONE)$/ ? 'input.txt' : $_[1] }
+sub output_or { $_[0] =~ /^\*(?:STDOUT|NONE)$/ ? 'output.txt' : $_[1] }
 
 sub input_or_default { File::Spec->catfile($cfg->rundir, input_or($_[0], $_[0])) }
 sub output_or_default { File::Spec->catfile($cfg->rundir, output_or($_[0], $_[0])) }
