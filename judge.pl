@@ -8,6 +8,7 @@ use Fcntl;
 use File::Spec;
 use FindBin;
 use List::Util qw(max min);
+use Time::HiRes;
 
 sub terminate($) {
     print "\n$_[0]\n";
@@ -1165,6 +1166,11 @@ sub generate_snippets {
     $judge->save_logs($r->{job_id}, $log->get_dump);
 }
 
+sub timer_start { [ Time::HiRes::gettimeofday ] }
+sub timer_since { Time::HiRes::tv_interval($_[0], [ Time::HiRes::gettimeofday ]) }
+
+my ($total_timer, $timer_count) = (0, 0);
+
 sub main_loop {
     chdir $cfg->workdir
         or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
@@ -1176,8 +1182,15 @@ sub main_loop {
         sleep $cfg->sleep_time;
         $log->rollover;
         syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];
+        my $timer = timer_start;
         my $r = $judge->select_request;
-        log_msg("pong\n") if $judge->was_pinged;
+        my $dt = timer_since($timer);
+        $total_timer += $dt;
+        $timer_count++;
+        if ($judge->was_pinged) {
+            log_msg("\naverage select_request time: %.3f\n", $total_timer / $timer_count);
+            log_msg("pong\n");
+        }
         $r or next;
 
         $current_job_id = $r->{job_id};
