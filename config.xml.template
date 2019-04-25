@@ -46,6 +46,7 @@
 <define name="#java" de_code_autodetect="403.runtime" value="C:\Lang\jdk8\bin\java.exe" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#go" de_code_autodetect="404" value="C:\Lang\go\bin\go.exe" />
+<define name="#kotlin" de_code_autodetect="406" value="C:\Lang\kotlin" />
 
 <define name="#perl" de_code_autodetect="501" value="C:\Lang\perl\perl\bin\perl.exe" />
 <define name="#python" de_code_autodetect="502" value="C:\Lang\python3\python.exe" />
@@ -365,6 +366,17 @@
     validate='"%name.exe" "%test_input"'
     check='"%name.exe" %checker_args'
     extension='go'/>
+
+<!-- Kotlin -->
+<de
+    code="406"
+    compile='"#java" -Xmx256M -Xms32M -noverify -cp #kotlin\lib\kotlin-preloader.jar org.jetbrains.kotlin.preloading.Preloader -cp #kotlin\lib\kotlin-compiler.jar org.jetbrains.kotlin.cli.jvm.K2JVMCompiler "%full_name" -include-runtime -d result.jar'
+    run='"#java" -Xmx256m -Xss64m -jar result.jar'
+    runfile='result.jar'
+    generate='"#java" -Xmx256m -Xss64m -jar result.jar %args'
+    validate='"#java" -Xmx256m -Xss64m -jar result.jar "%test_input"'
+    check='"#java" -jar result.jar %checker_args'
+    extension='kt'/>
 
 <!-- Perl -->
 <de
