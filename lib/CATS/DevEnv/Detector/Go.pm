@@ -12,6 +12,7 @@ sub code { '404' }
 sub _detect {
     my ($self) = @_;
     folder($self, "$ENV{GOROOT}/bin", 'go') if $ENV{GOROOT};
+    registry_glob($self, 'GoProgrammingLanguage/installLocation', 'bin', 'go');
     pbox($self, 'go', 'bin', 'go');
 }
 
