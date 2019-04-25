@@ -46,7 +46,7 @@
 <define name="#java" de_code_autodetect="403.runtime" value="C:\Lang\jdk8\bin\java.exe" />
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#go" de_code_autodetect="404" value="C:\Lang\go\bin\go.exe" />
-<define name="#kotlin" de_code_autodetect="406" value="C:\Lang\kotlin" />
+<define name="#kotlin" de_code_autodetect="406.path" value="C:\Lang\kotlin" />
 
 <define name="#perl" de_code_autodetect="501" value="C:\Lang\perl\perl\bin\perl.exe" />
 <define name="#python" de_code_autodetect="502" value="C:\Lang\python3\python.exe" />
