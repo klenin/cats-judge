@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 89;
+use Test::More tests => 93;
 use Test::Exception;
 
 use File::Spec;
@@ -207,6 +207,17 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
     ok !-f FS->catfile($tmpdir, 'zzz'), 'copy_glob duplicate no copy';
 
     ok $fu->remove([ $tmpdir, 'a?' ]), 'remove after copy_glob 2';
+}
+
+{
+    my $fu = make_fu_dies;
+    $fu->ensure_dir([ $tmpdir, 'r' ]);
+    $fu->write_to_file([ $tmpdir, 'r', 'пример' ], '111');
+    my $fn1 = [ $tmpdir, '01.txt' ];
+    ok $fu->copy_glob([ $tmpdir, 'r', '*' ], $fn1), 'copy_glob encoding';
+    ok -f FS->catfile(@$fn1), 'copy_glob encoding';
+    is_deeply $fu->read_lines($fn1), [ '111' ], 'copy_glob read_lines encoding';
+    ok $fu->remove([ $tmpdir, '*' ]), 'remove after copy_glob encoding';
 }
 
 {

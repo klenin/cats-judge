@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Encode;
 use File::Spec;
 use File::Copy::Recursive qw(rcopy);
 use IPC::Cmd;
@@ -28,10 +29,18 @@ sub log {
     $self->{logger}->msg(@rest);
 }
 
-sub fn {
+sub _fn_basic {
     my ($file) = @_;
     ref $file eq 'ARRAY' ? File::Spec->catfile(@$file) : $file;
 }
+
+sub _fn_win {
+    my $fn = _fn_basic(@_);
+    Encode::from_to($fn, 'UTF-8', 'WINDOWS-1251');
+    $fn;
+}
+
+BEGIN { *fn = $^O eq 'MSWin32' ? \&_fn_win : \&_fn_basic }
 
 sub write_to_file {
     my ($self, $file_name, $src) = @_;
@@ -82,7 +91,7 @@ sub dir_files {
 
 sub remove_file {
     my ($self, $file_name) = @_;
-    my $fn = fn($file_name);
+    my $fn = _fn_basic($file_name);
     -f $fn || -l $fn or return $self->log("remove_file: '$fn' is not a file\n");
 
     # Some AV software blocks access to new executables while running checks.
