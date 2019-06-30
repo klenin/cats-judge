@@ -181,11 +181,12 @@ sub generate_test {
     my $pid = $problem->{id};
     die 'generated' if $test->{generated};
 
-    my ($ps) = grep $_->{id} eq $test->{generator_id}, @$problem_sources or die;
+    my ($ps) = grep $_->{id} eq $test->{generator_id} ||
+        $_->{guid} eq $test->{generator_guid}, @$problem_sources or die;
 
     clear_rundir or return undef;
 
-    $fu->copy($problem_cache->source_path($pid, $test->{generator_id}, '*'), $cfg->rundir)
+    $fu->copy($problem_cache->source_path($pid, $ps->{id}, '*'), $cfg->rundir)
         or return;
 
     my $redir;
@@ -350,7 +351,7 @@ sub prepare_tests {
         if (defined $t->{in_file} && !defined $t->{in_file_size}) {
             $fu->write_to_file($tf, $t->{in_file}) or return;
         }
-        elsif (defined $t->{generator_id}) {
+        elsif (defined ($t->{generator_id} // $t->{generator_guid})) {
             if ($t->{gen_group}) {
                 generate_test_group($problem, $t, $tests) or return undef;
             }
