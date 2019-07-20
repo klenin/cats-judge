@@ -71,6 +71,7 @@ sub compile {
     my $compile_limits = $self->cfg->compile;
     my %limits = map { $compile_limits->{$_} ? ($_ => $compile_limits->{$_}) : () }
         @cats::limits_fields;
+    $limits{deadline} = $limits{time_limit} if $limits{time_limit};
 
     my $sp_report = $self->sp->run_single({
         ($opt->{section} ? (section => $cats::log_section_compile) : ()),
