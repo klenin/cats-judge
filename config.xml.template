@@ -326,6 +326,7 @@
 <de
     code="401"
     compile='"#javac" "%full_name"'
+    compile_rename_regexp='is public, should be declared in a file named (\w+\.java)'
     run='"#java" -Xss64m "%name"'
     interactor_name='"#java" -Xss64m "Interact"'
     run_interactive='"#java" -Xss64m "%name"'

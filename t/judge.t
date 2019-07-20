@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 45;
+use Test::More tests => 46;
 
 use File::Spec;
 
@@ -121,6 +121,16 @@ maybe_subtest 'compile_error_flag', 4, sub {
         de => 501, 'config-set' => "DEs.501.compile_error_flag=FLAG")->stdout->[-1],
         qr/compilation error/, 'compilation error';
 };
+
+SKIP: {
+    my ($java, $javac) =
+        sort @{$fu->run([ $perl, $judge, 'config --print defines/#javac?$ --bare' ])->stdout};
+    chomp for $java, $javac;
+    -e $java && -e $javac or skip 'No Java', 1;
+    maybe_subtest 'Java rename', 4, sub {
+        like run_judge_sol($p_minimal, 'bad_name.java', de => 401)->stdout->[-1], qr/accepted/, 'accepted';
+    };
+}
 
 maybe_subtest 'reinitialize', 15, sub {
     my $cache_dir = run_judge(qw(config --print cachedir --bare))->stdout->[0];

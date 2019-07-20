@@ -43,6 +43,7 @@ sub de_fields() { qw(
     compile
     compile_add_path
     compile_error_flag
+    compile_rename_regexp
     encoding
     extension
     generate
