@@ -127,7 +127,9 @@ sub get_run_params {
                 %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
         my $run_cmd = $src_proc->require_property(run => $r, {
-            %$run_cmd_opts, output_file => output_or_default($problem->{output_file}),
+            %$run_cmd_opts,
+            output_file => output_or_default($problem->{output_file}),
+            original_output => $problem->{output_file},
         }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
     }

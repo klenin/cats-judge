@@ -236,7 +236,6 @@ step 'Save configuration', sub {
         s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
         s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
         if (($platform // '') ne 'win32') {
-            s~(\sname="#move"\s+value=")[^"]+"~$1/bin/mv -f"~;
             s~(\sname="#gcc_stack"\s+value=")[^"]+"~$1"~;
             # Hack: Use G++ instead of Visual C++
             s~extension='cpp'~extension='cpp1'~;

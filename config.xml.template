@@ -36,7 +36,7 @@
 
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp.exe"/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
-<define name="#move" value="C:\WINDOWS\system32\cmd.exe /c move /y"/>
+<define name="#copy_cat" value="../copy_cat.pl"/>
 <define name="#gcc_stack" value=" -Wl,--stack=268435456"/>
 <define name="#formal" value="%workdir/lib/cats-problem/CATS/Formal/Formal.pl"/>
 
@@ -124,8 +124,8 @@
 <!-- Special: copy text as an answer -->
 <de
     code="3"
-    compile='#move "%full_name" _cats_output_copy'
-    run='#move _cats_output_copy %output_file'
+    compile='#perl #copy_cat -i "%full_name" -o _cats_output_copy'
+    run='#perl #copy_cat -i _cats_output_copy -o %output_file -m %original_output'
     generate=''
     check=''/>
 
