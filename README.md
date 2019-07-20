@@ -163,8 +163,8 @@ Options:
 Work with configuration.
 
 Options:
-  * `--print <regexp>` print configuration
-  * `--bare` print values without names
+  * `--print <regexps>` print configuration. Regexps are used to filter config keys. Multiple regexps separated by slash (`/`) correspond to nesting levels.
+  * `--bare` print values without names and extra spaces
 
 Examples:
 ```
@@ -176,6 +176,11 @@ Display default development environment codes for each extension.
 j conf -p url
 ```
 Display contest control system URL prefixes.
+
+```
+j co -p defines/#javac$ -b
+```
+Display path to Java compiler.
 
 ### `clear-cache` command
 

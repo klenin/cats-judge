@@ -176,13 +176,14 @@ sub load {
 }
 
 sub print_helper {
-    my ($val, $keys, $depth, $bare) = @_;
-    for my $k (sort @$keys) {
+    my ($val, $regexps, $keys, $depth, $bare) = @_;
+    my ($regexp, @rest) = @$regexps;
+    for my $k (sort $regexp ? grep /$regexp/, @$keys : @$keys) {
         print "$depth$k =" unless $bare;
         my $v = $val->{$k};
         if (ref $v eq 'HASH') {
-            print "\n";
-            print_helper($v, [ keys %$v ], "$depth    ");
+            print "\n" unless $bare;
+            print_helper($v, \@rest, [ keys %$v ], "$depth    ", $bare);
         }
         elsif (!ref $v) {
             print $bare ? "$v\n" : " $v\n";
@@ -192,8 +193,7 @@ sub print_helper {
 
 sub print_params {
     my ($self, $regexp, $bare) = @_;
-    my $r = qr/$regexp/;
-    print_helper($self, [ grep /$r/, keys %$self ], '', $bare);
+    print_helper($self, [ map qr/$_/, split '/', $regexp ], [ keys %$self ], '', $bare);
 }
 
 sub apply_params {
