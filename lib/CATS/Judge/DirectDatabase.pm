@@ -7,9 +7,9 @@ use CATS::Config;
 use CATS::Constants;
 use CATS::DB qw($dbh);
 use CATS::DevEnv;
+use CATS::Job;
 use CATS::JudgeDB;
 use CATS::Testset;
-use CATS::Job;
 
 use base qw(CATS::Judge::Base);
 
@@ -57,7 +57,9 @@ sub auth {
 
 sub is_locked { $_[0]->{lock_counter} }
 
-sub can_split { 1 }
+sub can_split {
+    CATS::JudgeDB::can_split;
+}
 
 sub set_request_state {
     my ($self, $req, $state, $job_id, %p) = @_;

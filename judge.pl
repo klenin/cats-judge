@@ -1236,10 +1236,15 @@ sub main_loop {
             else {
                 $r->{split_strategy} = get_split_strategy($r);
                 my $problem = $judge->get_problem($r->{problem_id});
+
                 if ($problem->{run_method} == $cats::rm_competitive ||
-                    $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
+                    $r->{type} == $cats::job_type_submission_part ||
                     $r->{split_strategy} eq $cats::split_none) {
-                        test_problem($r, $problem)
+                        test_problem($r, $problem);
+                    }
+                    elsif (!$judge->can_split) {
+                        log_msg("Can't split solution: queue limit reached\n");
+                        test_problem($r, $problem);
                     }
                     else {
                         my $state = split_solution($r);

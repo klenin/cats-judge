@@ -80,7 +80,9 @@ sub auth {
     $self->{id} = $response->{id};
 }
 
-sub can_split { 1 }
+sub can_split {
+    CATS::JudgeDB::can_split;
+}
 
 sub update_dev_env {
     my ($self) = @_;
