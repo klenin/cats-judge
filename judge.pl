@@ -856,6 +856,11 @@ sub delete_req_details {
     1;
 }
 
+sub get_split_strategy {
+    my $r = @_;
+    $r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // 'default';
+}
+
 sub split_solution {
     my ($r) = @_;
     log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
@@ -869,7 +874,7 @@ sub split_solution {
     };
 
     my $testsets;
-    if (($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'subtasks') {
+    if ($r->{split_strategy} eq 'subtasks') {
         my (@other, %subtasks);
         for (keys %tests) {
             if (CATS::Testset::is_scoring_group($tests{$_})) {
@@ -1219,6 +1224,7 @@ sub main_loop {
             generate_snippets($r);
         }
         elsif ($r->{type} == $cats::job_type_submission || $r->{type} == $cats::job_type_submission_part) {
+            $r->{split_strategy} = get_split_strategy($r);
             if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
                 log_msg("Empty source for problem $r->{problem_id}\n");
                 $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id);
@@ -1228,7 +1234,7 @@ sub main_loop {
                 my $problem = $judge->get_problem($r->{problem_id});
                 if ($problem->{run_method} == $cats::rm_competitive ||
                     $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
-                    ($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'none') {
+                    $r->{split_strategy} eq 'none') {
                         test_problem($r, $problem)
                     }
                     else {
