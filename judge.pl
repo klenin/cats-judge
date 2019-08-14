@@ -857,13 +857,15 @@ sub delete_req_details {
 }
 
 sub get_split_strategy {
-    my $r = @_;
-    $r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // 'default';
+    my ($r) = @_;
+    $r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // $cats::split_default;
 }
 
 sub split_solution {
     my ($r) = @_;
     log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
+    log_msg("Split strategy: $r->{split_strategy}\n");
+
     my ($is_group_req, @run_requests) = get_run_reqs($r);
     delete_req_details($r, $is_group_req, @run_requests) or return $cats::st_unhandled_error;
 
@@ -874,7 +876,7 @@ sub split_solution {
     };
 
     my $testsets;
-    if ($r->{split_strategy} eq 'subtasks') {
+    if ($r->{split_strategy} eq $cats::split_subtasks) {
         my (@other, %subtasks);
         for (keys %tests) {
             if (CATS::Testset::is_scoring_group($tests{$_})) {
@@ -887,8 +889,10 @@ sub split_solution {
         $testsets = [ keys %subtasks, @other ? CATS::Testset::pack_rank_spec(@other) : () ];
     }
     else {
+        my $parts_cnt = $r->{judges_alive} // $cats::default_split_cnt;
         my $tests_count = keys %tests;
-        my $subtasks_amount = min(4, max(1, $tests_count / 5));
+        # min_tests_per_job should be defined in strategy
+        my $subtasks_amount = min($parts_cnt, max(1, $tests_count / $cats::min_tests_per_job));
 
         my @tests;
         push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
@@ -1224,17 +1228,17 @@ sub main_loop {
             generate_snippets($r);
         }
         elsif ($r->{type} == $cats::job_type_submission || $r->{type} == $cats::job_type_submission_part) {
-            $r->{split_strategy} = get_split_strategy($r);
             if (($r->{src} // '') eq '' && @{$r->{elements}} <= 1) { # TODO: Add link -> link -> problem checking
                 log_msg("Empty source for problem $r->{problem_id}\n");
                 $judge->set_request_state($r, $cats::st_unhandled_error, $current_job_id);
                 $judge->finish_job($r->{job_id}, $cats::job_st_failed);
             }
             else {
+                $r->{split_strategy} = get_split_strategy($r);
                 my $problem = $judge->get_problem($r->{problem_id});
                 if ($problem->{run_method} == $cats::rm_competitive ||
                     $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
-                    $r->{split_strategy} eq 'none') {
+                    $r->{split_strategy} eq $cats::split_none) {
                         test_problem($r, $problem)
                     }
                     else {
