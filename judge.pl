@@ -894,6 +894,9 @@ sub split_solution {
         }
         $testsets = [ keys %subtasks, @other ? CATS::Testset::pack_rank_spec(@other) : () ];
     }
+    elsif ($r->{split_strategy}->{method} eq $cats::split_explicit) {
+        $testsets = $r->{split_strategy}->{testsets} // [];
+    }
     else {
         my $strategy = $r->{split_strategy};
         my $parts_cnt = $strategy->{split_cnt};
