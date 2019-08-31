@@ -870,7 +870,7 @@ sub get_split_strategy {
 sub split_solution {
     my ($r) = @_;
     log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
-    log_msg("Split strategy: $r->{split_strategy}\n");
+    log_msg("Split strategy: $r->{split_strategy}->{method}\n");
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
     delete_req_details($r, $is_group_req, @run_requests) or return $cats::st_unhandled_error;
