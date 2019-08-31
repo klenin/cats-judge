@@ -1251,16 +1251,16 @@ sub main_loop {
                     $r->{type} == $cats::job_type_submission_part ||
                     $r->{split_strategy}->{method} eq $cats::split_none) {
                         test_problem($r, $problem);
-                    }
-                    elsif (!$judge->can_split) {
-                        log_msg("Can't split solution: queue limit reached\n");
+                }
+                elsif (!$judge->can_split) {
+                    log_msg("Can't split solution: queue limit reached\n");
+                    test_problem($r, $problem);
+                }
+                else {
+                    my $state = split_solution($r);
+                    $state ? $judge->set_request_state($r, $state, $current_job_id) :
                         test_problem($r, $problem);
-                    }
-                    else {
-                        my $state = split_solution($r);
-                        $state ? $judge->set_request_state($r, $state, $current_job_id) :
-                            test_problem($r, $problem);
-                    }
+                }
             }
         }
     }
