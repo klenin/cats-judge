@@ -46,6 +46,8 @@ use CATS::TestPlan;
 use Digest::MD5 qw(md5_hex);
 use Digest::SHA qw(sha1_hex);
 
+use JSON::XS;
+
 use open IN => ':crlf', OUT => ':raw';
 
 my %lock;
@@ -858,7 +860,11 @@ sub delete_req_details {
 
 sub get_split_strategy {
     my ($r) = @_;
-    $r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // $cats::split_default;
+    my $strategy = $r->{req_job_split_strategy} // $r->{cp_job_split_strategy};
+    my $res = $strategy ? decode_json($strategy) : {'method' => $cats::split_default};
+    $res->{min_tests_per_job} //= $cats::min_tests_per_job;
+    $res->{split_cnt} //= $r->{judges_alive} // $cats::default_split_cnt;
+    $res;
 }
 
 sub split_solution {
@@ -876,7 +882,7 @@ sub split_solution {
     };
 
     my $testsets;
-    if ($r->{split_strategy} eq $cats::split_subtasks) {
+    if ($r->{split_strategy}->{method} eq $cats::split_subtasks) {
         my (@other, %subtasks);
         for (keys %tests) {
             if (CATS::Testset::is_scoring_group($tests{$_})) {
@@ -889,10 +895,11 @@ sub split_solution {
         $testsets = [ keys %subtasks, @other ? CATS::Testset::pack_rank_spec(@other) : () ];
     }
     else {
-        my $parts_cnt = $r->{judges_alive} // $cats::default_split_cnt;
+        my $strategy = $r->{split_strategy};
+        my $parts_cnt = $strategy->{split_cnt};
         my $tests_count = keys %tests;
-        # min_tests_per_job should be defined in strategy
-        my $subtasks_amount = min($parts_cnt, max(1, $tests_count / $cats::min_tests_per_job));
+
+        my $subtasks_amount = min($parts_cnt, max(1, $tests_count / $strategy->{min_tests_per_job}));
 
         my @tests;
         push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
@@ -1239,7 +1246,7 @@ sub main_loop {
 
                 if ($problem->{run_method} == $cats::rm_competitive ||
                     $r->{type} == $cats::job_type_submission_part ||
-                    $r->{split_strategy} eq $cats::split_none) {
+                    $r->{split_strategy}->{method} eq $cats::split_none) {
                         test_problem($r, $problem);
                     }
                     elsif (!$judge->can_split) {
