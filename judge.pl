@@ -858,19 +858,33 @@ sub delete_req_details {
     1;
 }
 
+sub _number_or {
+    if (!$_[0] || $_[0] !~ /^[0-9]+$/) {
+        log_msg("Invalid param %s\n", $_[0]) if $_[0];
+        $_[0] = $_[1];
+    }
+}
+
 sub get_split_strategy {
     my ($r) = @_;
     my $strategy = $r->{req_job_split_strategy} // $r->{cp_job_split_strategy};
-    my $res = $strategy ? decode_json($strategy) : {'method' => $cats::split_default};
-    $res->{min_tests_per_job} //= $cats::min_tests_per_job;
-    $res->{split_cnt} //= $r->{judges_alive} // $cats::default_split_cnt;
+    my $res = { method => $cats::split_default };
+    if ($strategy) {
+        eval {
+            $res = decode_json($strategy);
+            1;
+        } or log_msg("Invalid json: %s (%s)\n", $strategy, $@);
+    }
+
+    _number_or($res->{min_tests_per_job}, $CATS::Config::split->{min_tests_per_job});
+    _number_or($res->{split_cnt}, $r->{judges_alive} // $CATS::Config::split->{default_cnt});
     $res;
 }
 
 sub split_solution {
     my ($r) = @_;
     log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
-    log_msg("Split strategy: $r->{split_strategy}->{method}\n");
+    log_msg("Split strategy: %s\n", $r->{split_strategy}->{method});
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
     delete_req_details($r, $is_group_req, @run_requests) or return $cats::st_unhandled_error;
@@ -896,6 +910,10 @@ sub split_solution {
     }
     elsif ($r->{split_strategy}->{method} eq $cats::split_explicit) {
         $testsets = $r->{split_strategy}->{testsets} // [];
+        if (ref $testsets ne 'ARRAY') {
+            log_msg("Invalid testsets: %s\n", $testsets);
+            return $cats::st_ignore_submit;
+        }
     }
     else {
         my $strategy = $r->{split_strategy};
@@ -1253,13 +1271,19 @@ sub main_loop {
                         test_problem($r, $problem);
                 }
                 elsif (!$judge->can_split) {
-                    log_msg("Can't split solution: queue limit reached\n");
+                    # TODO: move to JudgeDB
+                    log_msg("Can't split solution. Queue limit reached or local judge\n");
                     test_problem($r, $problem);
                 }
                 else {
                     my $state = split_solution($r);
-                    $state ? $judge->set_request_state($r, $state, $current_job_id) :
+                    if ($state) {
+                        $judge->set_request_state($r, $state, $current_job_id);
+                        $judge->finish_job($r->{job_id}, determine_job_state($state));
+                    }
+                    else {
                         test_problem($r, $problem);
+                    }
                 }
             }
         }

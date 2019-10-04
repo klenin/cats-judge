@@ -57,9 +57,7 @@ sub auth {
 
 sub is_locked { $_[0]->{lock_counter} }
 
-sub can_split {
-    CATS::JudgeDB::can_split;
-}
+sub can_split { CATS::JudgeDB::can_split; }
 
 sub set_request_state {
     my ($self, $req, $state, $job_id, %p) = @_;
