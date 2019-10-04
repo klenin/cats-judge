@@ -46,6 +46,8 @@ use CATS::TestPlan;
 use Digest::MD5 qw(md5_hex);
 use Digest::SHA qw(sha1_hex);
 
+use JSON::XS;
+
 use open IN => ':crlf', OUT => ':raw';
 
 my %lock;
@@ -856,9 +858,34 @@ sub delete_req_details {
     1;
 }
 
+sub _number_or {
+    if (!$_[0] || $_[0] !~ /^[0-9]+$/) {
+        log_msg("Invalid param %s\n", $_[0]) if $_[0];
+        $_[0] = $_[1];
+    }
+}
+
+sub get_split_strategy {
+    my ($r) = @_;
+    my $strategy = $r->{req_job_split_strategy} // $r->{cp_job_split_strategy};
+    my $res = { method => $cats::split_default };
+    if ($strategy) {
+        eval {
+            $res = decode_json($strategy);
+            1;
+        } or log_msg("Invalid json: %s (%s)\n", $strategy, $@);
+    }
+
+    _number_or($res->{min_tests_per_job}, $CATS::Config::split->{min_tests_per_job});
+    _number_or($res->{split_cnt}, $r->{judges_alive} // $CATS::Config::split->{default_cnt});
+    $res;
+}
+
 sub split_solution {
     my ($r) = @_;
     log_msg("Splitting solution $r->{id} for problem $r->{problem_id} into parts\n");
+    log_msg("Split strategy: %s\n", $r->{split_strategy}->{method});
+
     my ($is_group_req, @run_requests) = get_run_reqs($r);
     delete_req_details($r, $is_group_req, @run_requests) or return $cats::st_unhandled_error;
 
@@ -869,7 +896,7 @@ sub split_solution {
     };
 
     my $testsets;
-    if (($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'subtasks') {
+    if ($r->{split_strategy}->{method} eq $cats::split_subtasks) {
         my (@other, %subtasks);
         for (keys %tests) {
             if (CATS::Testset::is_scoring_group($tests{$_})) {
@@ -881,9 +908,19 @@ sub split_solution {
         }
         $testsets = [ keys %subtasks, @other ? CATS::Testset::pack_rank_spec(@other) : () ];
     }
+    elsif ($r->{split_strategy}->{method} eq $cats::split_explicit) {
+        $testsets = $r->{split_strategy}->{testsets} // [];
+        if (ref $testsets ne 'ARRAY') {
+            log_msg("Invalid testsets: %s\n", $testsets);
+            return $cats::st_ignore_submit;
+        }
+    }
     else {
+        my $strategy = $r->{split_strategy};
+        my $parts_cnt = $strategy->{split_cnt};
         my $tests_count = keys %tests;
-        my $subtasks_amount = min(4, max(1, $tests_count / 5));
+
+        my $subtasks_amount = min($parts_cnt, max(1, $tests_count / $strategy->{min_tests_per_job}));
 
         my @tests;
         push @{$tests[$_ % $subtasks_amount]}, $_ for keys %tests;
@@ -1225,17 +1262,29 @@ sub main_loop {
                 $judge->finish_job($r->{job_id}, $cats::job_st_failed);
             }
             else {
+                $r->{split_strategy} = get_split_strategy($r);
                 my $problem = $judge->get_problem($r->{problem_id});
+
                 if ($problem->{run_method} == $cats::rm_competitive ||
-                    $r->{type} == $cats::job_type_submission_part || !$judge->can_split ||
-                    ($r->{req_job_split_strategy} // $r->{cp_job_split_strategy} // '') eq 'none') {
-                        test_problem($r, $problem)
+                    $r->{type} == $cats::job_type_submission_part ||
+                    $r->{split_strategy}->{method} eq $cats::split_none) {
+                        test_problem($r, $problem);
+                }
+                elsif (!$judge->can_split) {
+                    # TODO: move to JudgeDB
+                    log_msg("Can't split solution. Queue limit reached or local judge\n");
+                    test_problem($r, $problem);
+                }
+                else {
+                    my $state = split_solution($r);
+                    if ($state) {
+                        $judge->set_request_state($r, $state, $current_job_id);
+                        $judge->finish_job($r->{job_id}, determine_job_state($state));
                     }
                     else {
-                        my $state = split_solution($r);
-                        $state ? $judge->set_request_state($r, $state, $current_job_id) :
-                            test_problem($r, $problem);
+                        test_problem($r, $problem);
                     }
+                }
             }
         }
     }
