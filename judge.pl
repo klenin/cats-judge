@@ -814,7 +814,7 @@ sub run_testplan {
             insert_test_run_details(%$details) or return;
             $inserted_details{$details->{req_id}}->{$tp->current} = $details->{result};
             $judge->set_request_state($requests->[$i], $details->{result}, $current_job_id, %{$requests->[$i]})
-                if $problem->{run_method} == $cats::rm_competitive;
+                or return if $problem->{run_method} == $cats::rm_competitive;
         }
 
         my $ok = $test_verdict == $cats::st_accepted ? 1 : 0;
@@ -1097,12 +1097,12 @@ sub set_verdict {
 
     for my $req (@run_requests) {
         if ($state == $cats::st_unhandled_error) {
-            $judge->set_request_state($req, $state, $parent_id, %$req);
+            $judge->set_request_state($req, $state, $parent_id, %$req) or return;
             next;
         }
 
         if ($req->{pre_run_error}) {
-            $judge->set_request_state($req, $req->{pre_run_error}, $parent_id, %$req);
+            $judge->set_request_state($req, $req->{pre_run_error}, $parent_id, %$req) or return;
             next;
         }
 
@@ -1120,13 +1120,12 @@ sub set_verdict {
             $cur_req_state = $cats::st_awaiting_verification;
         }
 
-        $judge->set_request_state($req, $cur_req_state, $parent_id, %$req);
+        $judge->set_request_state($req, $cur_req_state, $parent_id, %$req) or return;
     }
 
-    $judge->set_request_state($r, $state, $parent_id, %$r) if $is_group_req;
+    $judge->set_request_state($r, $state, $parent_id, %$r) or return if $is_group_req;
 
-    $judge->finish_job($parent_id, determine_job_state($state)) or log_msg("Job canceled\n");
-
+    $judge->finish_job($parent_id, determine_job_state($state)) or return log_msg("Job canceled\n");
     log_state_text($state, $r->{failed_test});
     $judge->cancel_all($r->{id}) if is_UH_or_CE($state);
 }
