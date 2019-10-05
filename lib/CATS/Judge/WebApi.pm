@@ -10,6 +10,7 @@ use HTTP::Request::Common;
 use JSON::XS;
 use LWP::UserAgent;
 
+use CATS::DeBitmaps;
 use CATS::DevEnv;
 use CATS::JudgeDB;
 
@@ -322,7 +323,7 @@ sub select_request {
         f => 'api_judge_select_request',
         sid => $self->{sid},
         de_version => $self->{dev_env}->version,
-        map "$_", CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
+        map "$_", CATS::DeBitmaps::get_de_bitfields_hash(@{$self->{de_bitmap}}),
     ]);
 
     if ($response->{error}) {
