@@ -237,6 +237,8 @@ step 'Save configuration', sub {
         s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
         if (($platform // '') ne 'win32') {
             s~(\sname="#gcc_stack"\s+value=")[^"]+"~$1"~;
+            s~compile='"#delphi"\s"-U#delphi_units"\s-CC\s"%full_name"'~compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'~;
+
             # Hack: Use G++ instead of Visual C++
             s~extension='cpp'~extension='cpp1'~;
             s~extension='cxx'~extension='cpp cxx'~;
