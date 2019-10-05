@@ -6,6 +6,7 @@ use warnings;
 use CATS::Config;
 use CATS::Constants;
 use CATS::DB qw($dbh);
+use CATS::DeBitmaps;
 use CATS::DevEnv;
 use CATS::Job;
 use CATS::JudgeDB;
@@ -124,7 +125,7 @@ sub select_request {
         pin_mode         => $self->{pin_mode},
         time_since_alive => $time_since_alive,
         de_version       => $self->{dev_env}->version,
-        CATS::JudgeDB::get_de_bitfields_hash(@{$self->{de_bitmap}}),
+        CATS::DeBitmaps::get_de_bitfields_hash(@{$self->{de_bitmap}}),
     });
 
     if ($request && $request->{error}) {
