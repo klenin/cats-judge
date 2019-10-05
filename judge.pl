@@ -1278,7 +1278,8 @@ sub main_loop {
                     my $state = split_solution($r);
                     if ($state) {
                         $judge->set_request_state($r, $state, $current_job_id);
-                        $judge->finish_job($r->{job_id}, determine_job_state($state));
+                        $judge->finish_job($r->{job_id}, determine_job_state($state))
+                            if $state != $cats::st_testing;
                     }
                     else {
                         test_problem($r, $problem);
