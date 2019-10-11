@@ -4,6 +4,6 @@
 
 while true
 do
-    perl judge.pl serve
+    perl judge.pl serve "$@"
     sleep 1
 done
