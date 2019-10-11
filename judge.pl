@@ -200,8 +200,8 @@ sub generate_test {
         $redir = $out;
     }
 
-    my $generate_cmd = $src_proc->require_property(
-        generate => $ps, { args => $test->{param} // '' }) or return;
+    my $args = $test->{param} // '';
+    my $generate_cmd = $src_proc->require_property(generate => $ps, { args => $args }) or return;
     my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
         $generate_cmd,
         [],

@@ -11,7 +11,7 @@
 
 <Test rank="1"><In src="%n.in" /></Test>
 <Test rank="2"><In use="gen_copy" param="2" /></Test>
-<Test rank="3"><In use="gen_copy" param="3" /></Test>
+<Test rank="3"><In use="gen_copy" param="%n" /></Test>
 <Test rank="4-6"><In use="gen_group" genAll="1" /></Test>
 <Test rank="7"><In use="gen_stdout" param="7" /></Test>
 <Test rank="8"><In>7</In></Test>
