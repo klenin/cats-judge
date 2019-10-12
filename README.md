@@ -37,7 +37,7 @@ At least some programming languages, such as C++ and Pascal should be installed 
 ## Installation
 
   * Clone this repository
-  * To install development environments and tools on Windows, run scripts in `install` directory
+  * To install development environments and tools on Windows or Linux, run scripts in `install` directory
   * Make sure your `perl` and `git` are in `PATH`
   * Run `perl install.pl`
   * See [Advanced installation](#advanced-installation) in case of problems
@@ -192,7 +192,9 @@ Options:
 
 ### `serve` command
 
-Start judging server. On Windows it is recommended to use `judge.cmd` wrapper.
+Start judging server.
+On Windows it is recommended to use `judge.cmd` wrapper script.
+On Linux it is recommended to use `judge.sh` wrapper script.
 
 ### `help` command
 
