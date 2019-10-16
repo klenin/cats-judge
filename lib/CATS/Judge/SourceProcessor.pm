@@ -123,7 +123,13 @@ sub get_limits {
     $res{deadline} = $res{time_limit}
         if $res{time_limit} && (!defined $ENV{SP_DEADLINE} || $res{time_limit} > $ENV{SP_DEADLINE});
     if ($res{memory_limit} && $ps->{de_id}) {
-        $res{memory_limit} += $self->property(memory_handicap => $ps->{de_id}) // 0;
+        my $mh = $self->property(memory_handicap => $ps->{de_id}) // 0;
+	if ($mh >= 0) {
+            $res{memory_limit} += $mh;
+	}
+	else {
+            delete $res{memory_limit}
+	}
     }
     $res{write_limit} = $res{write_limit} . 'B' if $res{write_limit};
     %res;
