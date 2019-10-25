@@ -39,6 +39,7 @@ Commands:
         [--system cats|polygon]
     #config# --print <regexp> [--bare]
     #clear-cache# --problem <zip_or_directory_or_name>
+    #hash# --file <file_name>
     #help#|-?
 
 Common options:
@@ -66,6 +67,9 @@ my %commands = (
         '!problem=s',
         'system=s',
         '!url=s',
+    ],
+    hash => [
+        '!file=s',
     ],
     help => [],
     install => [

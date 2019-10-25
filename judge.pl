@@ -1385,6 +1385,11 @@ elsif ($cli->command =~ /^list$/) {
 elsif ($cli->command =~ /^(clear-cache)$/) {
     $problem_cache->remove_current;
 }
+elsif ($cli->command =~ /^(hash)$/) {
+    my $data = $fu->read_lines($cli->opts->{file});
+    my $input = join '\n', @$data;
+    print '$sha$' . sha1_hex($input);
+}
 elsif ($cli->command =~ /^(install|run)$/) {
     for my $rr (@{$cli->opts->{run} || [ '' ]}) {
         my $wd = Cwd::cwd();
