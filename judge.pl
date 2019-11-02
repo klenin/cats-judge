@@ -540,8 +540,7 @@ sub run_checker {
         checker_args => qq~"$a" "$o" "$i"~,
     };
 
-    my $checker_cmd;
-    my %limits;
+    my ($checker_cmd, %limits, $checker_type);
     if (defined $problem->{std_checker}) {
         $checker_cmd = $cfg->checkers->{$problem->{std_checker}}
             or return log_msg("unknown std checker: $problem->{std_checker}\n");
@@ -558,6 +557,7 @@ sub run_checker {
         $checker_params->{$_} = $ps->{name_parts}->{$_} for qw(name full_name);
         $cats::source_modules{$ps->{stype}} || 0 == $cats::checker_module
             or die "Bad checker type $ps->{stype}";
+        $checker_type = $ps->{stype};
         $checker_params->{checker_args} =
             $ps->{stype} == $cats::checker ? qq~"$a" "$o" "$i"~ : qq~"$i" "$o" "$a"~;
 
@@ -569,8 +569,12 @@ sub run_checker {
     my $sp_report = $sp->run_single({ duplicate_output => \my $output },
         $checker_cmd, [], { %limits }) or return;
     $sp_report->tr_ok or return;
+    my $checker_points;
+    if ($checker_type == $cats::partial_checker && $output =~ /^(\d+)/) {
+        $checker_points = int($1);
+    }
 
-    [ $sp_report, $output ];
+    [ $sp_report, $output, $checker_points ];
 }
 
 sub save_output_prefix {
@@ -680,7 +684,7 @@ sub run_single_test {
 
     {
         my $checker_result = run_checker(problem => $problem, rank => $p{rank}) or return;
-        my ($sp_report, $checker_output) = @$checker_result;
+        my ($sp_report, $checker_output, $checker_points) = @$checker_result;
 
         my $save_comment = sub {
             #Encode::from_to($$c, 'cp866', 'utf8');
@@ -720,6 +724,9 @@ sub run_single_test {
         } else {
             $save_comment->(0, $checker_output) if $checker_output;
             $result = $test_run_details->[0]->{result} = $get_verdict->($sp_report->{exit_code}) // return;
+            if ($result == $cats::st_accepted && $checker_points) {
+                $test_run_details->[0]->{points} = $checker_points;
+            }
         }
 
         log_msg("OK\n") if $result == $cats::st_accepted;
