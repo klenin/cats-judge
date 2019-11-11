@@ -772,7 +772,8 @@ sub compile {
         $fu->write_to_file([ $cfg->rundir, $main->{fname} ], $main->{src}) or return;
         $fu->write_to_file([ $cfg->rundir, $main->{main} ], $r->{src}) or return;
         $r->{main} = $main->{main};
-        $r->{name_parts}->{full_name} = $main->{fname};
+        $r->{fname} = $main->{fname};
+        set_name_parts($r);
     } else {
         $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src}) or return;
     }
