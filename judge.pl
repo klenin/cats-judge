@@ -500,7 +500,12 @@ sub initialize_problem_wrapper {
     });
 
     log_msg("Created job $job_id\n");
-    my $res = initialize_problem($pid);
+    my $res;
+    eval {
+        $res = initialize_problem($pid);
+    } or do {
+        log_msg("error during initialization: $@\n") if $@;
+    };
 
     $judge->finish_job($job_id, $res ? $cats::job_st_finished : $cats::job_st_failed) or
         log_msg("Job canceled\n");
