@@ -161,8 +161,8 @@ step 'Detect development environments', sub {
 my $proxy;
 step 'Detect proxy', sub {
     $proxy = CATS::DevEnv::Detector::Utils::detect_proxy() or return;
+    $proxy =~ /^http/ or $proxy = "http://$proxy";
     print " $proxy ";
-    $proxy = "http://$proxy";
 };
 
 my $platform;
