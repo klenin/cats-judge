@@ -734,7 +734,7 @@ sub run_single_test {
             }
         }
 
-        log_msg("OK\n") if $result == $cats::st_accepted;
+        log_msg("OK%s\n", $checker_points ? " pt=$checker_points" : '') if $result == $cats::st_accepted;
     }
     ($test_run_details, $competitive_test_output);
 }
