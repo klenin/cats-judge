@@ -575,7 +575,7 @@ sub run_checker {
         $checker_cmd, [], { %limits }) or return;
     $sp_report->tr_ok or return;
     my $checker_points;
-    if ($checker_type == $cats::partial_checker && $output =~ /^(\d+)/) {
+    if (($checker_type // -1) == $cats::partial_checker && $output =~ /^(\d+)/) {
         $checker_points = int($1);
     }
 
