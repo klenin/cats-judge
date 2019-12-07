@@ -82,7 +82,7 @@ sub auth {
 }
 
 sub can_split {
-    CATS::JudgeDB::can_split;
+    1; # TODO:     my $response = $self->get_json([ f => 'api_judge_can_split', sid => $self->{sid},]);
 }
 
 sub update_dev_env {
