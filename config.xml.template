@@ -75,6 +75,7 @@
 <define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
 
 <define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
+<define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
 <!-- END -->
 
 <!-- standart checkers -->
@@ -469,5 +470,16 @@
     compile='"#unity" -batchmode -quit -projectPath "project" -nographics -buildWindowsPlayer ./build/main.exe -logFile out.txt'
     run='./project/build/main.exe -batchmode -nographics'
     extension=''/>
+
+<!-- OBJ/Python -->
+<de
+    code="604"
+    compile='"#python" -m py_compile "%full_name"'
+    run='"#python" %full_name "#blender"'
+    run_interactive='"#python" %full_name'
+    generate='"#python" %full_name %args'
+    validate='"#python" %full_name "%test_input"'
+    check='"#python" %full_name %checker_args'
+    extension='obj'/>
 
 </judge>
