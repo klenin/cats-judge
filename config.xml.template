@@ -76,6 +76,7 @@
 
 <define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
 <define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
+<define name="#unreal_engine4" de_code_autodetect="605" value="C:\Dev\UE_4.24\Engine\Binaries\DotNET\AutomationTool.exe" />
 <!-- END -->
 
 <!-- standart checkers -->
@@ -481,5 +482,12 @@
     validate='"#python" %full_name "%test_input"'
     check='"#python" %full_name %checker_args'
     extension='obj'/>
+
+<!-- Unreal Engine 4 -->
+<de
+    code="605"
+    compile='"#unreal_engine4" BuildCookRun -project="#rootdir\run\Project\Project.uproject" -noP4 -platform=Win64 -clientconfig=Development -cook -build -pak -stage -archive -archivedirectory="#rootdir\run"'
+    run='.\WindowsNoEditor\Project.exe'
+    extension=''/>
 
 </judge>
