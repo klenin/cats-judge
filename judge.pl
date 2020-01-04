@@ -1315,7 +1315,12 @@ eval {
 } or terminate $@;
 
 if ($cli->command eq 'config') {
-    $cfg->print_params($cli->opts->{print}, $cli->opts->{bare});
+    if ($cli->opts->{print}) {
+        $cfg->print_params($cli->opts->{print}, $cli->opts->{bare});
+    }
+    else {
+        say $cfg->apply_defines($cli->opts->{apply});
+    }
     exit;
 }
 

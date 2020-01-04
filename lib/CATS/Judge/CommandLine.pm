@@ -37,7 +37,7 @@ Commands:
         [--system cats|polygon]
     #upload# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
-    #config# --print <regexp> [--bare]
+    #config# [--print <regexp> | --apply <string> ] [--bare]
     #clear-cache# --problem <zip_or_directory_or_name>
     #hash# --file <file_name>
     #help#|-?
@@ -57,8 +57,9 @@ USAGE
 my %commands = (
     '-?' => [],
     config => [
-        '!print:s',
+        'apply:s',
         'bare',
+        'print:s',
     ],
     'clear-cache' => [
         '!problem=s',
@@ -124,6 +125,11 @@ sub get_options {
     for (@{$commands{$command}}) {
         m/^!([a-z\-]+)/ or next;
         defined $self->opts->{$1} or usage("Command $command requires --$1 option");
+    }
+
+    if ($command eq 'config') {
+        ($self->{opts}->{print} ? 0 : 1) + ($self->{opts}->{apply} ? 0 : 1) == 1
+            or usage("Command $command requires either --print or --apply option");
     }
 
     for ($self->opts->{result}) {

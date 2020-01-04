@@ -164,7 +164,8 @@ Work with configuration.
 
 Options:
   * `--print <regexps>` print configuration. Regexps are used to filter config keys. Multiple regexps separated by slash (`/`) correspond to nesting levels.
-  * `--bare` print values without names and extra spaces
+  * `--bare` print values without names and extra spaces.
+  * `--apply <string>` substitute configuration defines in a given string.
 
 Examples:
 ```
