@@ -38,6 +38,7 @@ sub optional_fields() { qw(
 sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
 sub compile_fields() { @cats::limits_fields }
+sub default_limits_fields() { qw(deadline_add deadline_min idle_time) }
 sub de_fields() { qw(
     check
     compile
@@ -57,7 +58,10 @@ sub de_fields() { qw(
 sub param_fields() { required_fields, optional_fields, special_fields }
 
 sub import {
-    for (required_fields, optional_fields, special_fields, security_fields, 'compile') {
+    for (
+        required_fields, optional_fields, special_fields, security_fields,
+        qw(compile default_limits)
+    ) {
         no strict 'refs';
         my $x = $_;
         *{"$_[0]::$_"} = sub { $_[0]->{$x} };
@@ -103,6 +107,9 @@ sub load_part {
         },
         compile => sub {
             $self->_read_attributes($self->{compile} //= {}, $_[0], compile_fields);
+        },
+        default_limits => sub {
+            $self->_read_attributes($self->{default_limits} //= {}, $_[0], default_limits_fields);
         },
         de => sub {
             my $code = $_[0]->{code} or die 'de: code required';

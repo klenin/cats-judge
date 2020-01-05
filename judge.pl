@@ -136,11 +136,13 @@ sub get_run_params {
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
     }
 
-    my $deadline = $is_competititve ? max($time_limit_sum + 5, 30) : $time_limit_sum + 5;
+    my $deadline_min = $cfg->default_limits->{deadline_min} // 30;
+    my $sd = $time_limit_sum + ($cfg->default_limits->{deadline_add} // 5);
+    my $deadline = $is_competititve ? max($sd, $deadline_min) : $sd;
 
     my $global_opts = {
         deadline => $deadline,
-        idle_time_limit => 1,
+        idle_time_limit => $cfg->default_limits->{idle_time} // 1,
         stdout => '*null',
     };
 

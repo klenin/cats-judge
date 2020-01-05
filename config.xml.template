@@ -34,6 +34,8 @@
 
 <compile time_limit="30" memory_limit="512" write_limit="128M" />
 
+<default_limits idle_time="1" deadline_add="5" deadline_min="30"/>
+
 <define name="#spawner" value="%workdir/spawner-bin/win32/sp.exe"/>
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#copy_cat" value="../copy_cat.pl"/>
