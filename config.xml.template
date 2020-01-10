@@ -218,10 +218,21 @@
     validate='"%name.exe" "%test_input"'
     check='"%name.exe" %checker_args'/>
 
-<!-- CLang with Address Sanitizer-->
+<!-- gcc with sanitizers and werror. Change codes to 107 and 108 corresppondingly to make it work on linux judges -->
 <de
-    code="107"
-    compile='"#clang" "%full_name" -o "%name.exe" -fsanitize=address'
+    code="1007"
+    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=address -Wall -Werror'
+    memory_handicap="-1"
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input"'
+    check='"%name.exe" %checker_args'/>
+    
+<de
+    code="1008"
+    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=thread -Wall -Werror'
+    memory_handicap="-1"
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
