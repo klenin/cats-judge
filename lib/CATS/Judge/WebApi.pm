@@ -12,7 +12,6 @@ use LWP::UserAgent;
 
 use CATS::DeBitmaps;
 use CATS::DevEnv;
-use CATS::JudgeDB;
 
 use base qw(CATS::Judge::Base);
 
