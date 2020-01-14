@@ -67,8 +67,9 @@ sub auth {
         f => 'login',
         login => $self->{name},
         passwd => $self->{password},
+        lang => 'en',
     ]);
-    die "Incorrect login and password" if $response->{status} eq 'error';
+    die sprintf "Auth failed: '%s'", $response->{message} // '' if $response->{status} eq 'error';
     $self->{sid} = $response->{sid};
 
     $response = $self->get_json([
