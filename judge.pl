@@ -578,8 +578,13 @@ sub run_checker {
         $checker_cmd, [], { %limits }) or return;
     $sp_report->tr_ok or return;
     my $checker_points;
-    if (($checker_type // -1) == $cats::partial_checker && $output =~ /^(\d+)/) {
-        $checker_points = int($1);
+    if (($checker_type // -1) == $cats::partial_checker) {
+        if (defined($output) && $output =~ /^(\d+)/) {
+            $checker_points = int($1);
+        }
+        else {
+            return log_msg("Partial checker did not output points\n") if $sp_report->{exit_code} == 0;
+        }
     }
 
     [ $sp_report, $output, $checker_points ];
@@ -730,14 +735,16 @@ sub run_single_test {
             0 == grep !defined $_->{result}, @$test_run_details
                 or return log_msg("competitive checker missing agent\n");
         } else {
-            $save_comment->(0, $checker_output) if $checker_output;
-            $result = $test_run_details->[0]->{result} = $get_verdict->($sp_report->{exit_code}) // return;
-            if ($result == $cats::st_accepted && $checker_points) {
+            $save_comment->(0, $checker_output) if defined $checker_output;
+            $result = $test_run_details->[0]->{result} =
+                $get_verdict->($sp_report->{exit_code}) // return;
+            if ($result == $cats::st_accepted && defined $checker_points) {
                 $test_run_details->[0]->{points} = $checker_points;
             }
         }
 
-        log_msg("OK%s\n", $checker_points ? " pt=$checker_points" : '') if $result == $cats::st_accepted;
+        log_msg("OK%s\n", defined $checker_points ? " pt=$checker_points" : '')
+            if $result == $cats::st_accepted;
     }
     ($test_run_details, $competitive_test_output);
 }

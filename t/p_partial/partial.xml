@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Partial checker" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="partial.cpp" type="checker" de_code="102" style="partial" />
+<Test rank="1-2"><In src="%n"/><Out src="%n"/></Test>
+
+</Problem>
+</CATS>

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 47;
+use Test::More tests => 49;
 
 use File::Spec;
 
@@ -238,6 +238,20 @@ SKIP: {
 
 maybe_subtest 'verdicts WL', 4, sub {
     like run_judge_sol($p_verdicts, 'write_10mb.cpp')->stdout->[-1], qr/write limit exceeded/, 'WL';
+};
+
+my $p_partial = FS->catfile($path, 'p_partial');
+
+maybe_subtest 'partial OK', 5, sub {
+    my $out = run_judge_sol($p_partial, '1', de => 3, c => 'columns=P', result => 'text')->stdout;
+    like $out->[-2], qr/5/, 'partial points';
+    like $out->[-8], qr/accepted/, 'partial ok';
+};
+
+maybe_subtest 'partial UH', 5, sub {
+    my $out = run_judge_sol($p_partial, '2', de => 3)->stdout;
+    like $out->[-1], qr/unhandled/, 'partial unhandled';
+    like $out->[-2], qr/partial/i, 'partial unhandled message';
 };
 
 my $p_generator = FS->catfile($path, 'p_generator');
