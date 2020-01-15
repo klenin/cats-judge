@@ -295,6 +295,7 @@ sub get_testset {
 my %header_defs = (
     R => { c => 'Rank'   , n => 'test_rank',       a => 'right'  },
     V => { c => 'Verdict', n => 'result',          a => 'center' },
+    P => { c => 'Points',  n => 'points',          a => 'right'  },
     T => { c => 'Time'   , n => 'time_used',       a => 'left'   },
     M => { c => 'Memory' , n => 'memory_used',     a => 'right'  },
     W => { c => 'Written', n => 'disk_used',       a => 'right'  },

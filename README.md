@@ -105,7 +105,7 @@ Options:
   * `--use-plan all|acm` choose order and subset of tests according to a given plan.
 
 Config variables:
-  * `columns` a string of `R`, `V`, `T`, `M`, `W`, `C`, `O` characters, representing a subset and order of columns in result.
+  * `columns` a string of `R`, `V`, `P`, `T`, `M`, `W`, `C`, `O` characters, representing a subset and order of columns in result.
 
 Examples:
 ```

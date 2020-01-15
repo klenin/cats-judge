@@ -21,7 +21,7 @@
     polygon_url="https://polygon.codeforces.com"
     proxy=""
     api="DirectDatabase"
-    columns="RVTMWCO"
+    columns="RVPTMWCO"
     log_dump_size="200000"
     runtime_stderr_size="10000"
     confess=""
