@@ -301,7 +301,8 @@ sub validate_test {
 
     my (undef, undef, $t_fname, $t_name, undef) = split_fname(File::Spec->catfile(@$path_to_test));
     my $validate_cmd = $src_proc->require_property(
-        validate => $validator, { test_input => $t_fname }) or return;
+        validate => $validator,
+        { test_input => $t_fname, args => $test->{input_validator_param} // '' }) or return;
 
     my $sp_report = $sp->run_single({ stdin => $t_fname },
         $validate_cmd,

@@ -158,7 +158,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='cc'/>
 
@@ -170,7 +170,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='cxx'/>
 
@@ -182,7 +182,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='cpp'/>
 
@@ -204,7 +204,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='c'/>
 
@@ -215,7 +215,7 @@
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- gcc with sanitizers and werror. Change codes to 107 and 108 corresppondingly to make it work on linux judges -->
@@ -236,7 +236,7 @@
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- Visual C++ 2003 compatible -->
@@ -246,7 +246,7 @@
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- Rust -->
@@ -256,7 +256,7 @@
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- BP -->
@@ -265,7 +265,7 @@
     compile='#bpc "%full_name"'
     run='%comspec% /C "%name.exe"'
     generate='%comspec% /C "%name.exe" %args'
-    validate='%comspec% /C "%name.exe" "%test_input"'
+    validate='%comspec% /C "%name.exe" "%test_input" %args'
     check='%comspec% /C "%name.exe" %checker_args'/>
 
 <!-- Free Pascal -->
@@ -276,7 +276,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='lpr pas pp'/>
 
@@ -288,7 +288,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- Free Pascal in Delphi mode -->
@@ -299,7 +299,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='dpr'/>
 
@@ -312,7 +312,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
 <!-- QBasic -->
@@ -333,7 +333,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='bas'/>
 
@@ -347,7 +347,7 @@
     run_interactive='"#java" -Xss64m "%name"'
     runfile='%name.class'
     generate='"#java" -Xmx256m -Xss64m "%name" %args'
-    validate='"#java" -Xmx256m -Xss64m "%name" "%test_input"'
+    validate='"#java" -Xmx256m -Xss64m "%name" "%test_input" %args'
     check='"#java" -Xss64m "%name" %checker_args'
     extension='java'/>
 
@@ -359,7 +359,7 @@
     run_interactive='"main.exe"'
     runfile='main.exe'
     generate='"main.exe" %args'
-    validate='"main.exe" "%test_input"'
+    validate='"main.exe" "%test_input" %args'
     check='"main.exe" %checker_args'
     extension='cs'/>
 
@@ -379,7 +379,7 @@
     run_interactive='"%name.exe"'
     runfile='%name.exe'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='go'/>
 
@@ -390,7 +390,7 @@
     run='"#java" -Xmx256m -Xss64m -jar result.jar'
     runfile='result.jar'
     generate='"#java" -Xmx256m -Xss64m -jar result.jar %args'
-    validate='"#java" -Xmx256m -Xss64m -jar result.jar "%test_input"'
+    validate='"#java" -Xmx256m -Xss64m -jar result.jar "%test_input" %args'
     check='"#java" -jar result.jar %checker_args'
     extension='kt'/>
 
@@ -401,7 +401,7 @@
     run='"#perl" %full_name'
     run_interactive='"#perl" %full_name'
     generate='"#perl" %full_name %args'
-    validate='"#perl" %full_name "%test_input"'
+    validate='"#perl" %full_name "%test_input" %args'
     check='"#perl" %full_name %checker_args'
     extension='pl'/>
 
@@ -412,7 +412,7 @@
     run='"#python" %full_name'
     run_interactive='"#python" %full_name'
     generate='"#python" %full_name %args'
-    validate='"#python" %full_name "%test_input"'
+    validate='"#python" %full_name "%test_input" %args'
     check='"#python" %full_name %checker_args'
     extension='py'/>
 
@@ -423,7 +423,7 @@
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
+    validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'
     extension='hs'/>
 
@@ -434,7 +434,7 @@
     run='"#ruby" %full_name'
     run_interactive='"#ruby" %full_name'
     generate='"#ruby" %full_name %args'
-    validate='"#ruby" %full_name "%test_input"'
+    validate='"#ruby" %full_name "%test_input" %args'
     check='"#ruby" %full_name %checker_args'
     extension='rb'/>
 
@@ -445,7 +445,7 @@
     run='"#php" %full_name'
     run_interactive='"#php" %full_name'
     generate='#php %full_name %args'
-    validate='"#php" %full_name "%test_input"'
+    validate='"#php" %full_name "%test_input" %args'
     check='"#php" %full_name %checker_args'
     extension='php'/>
 
@@ -466,7 +466,7 @@
     compile='"#nodejs" -c "%full_name"'
     run='"#nodejs" "%full_name"'
     generate='"#nodejs" "%name" %args'
-    validate='"#nodejs" %full_name "%test_input"'
+    validate='"#nodejs" %full_name "%test_input" %args'
     check='"#nodejs" %full_name %checker_args'
     extension='js'/>
 
@@ -492,7 +492,7 @@
     run='"#python" %full_name "#blender"'
     run_interactive='"#python" %full_name'
     generate='"#python" %full_name %args'
-    validate='"#python" %full_name "%test_input"'
+    validate='"#python" %full_name "%test_input" %args'
     check='"#python" %full_name %checker_args'
     extension='obj'/>
 
