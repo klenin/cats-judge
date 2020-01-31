@@ -489,7 +489,7 @@
 <de
     code="604"
     compile='"#python" -m py_compile "%full_name"'
-    run='"#python" %full_name "#blender"'
+    run='"#blender" -b scene.blend --python scene.py --python-exit-code 77 -o //output_# -f 1'
     run_interactive='"#python" %full_name'
     generate='"#python" %full_name %args'
     validate='"#python" %full_name "%test_input" %args'
