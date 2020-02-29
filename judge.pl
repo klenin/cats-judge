@@ -131,6 +131,7 @@ sub get_run_params {
         $r->{cfg_exit_code} = $src_proc->property(run_exit_code => $r->{de_id});
         my $run_cmd = $src_proc->require_property(run => $r, {
             %$run_cmd_opts,
+            input_file => input_or_default($problem->{input_file}),
             output_file => output_or_default($problem->{output_file}),
             original_output => $problem->{output_file},
         }) or return;
