@@ -51,6 +51,7 @@ sub de_fields() { qw(
     interactor_name
     memory_handicap
     run
+    run_exit_code
     run_interactive
     runfile
     validate

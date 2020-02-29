@@ -128,6 +128,7 @@ sub get_run_params {
             $solution_opts = {
                 %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
+        $r->{cfg_exit_code} = $src_proc->property(run_exit_code => $r->{de_id});
         my $run_cmd = $src_proc->require_property(run => $r, {
             %$run_cmd_opts,
             output_file => output_or_default($problem->{output_file}),
@@ -657,7 +658,7 @@ sub run_single_test {
 
             my $tr = $solution_report->{terminate_reason};
             if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
-                if ($solution_report->{exit_code} != 0) {
+                if (($r->[$i]->{cfg_exit_code} // '') ne 'ignore' && $solution_report->{exit_code} != 0) {
                     $result = $d->{result} = $cats::st_runtime_error;
                 }
             } else {
