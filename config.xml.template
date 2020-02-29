@@ -499,4 +499,12 @@
     run='.\WindowsNoEditor\Project.exe'
     extension=''/>
 
+<!-- Digital simulator -->
+<de
+    code="651"
+    compile=''
+    run='"#java" -cp C:\Lang\digitalsim\Digital.jar de.neemann.digital.testing.CommandLineTester "%full_name" %input_file'
+    run_exit_code='ignore'
+    extension='dig'/>
+
 </judge>

@@ -66,5 +66,9 @@ if exist "%PYTHON3_HOME%\python.exe" (
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
 )
 
+mkdir C:\Lang\digitalsim
+%PBOX_HOME%\bin\wget --output-document %TEMP%\digitalsim.zip https://github.com/hneemann/Digital/releases/download/v0.24/Digital.zip
+%PBOX_HOME%\bin\7za e -oC:\Lang\digitalsim %TEMP%\digitalsim.zip */*.jar
+
 rem IDE only, separate GUI action required to install C++
 choco install visualstudio2015community -y --execution-timeout 27000
