@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 49;
+use Test::More tests => 50;
 
 use File::Spec;
 
@@ -356,6 +356,15 @@ maybe_subtest 'linter', 12, sub {
     like run_judge_sol($p_linter, 'ok.cpp')->stdout->[-1], qr/accepted/, 'ok';
     like run_judge_sol($p_linter, 'sol_a.cpp')->stdout->[-1], qr/lint error/, 'before';
     like run_judge_sol($p_linter, 'sol_b.cpp')->stdout->[-1], qr/lint error/, 'after';
+};
+
+my $p_quiz_de = FS->catfile($path, 'p_quiz_de');
+
+maybe_subtest 'quiz', 15, sub {
+    my $r = run_judge(qw(install -p), $p_quiz_de)->stdout;
+    like run_judge_sol($p_quiz_de, 'ok.txt', de => 606)->stdout->[-1], qr/accepted/, 'ok';
+    like run_judge_sol($p_quiz_de, 'wrong1.txt', de => 606)->stdout->[-1], qr/wrong answer on test 1/, 'WA';
+    like run_judge_sol($p_quiz_de, 'wrong2.txt', de => 606)->stdout->[-1], qr/wrong answer on test 2/, 'WA';
 };
 
 1;

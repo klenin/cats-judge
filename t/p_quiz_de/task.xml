@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CATS version="1.10">
+<Problem title="Quiz DE" lang="en" tlimit="1" mlimit="256" inputFile="*NONE" outputFile="*NONE" maxPoints="3">
+<Import guid="std.strs" type="checker" name="std_checker"/>
+<ProblemStatement>
+<Quiz type="radiogroup">
+<Choice>1</Choice>
+<Choice>2</Choice>
+<Choice>3</Choice>
+<Choice>4</Choice>
+</Quiz>
+
+<Quiz type="text">
+</Quiz>
+
+<Quiz type="checkbox">
+<Choice>11</Choice>
+<Choice>22</Choice>
+<Choice>33</Choice>
+<Choice>44</Choice>
+</Quiz>
+
+</ProblemStatement>
+<Test rank="1"><In>!</In><Out>1</Out></Test>
+<Test rank="2"><In>!</In><Out>text</Out></Test>
+<Test rank="3"><In>!</In><Out>1 2 4</Out></Test>
+
+</Problem>
+</CATS>
