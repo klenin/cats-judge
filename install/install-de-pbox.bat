@@ -64,6 +64,7 @@ if exist "%PYTHON3_HOME%\python.exe" (
     rem Install cython
     "%PYTHON3_HOME%\python.exe" -m pip install cython
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
+    "%PYTHON3_HOME%\python.exe" -m pip install requests
 )
 
 mkdir C:\Lang\digitalsim
