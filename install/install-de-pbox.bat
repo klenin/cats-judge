@@ -67,6 +67,9 @@ if exist "%PYTHON3_HOME%\python.exe" (
     "%PYTHON3_HOME%\python.exe" -m pip install requests
 )
 
+mkdir C:\Lang\logisim
+%PBOX_HOME%\bin\wget --output-document C:\Lang\logisim\logisim.jar https://github.com/reds-heig/logisim-evolution/releases/download/v3.3.0/logisim-evolution-3.3.0-all.jar
+
 mkdir C:\Lang\digitalsim
 %PBOX_HOME%\bin\wget --output-document %TEMP%\digitalsim.zip https://github.com/hneemann/Digital/releases/download/v0.24/Digital.zip
 %PBOX_HOME%\bin\7za e -oC:\Lang\digitalsim %TEMP%\digitalsim.zip */*.jar

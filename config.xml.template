@@ -507,4 +507,20 @@
     run_exit_code='ignore'
     extension='dig'/>
 
+<!-- Logisim table -->
+<define name="#jdk11" value="C:\Lang\jdk11\bin\java.exe" />
+<de
+    code="652"
+    compile=''
+    run='"#jdk11" -jar C:\Lang\logisim\logisim.jar -tty table "%full_name"'
+    extension=''/>
+
+<!-- Logisim test vector -->
+<define name="#jdk11" value="C:\Lang\jdk11\bin\java.exe" />
+<de
+    code="653"
+    compile=''
+    run='"#jdk11" -jar C:\Lang\logisim\logisim.jar -testvector main %input_file "%full_name"'
+    extension='circ'/>
+
 </judge>
