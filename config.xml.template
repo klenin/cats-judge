@@ -150,6 +150,13 @@
     validate='#perl #formal -from INPUT="%full_name" -validate INPUT="%test_input"'
     check=''/>
 
+<!-- Quiz -->
+<de
+    code="6"
+    compile=''
+    run='#perl #copy_cat -i "%full_name" -m *STDOUT -l %test_rank'
+    extension='quiz'/>
+
 <!-- Cross-platform C/C++ compiler -->
 <de
     code="101"
@@ -498,13 +505,6 @@
     compile='"#unreal_engine4" BuildCookRun -project="#rootdir\run\Project\Project.uproject" -noP4 -platform=Win64 -clientconfig=Development -cook -build -pak -stage -archive -archivedirectory="#rootdir\run"'
     run='.\WindowsNoEditor\Project.exe'
     extension=''/>
-
-<!-- Quiz -->
-<de
-    code="606"
-    compile=''
-    run='#perl #copy_cat -i "%full_name" -m *STDOUT -l %test_rank'
-    extension='quiz'/>
 
 <!-- Digital simulator -->
 <de

@@ -362,9 +362,9 @@ my $p_quiz_de = FS->catfile($path, 'p_quiz_de');
 
 maybe_subtest 'quiz', 15, sub {
     my $r = run_judge(qw(install -p), $p_quiz_de)->stdout;
-    like run_judge_sol($p_quiz_de, 'ok.txt', de => 606)->stdout->[-1], qr/accepted/, 'ok';
-    like run_judge_sol($p_quiz_de, 'wrong1.txt', de => 606)->stdout->[-1], qr/wrong answer on test 1/, 'WA';
-    like run_judge_sol($p_quiz_de, 'wrong2.txt', de => 606)->stdout->[-1], qr/wrong answer on test 2/, 'WA';
+    like run_judge_sol($p_quiz_de, 'ok.txt', de => 6)->stdout->[-1], qr/accepted/, 'ok';
+    like run_judge_sol($p_quiz_de, 'wrong1.txt', de => 6)->stdout->[-1], qr/wrong answer on test 1/, 'WA';
+    like run_judge_sol($p_quiz_de, 'wrong2.txt', de => 6)->stdout->[-1], qr/wrong answer on test 2/, 'WA';
 };
 
 1;
