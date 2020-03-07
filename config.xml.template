@@ -523,4 +523,11 @@
     run='"#jdk11" -jar C:\Lang\logisim\logisim.jar -testvector main %input_file "%full_name"'
     extension='circ'/>
 
+<!-- Quiz -->
+<de
+    code="606"
+    compile=''
+    run='#perl #copy_cat -i "%full_name" -m *STDOUT -l %test_rank'
+    extension='quiz'/>
+
 </judge>
