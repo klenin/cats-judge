@@ -581,7 +581,7 @@ sub run_checker {
     $sp_report->tr_ok or return;
     my $checker_points;
     if (($checker_type // -1) == $cats::partial_checker) {
-        if (defined($output) && $output =~ /^-?(\d+)/) {
+        if (defined($output) && $output =~ /^(-?\d+)/) {
             $checker_points = int($1);
         }
         else {
