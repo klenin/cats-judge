@@ -25,7 +25,7 @@ sub _set_sid {
         $self->{sid} = $self->make_sid;
         return 1 if $dbh->do(qq~
             UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP,
-                last_ip = (${ \CATS::DB::last_ip_query })
+                last_ip = ($CATS::DB::db->{LAST_IP_QUERY})
             WHERE id = ?~, undef,
             $self->{sid}, $self->{uid});
         sleep 1;
