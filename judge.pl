@@ -786,6 +786,7 @@ sub compile {
     $modules_result == $cats::st_testing or return $modules_result;
 
     if (my ($main) = grep $_->{main}, @$problem_sources) {
+        log_msg("Substituting main: %s -> %s\n", $main->{fname}, $main->{main});
         $fu->write_to_file([ $cfg->rundir, $main->{fname} ], $main->{src}) or return;
         $fu->write_to_file([ $cfg->rundir, $main->{main} ], $r->{src}) or return;
         $r->{main} = $main->{main};
