@@ -60,7 +60,7 @@ sub quick_check_de {
     exists $de->{code} or return 0;
     # Special and legacy DEs are not checked.
     my $c = $de->{compile} || $de->{run} or return 1;
-    $c =~ /^"([^"]+)"|^(\S+)\s/ or return 0;
+    $c =~ /^(?:-\S+\s+)*"([^"]+)"|^(\S+)\s/ or return 0;
     my $fn = $1 // $2;
     my $ok = -e $fn or print STDERR "Warning: DE $de->{code} not found at: $fn\n";
     $ok;
