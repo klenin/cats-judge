@@ -58,6 +58,7 @@
 <define name="#erlang" de_code_autodetect="506" value="C:\Lang\erlang\bin" />
 <define name="#nodejs" de_code_autodetect="507" value="C:\Lang\nodejs\node.exe" />
 <define name="#prolog" de_code_autodetect="509" value="C:\Lang\swipl\bin\swipl.exe" />
+<define name="#pypy" de_code_autodetect="510" value="C:\Lang\pypy\pypy.exe" />
 
 <define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\freebasic\fbc.exe" />
@@ -484,6 +485,17 @@
     compile_error_flag='ERROR'
     run='"#prolog" -g main -g halt -l "%full_name"'
     extension='pro'/>
+
+<!-- PyPy -->
+<de
+    code="510"
+    compile='"#pypy" -m py_compile "%full_name"'
+    run='"#pypy" %full_name'
+    run_interactive='"#pypy" %full_name'
+    generate='"#pypy" %full_name %args'
+    validate='"#pypy" %full_name "%test_input" %args'
+    check='"#pypy" %full_name %checker_args'
+    extension='pypy'/>
 
 <!-- Unity -->
 <de

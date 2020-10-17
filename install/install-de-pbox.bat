@@ -20,6 +20,7 @@ call pbox install mingw-w64 --homedir=C:\Lang\mingw-w64
 call pbox install jdk8 --homedir=C:\Lang\jdk8
 call pbox install kotlin --homedir=C:\Lang\kotlin
 call pbox install python3 --homedir=C:\Lang\python3
+call pbox install pypy3 --homedir=C:\Lang\pypy
 call pbox install lazarus --homedir=C:\Lang\lazarus
 call pbox install ruby --homedir=C:\Lang\ruby
 call pbox install php --homedir=C:\Lang\php
