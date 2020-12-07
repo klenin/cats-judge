@@ -1239,6 +1239,8 @@ sub main_loop {
     chdir $cfg->workdir
         or return log_msg("change to workdir '%s' failed: $!\n", $cfg->workdir);
 
+    my $sp = $cfg->{defines}->{'#spawner'};
+    -x $sp or log_msg("Spawner not found: %s\n", $sp);
     log_msg("judge: %s, api: %s, version: %s\n", $judge->name, $cfg->api, $judge->version);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
