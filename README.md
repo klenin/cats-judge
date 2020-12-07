@@ -88,7 +88,7 @@ Install problem from the current directory.
 ### `run` command
 
 Run one or more problem solutions.
-Running includes folowing steps:
+Running includes following steps:
   * install problem as per `install` command
   * detect compiler/interpreter (aka *development environment*)
   * compile and lint solution
@@ -109,23 +109,23 @@ Config variables:
 
 Examples:
 ```
-j run A.zip -run mysolution.py
+j run -problem A.zip -run mysolution.py
 ```
 Test solution `mysolution.cpp` for problem `A.zip`.
 Solution is probably written in Python.
 ```
-j run . -run good.cpp -run bad.cpp -c columns=RV
+j run -p . -run good.cpp -run bad.cpp -c columns=RV
 ```
 Test two solutions for a problem located in the current directory,
 display only test number and judge verdict for each test.
 ```
-j run B.zip -run sol.pas -t 1,3,12-15 -format=polygon
+j run -p B.zip -run sol.pas -t 1,3,12-15 -format=polygon
 ```
 Test solution `sol.pas` for a Polygon-style problem.
 Run only tests 1, 3, 12, 13, 14 and 15.
 
 ```
-j run B.zip -run sol.cpp -de 102
+j run -p B.zip -run sol.cpp -de 102
 ```
 Enforce GCC compiler for solution.
 
