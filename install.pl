@@ -183,18 +183,28 @@ step 'Prepare spawner binary', sub {
         or maybe_die 'Unknown --bin value';
     my $version = '';
     my $repo_owner = 'klenin';
-    my $remote_repo = 'Spawner';
+    my $remote_repo = 'Spawner2';
     if ($1) {
         $version = $2;
         $repo_owner = $5 if $4;
         $remote_repo = $6 if $4;
     }
-    else {
+    elsif (-d $remote_repo) {
         # Git wants forward slash even on Windows.
-        my $tag = `git --git-dir=Spawner/.git describe --tag --match "v[0-9]*"`;
+        my $tag = `git --git-dir=$remote_repo/.git describe --tag --match "v[0-9]*"`;
         $tag =~ s/[\n\r]//g;
         $tag =~ /^v(\d+\.)+\d+$/ or maybe_die "Spawner submodule has invalid version tag: $tag";
         $version = $tag;
+    }
+    else {
+        my $uri1 = "http://api.github.com/repos/$repo_owner/$remote_repo/releases/latest";
+        my $ff1 = File::Fetch->new(uri => $uri1);
+        $File::Fetch::BLACKLIST = ['iosock'];
+        my $response;
+        $ff1->fetch(to => \$response) or maybe_die;
+        $response =~ /"name":"([^"]+)"/; # JSON::XS installed may be not installed yet.
+        $response or maybe_die();
+        $version = $1;
     }
     print $opts{verbose} ? "\n    Download spawner binary $version...\n" : " $version";
     my $file = "$platform.zip";
