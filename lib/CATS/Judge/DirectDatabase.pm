@@ -23,12 +23,9 @@ sub _set_sid {
     my ($self) = @_;
     for (1..20) {
         $self->{sid} = $self->make_sid;
-        return 1 if $dbh->do(q~
+        return 1 if $dbh->do(qq~
             UPDATE accounts SET sid = ?, last_login = CURRENT_TIMESTAMP,
-                last_ip = (
-                    SELECT mon$remote_address
-                    FROM mon$attachments M
-                    WHERE M.mon$attachment_id = CURRENT_CONNECTION)
+                last_ip = ($CATS::DB::db->{LAST_IP_QUERY})
             WHERE id = ?~, undef,
             $self->{sid}, $self->{uid});
         sleep 1;
@@ -112,7 +109,7 @@ sub select_request {
     my ($self) = @_;
 
     ($self->{was_pinged}, $self->{pin_mode}, my $current_sid, my $time_since_alive) = $dbh->selectrow_array(q~
-        SELECT 1 - J.is_alive, J.pin_mode, A.sid, CURRENT_TIMESTAMP - J.alive_date
+        SELECT 1 - J.is_alive, J.pin_mode, A.sid, CAST(CURRENT_TIMESTAMP - J.alive_date AS DOUBLE PRECISION)
         FROM judges J INNER JOIN accounts A ON J.account_id = A.id WHERE J.id = ?~, undef,
         $self->{id});
 
