@@ -102,7 +102,7 @@ sub compile {
     return $cats::st_testing if $ok;
 
     if ($de->{compile_rename_regexp} && !$opt->{renamed}) {
-        my $re = qr/\Q$cats::log_section_start_prefix$cats::log_section_compile\E\n.*$de->{compile_rename_regexp}/m;
+        my $re = qr/\Q$cats::log_section_start_prefix$cats::log_section_compile\E.*$de->{compile_rename_regexp}/ms;
         if (my ($new_name) = $self->log->get_dump =~ $re) {
             $self->log->msg("Compiler requires rename to '$new_name'\n");
             $self->fu->copy(map [ $self-> cfg->rundir, $_ ], $name_parts->{full_name}, $new_name) or return;
