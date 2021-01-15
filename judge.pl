@@ -199,20 +199,38 @@ sub generate_test {
     my $redir;
     my $out = $ps->{output_file} // $input_fname;
     if ($out =~ /^\*STD(IN|OUT)$/) {
-        $test->{gen_group} and return undef;
+        $test->{gen_group} and return;
         $out = 'stdout1.txt';
         $redir = $out;
     }
 
-    my $args = $test->{param} // '';
-    my $generate_cmd = $src_proc->require_property(generate => $ps, { args => $args }) or return;
-    my $sp_report = $sp->run_single({ ($redir ? (stdout => '*null') : ()) },
-        $generate_cmd,
-        [],
-        { $src_proc->get_limits($ps, $problem), stdout => $redir }
-    ) or return undef;
+    my ($args, @pipe) = split /\s*\|\s*/, $test->{param} // '';
+    return log_msg("Pipe reqiures stdout for test #%d", $test->{rank}) if @pipe && !$redir;
 
-    $sp_report->ok ? $out : undef;
+    my $generate_cmd = $src_proc->require_property(generate => $ps, { args => $args }) or return;
+    my %limits = $src_proc->get_limits($ps, $problem);
+    {
+        my $sp_report = $sp->run_single(
+            { ($redir ? (stdout => '*null') : ()) }, $generate_cmd, [], { %limits, stdout => $redir }
+        ) or return;
+        $sp_report->ok or return;
+    }
+
+    my @modules = grep $_->{stype} == $cats::generator_module, @$problem_sources;
+    my $i = 1;
+    for my $pipe_el (@pipe) {
+        my ($cmd, $args1) = $pipe_el =~ /^(\w+)\s*(.*)$/ or return;
+        my ($ps1) = grep $_->{name_parts}->{name} eq $cmd, @modules
+            or return log_msg("Unknown pipe element '%s' for test #%d\n", $cmd, $test->{rank});
+        my $pipe_cmd = $src_proc->require_property(generate => $ps1, { args => $args1 }) or return;
+        my $prev = $out;
+        $out = sprintf('stdout%d.txt', ++$i);
+        my $sp_report = $sp->run_single(
+            {}, $pipe_cmd, [], { %limits, stdin => $prev, stdout => $out }) or return;
+        $sp_report->ok or return;
+    }
+
+    $out;
 }
 
 sub generate_test_group {
@@ -429,6 +447,7 @@ sub prepare_tests {
 sub prepare_modules {
     my ($stype) = @_;
     # Select modules in order they are listed in problem definition xml.
+    # FIXME: It is currently all local modules after all imports.
     for my $m (grep $_->{stype} == $stype, @$problem_sources) {
         my $fname = $m->{name_parts}->{full_name};
         log_msg("module: $fname\n");
@@ -457,9 +476,9 @@ sub initialize_problem {
     $main_source_types{$_} = 1 for keys %cats::source_modules;
 
     for my $ps (grep $main_source_types{$_->{stype}}, @$problem_sources) {
-        clear_rundir or return undef;
+        clear_rundir or return;
 
-    (prepare_modules($cats::source_modules{$ps->{stype}} || 0) // -1) == $cats::st_testing or return;
+        (prepare_modules($cats::source_modules{$ps->{stype}} || 0) // -1) == $cats::st_testing or return;
 
         $fu->write_to_file([ $cfg->rundir, $ps->{name_parts}->{full_name} ], $ps->{src}) or return;
 
