@@ -207,7 +207,7 @@ sub print_params {
 
 sub apply_params {
     my ($str, $params) = @_;
-    $str =~ s/%$_/$params->{$_}/g
+    $str =~ s[%$_][$params->{$_} // '']eg
         for sort { length $b <=> length $a } keys %$params;
     $str;
 }
