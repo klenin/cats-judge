@@ -39,7 +39,7 @@ END
 
 sub get_version {
     my ($self, $path) = @_;
-    my ($ok, $err, $buf) = run command => [ $path,  '/help' ];
+    my ($ok, $err, $buf) = run command => [ $path, '/help' ];
     $ok or return 0;
     $buf->[0] =~ /Visual C#.+\s((?:\d+\.)+\d+)/ ? $1 : 0;
 }
