@@ -49,6 +49,7 @@
 <define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
 <define name="#go" de_code_autodetect="404" value="C:\Lang\go\bin\go.exe" />
 <define name="#kotlin" de_code_autodetect="406.path" value="C:\Lang\kotlin" />
+<define name="#dotnet" de_code_autodetect="407" value="C:\Lang\dotnet\dotnet.exe" />
 
 <define name="#perl" de_code_autodetect="501" value="C:\Lang\perl\perl\bin\perl.exe" />
 <define name="#python" de_code_autodetect="502" value="C:\Lang\python3\python.exe" />
@@ -401,6 +402,20 @@
     validate='"#java" -Xmx256m -Xss64m -jar result.jar "%test_input" %args'
     check='"#java" -jar result.jar %checker_args'
     extension='kt'/>
+
+<!-- C# -->
+<de
+    code="407"
+    compile='"#dotnet" publish --nologo -o build'
+    compile_precompile='#perl #copy_cat -i "../csharp.csproj" -o csharp.csproj'
+    encoding="CP866"
+    run='"build/csharp.exe"'
+    run_interactive='"build/csharp.exe"'
+    runfile='build/csharp.exe'
+    generate='"build/csharp.exe" %args'
+    validate='"build/csharp.exe" "%test_input" %args'
+    check='"build/csharp.exe" %checker_args'
+    />
 
 <!-- Perl -->
 <de

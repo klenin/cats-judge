@@ -30,6 +30,12 @@ call pbox install rust --homedir=C:\Lang\rust
 call pbox install delphi7-compiler --homedir=C:\Lang\delphi
 call pbox install 7zip --homedir=C:\Lang\7-zip
 call pbox install go --homedir=C:\Lang\go
+rem call pbox install dotnet-core-sdk --homedir=C:\Lang\dotnet
+
+rem https://dotnet.microsoft.com/download/dotnet/thank-you/sdk-5.0.200-windows-x64-binaries
+%PBOX_HOME%\bin\wget --output-document %TEMP%\dotnet.zip https://download.visualstudio.microsoft.com/download/pr/761159fa-2843-4abe-8052-147e6c873a78/77658948a9e0f7bc31e978b6bc271ec8/dotnet-sdk-5.0.200-win-x64.zip
+%PBOX_HOME%\bin\7za x -oC:\Lang\dotnet %TEMP%\dotnet.zip
+setx DOTNET_ROOT C:\Lang\dotnet
 
 rem Pbox provides only PascalABC 2.22
 mkdir C:\Lang\pascalabc
