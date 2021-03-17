@@ -170,7 +170,7 @@ sub _override {
     for my $k (keys %$override) {
         my $h = \$self;
         $h = \$$h->{$_} for split '\.', $k;
-        $$h = $override->{$k};
+        $$h = $self->apply_defines($override->{$k});
     }
 }
 

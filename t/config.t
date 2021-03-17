@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 24;
+use Test::More tests => 25;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -93,6 +93,14 @@ my $end = q~</judge>~;
     my $c = make_cfg;
     $c->load(src => qq~$default<define name="#xx" value="2"/><judge name="test#xx"/>$end~);
     is $c->name, 'test2', 'define';
+}
+
+{
+    my $c = make_cfg;
+    $c->load(
+        src => qq~$default<define name="#xx" value="2"/>$end~,
+        override => { name => 'tt#xx' });
+    is $c->name, 'tt2', 'define in override';
 }
 
 {
