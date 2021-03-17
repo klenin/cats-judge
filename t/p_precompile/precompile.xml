@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CATS version="1.8">
+<Problem title="Precompile" lang="en"
+  tlimit="1" mlimit="256" inputFile="input.txt" outputFile="output.txt">
+
+<Checker src="icmp.cpp" type="checker" de_code="102" style="testlib" />
+<Module type="solution" src="inc.pl" de_code="1"/>
+<Test rank="1-1"><In>5</In><Out>6</Out></Test>
+
+</Problem>
+</CATS>

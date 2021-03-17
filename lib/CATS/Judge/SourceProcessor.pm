@@ -63,8 +63,8 @@ sub compile {
     $de->{compile} or return $cats::st_testing;
 
     my %env;
-    if (my $add_path = $self->property(compile_add_path => $de_id)) {
-        my $path = apply_params($add_path, { %$name_parts, PATH => $ENV{PATH} });
+    if ($de->{compile_add_path}) {
+        my $path = apply_params($de->{compile_add_path}, { %$name_parts, PATH => $ENV{PATH} });
         %env = (env => { PATH => $path });
     }
 
@@ -72,6 +72,15 @@ sub compile {
     my %limits = map { $compile_limits->{$_} ? ($_ => $compile_limits->{$_}) : () }
         @cats::limits_fields;
     $limits{deadline} = $limits{time_limit} if $limits{time_limit};
+
+    if ($de->{compile_precompile}) {
+        my $sp_report = $self->sp->run_single({
+            encoding => $de->{encoding},
+            %limits, %env },
+            apply_params($de->{compile_precompile}, $name_parts)
+        ) or return;
+        $sp_report->ok or return;
+    }
 
     my $sp_report = $self->sp->run_single({
         ($opt->{section} ? (section => $cats::log_section_compile) : ()),

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 50;
+use Test::More tests => 51;
 
 use File::Spec;
 
@@ -120,6 +120,12 @@ maybe_subtest 'compile_error_flag', 4, sub {
     like run_judge_sol($p_minimal, 'warn.pl',
         de => 501, 'config-set' => "DEs.501.compile_error_flag=FLAG")->stdout->[-1],
         qr/compilation error/, 'compilation error';
+};
+
+maybe_subtest 'compile_precompile', 4, sub {
+    like run_judge_sol(FS->catfile($path, 'p_precompile'), 'sol',
+        de => 3, 'config-set' => qq~"DEs.3.compile_precompile=#perl inc.pl %full_name"~)->stdout->[-1],
+        qr/accepted/, 'accepted';
 };
 
 SKIP: {
