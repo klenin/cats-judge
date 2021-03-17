@@ -16,6 +16,7 @@ sub _detect {
     registry_glob($self, 'JavaSoft/Java Development Kit/*/JavaHome', 'bin', 'javac');
     program_files($self, 'Java/jdk*/bin', 'javac');
     pbox($self, 'jdk8', 'bin', 'javac');
+    pbox($self, 'jdk11', 'bin', 'javac');
 }
 
 sub hello_world {
