@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 93;
+use Test::More tests => 95;
 use Test::Exception;
 
 use File::Spec;
@@ -59,6 +59,15 @@ like CATS::FileUtil::fn([ 'a', 'b' ]), qr/a.b/, 'fn';
     is_deeply $fu->read_lines($fn), [ "abc\n" ], 'write_to_file read_lines';
     is_deeply $fu->read_lines_chomp($fn), [ 'abc' ], 'write_to_file read_lines_chomp';
     unlink $fn;
+}
+
+{
+    my $fu = make_fu;
+    my $p = [ $tmpdir, 'f.txt' ];
+    my $data = "\x01\x00\x1A\x0D\x0D\x0A\x0A\xFF";
+    ok $fu->write_to_file($p, $data), 'write_to_file bin';
+    is_deeply [ $fu->load_file($p, 200) ], [ $data, length($data) ], 'load_file bin';
+    unlink FS->catfile(@$p);
 }
 
 {
