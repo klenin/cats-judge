@@ -9,6 +9,7 @@ use File::Temp;
 use HTTP::Request::Common;
 use JSON::XS;
 use LWP::UserAgent;
+use MIME::Base64 ();
 
 use CATS::DeBitmaps;
 use CATS::DevEnv;
@@ -377,6 +378,9 @@ my @req_retails_params = qw(
 sub insert_req_details {
     my ($self, $job_id, $p) = @_;
 
+    if (exists $p->{output}) {
+        $p->{output} = MIME::Base64::encode_base64($p->{output}, '');
+    }
     my $response = $self->get_json([
         f => 'api_judge_insert_req_details',
         job_id => $job_id,
@@ -396,7 +400,7 @@ sub save_input_test_data {
         f => 'api_judge_save_input_test_data',
         problem_id => $problem_id,
         test_rank => $test_rank,
-        input => $input,
+        input => MIME::Base64::encode_base64($input, ''),
         input_size => $input_size,
         hash => $hash,
         sid => $self->{sid},
@@ -412,7 +416,7 @@ sub save_answer_test_data {
         f => 'api_judge_save_answer_test_data',
         problem_id => $problem_id,
         test_rank => $test_rank,
-        answer => $answer,
+        answer => MIME::Base64::encode_base64($answer, ''),
         answer_size => $answer_size,
         sid => $self->{sid},
     ]);
