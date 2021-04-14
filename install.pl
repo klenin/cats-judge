@@ -222,7 +222,7 @@ step 'Prepare spawner binary', sub {
     my $sp_path = File::Spec->catfile($dir, $sp);
     printf "    Downloaded: %d bytes\n", -s $zip_file if $opts{verbose};
     unzip($zip_file => $sp_path, Name => $sp, BinModeOut => 1)
-        or maybe_die "Can't unzip $zip_file";
+        or maybe_die "Can't unzip $zip_file: $UnzipError";
     chmod 0744, $sp_path if $^O ne 'MSWin32';
     unlink $zip_file;
 };
