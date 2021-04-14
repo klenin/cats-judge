@@ -2,6 +2,7 @@ use v5.10;
 use strict;
 use warnings;
 
+use Carp;
 use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use File::Copy qw(copy);
 use File::Fetch;
@@ -61,7 +62,7 @@ if ($opts{step}) {
 }
 
 sub maybe_die {
-    $opts{force} or die @_;
+    $opts{force} or croak @_;
     print @_;
     print ' overridden by --force';
 }
