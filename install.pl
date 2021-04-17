@@ -2,7 +2,6 @@ use v5.10;
 use strict;
 use warnings;
 
-use Carp;
 use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use File::Copy qw(copy);
 use File::Fetch;
@@ -19,6 +18,7 @@ use CATS::ConsoleColor qw(colored);
 use CATS::DevEnv::Detector::Utils qw(globq run);
 use CATS::FileUtil;
 use CATS::Loggers;
+use CATS::MaybeDie qw(maybe_die);
 use CATS::Spawner::Platform;
 
 $| = 1;
@@ -39,7 +39,7 @@ USAGE
 }
 
 GetOptions(
-    \my %opts,
+     \my %opts,
     'step=i@',
     'bin=s',
     'devenv=s',
@@ -61,11 +61,7 @@ if ($opts{step}) {
     printf "Will only run steps: %s\n", join ' ', sort { $a <=> $b } @steps;
 }
 
-sub maybe_die {
-    $opts{force} or croak @_;
-    print @_;
-    print ' overridden by --force';
-}
+CATS::MaybeDie::init(%opts);
 
 my $fu = CATS::FileUtil->new({ logger => CATS::Logger::Die->new });
 my $fr = CATS::FileUtil->new({
