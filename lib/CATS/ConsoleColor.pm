@@ -11,13 +11,14 @@ our @EXPORT_OK = qw(colored);
 my $use_color = 0;
 
 sub _no_color {
-    shift if ref $_[0];
+    ref $_[0] ? shift : pop;
     @_;
 }
 
 BEGIN {
-    $use_color = -t STDOUT;
-    eval { require Win32::Console::ANSI; 1; } or $use_color = 0 if $^O eq 'MSWin32';
+    $use_color =
+        ($ENV{CLICOLOR} // 1) && -t STDOUT && #/
+        ($^O ne 'MSWin32' || eval { require Win32::Console::ANSI; 1; });
     no warnings 'redefine';
     *colored = $use_color ? *Term::ANSIColor::colored : *_no_color;
 }
