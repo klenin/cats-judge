@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 25;
+use Test::More tests => 27;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -133,4 +133,13 @@ my $end = q~</judge>~;
     is ap('zzz', {}), 'zzz', 'no params';
     is ap('z%zz', { z => 1 }), 'z1z', 'apply 1';
     is ap('z%zz', { zz => 2, z => 1 }), 'z2', 'apply length';
+}
+
+{
+    my $JUDGE_TEST_ENV = 'JUDGE_TEST_ENV02349582';
+    my $c = make_cfg;
+    my $def = 'abc#env:JUDGE_TEST_ENV def';
+    throws_ok { $c->apply_defines($def) } qr/JUDGE_TEST_ENV/, 'define no env';
+    local $ENV{JUDGE_TEST_ENV} = $JUDGE_TEST_ENV;
+    is $c->apply_defines($def), "abc$JUDGE_TEST_ENV def", 'define env';
 }

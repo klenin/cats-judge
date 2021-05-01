@@ -67,7 +67,7 @@
 <define name="#ms_cpp" de_code_autodetect="103" value="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\cl.exe" />
 <define name="#gnu_c" de_code_autodetect="105" value="C:\Lang\mingw-w64-7\bin\gcc.exe" />
 <define name="#gnu_cpp" de_code_autodetect="102" value="C:\Lang\mingw-w64-7\bin\g++.exe" />
-<define name="#bcc" de_code_autodetect="104" value="%comspec% /C ..\bcc.cmd" />
+<define name="#bcc" de_code_autodetect="104" value="#env:comspec /C ..\bcc.cmd" />
 <define name="#clang" de_code_autodetect="106" value="C:\Lang\clang\bin\clang++.exe" />
 
 <define name="#rust" de_code_autodetect="120" value="C:\Lang\rust\bin\rustc.exe" />
@@ -76,7 +76,7 @@
 <define name="#delphi_units" de_code_autodetect="203.units" value="C:\Lang\delphi\Bin" />
 <define name="#fpc" de_code_autodetect="202" value="C:\Lang\lazarus\fpc\3.0.2\bin\i386-win32\fpc.exe" />
 <define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\pascalabc\pabcnetcclear.exe" />
-<define name="#bpc" de_code_autodetect="201" value="%comspec% /C ..\bpc.cmd" />
+<define name="#bpc" de_code_autodetect="201" value="#env:comspec /C ..\bpc.cmd" />
 
 <define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
 <define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
@@ -199,11 +199,11 @@
 <de
     code="104"
     compile='#bcc -ml "%full_name"'
-    run='%comspec% /C "%name.exe"'
+    run='#env:comspec /C "%name.exe"'
     runfile='%name.exe'
-    generate='%comspec% /C "%name.exe" %args'
-    validate='%comspec% /C "%name.exe" "%test_input"'
-    check='%comspec% /C "%name.exe" %checker_args'/>
+    generate='#env:comspec /C "%name.exe" %args'
+    validate='#env:comspec /C "%name.exe" "%test_input"'
+    check='#env:comspec /C "%name.exe" %checker_args'/>
 
 <!-- GCC C only -->
 <de
@@ -272,10 +272,10 @@
 <de
     code="201"
     compile='#bpc "%full_name"'
-    run='%comspec% /C "%name.exe"'
-    generate='%comspec% /C "%name.exe" %args'
-    validate='%comspec% /C "%name.exe" "%test_input" %args'
-    check='%comspec% /C "%name.exe" %checker_args'/>
+    run='#env:comspec /C "%name.exe"'
+    generate='#env:comspec /C "%name.exe" %args'
+    validate='#env:comspec /C "%name.exe" "%test_input" %args'
+    check='#env:comspec /C "%name.exe" %checker_args'/>
 
 <!-- Free Pascal -->
 <de
@@ -328,7 +328,7 @@
 <de
     code="301"
     compile=''
-    run='%comspec% /C "#qbasic" /run %full_name'
+    run='#env:comspec /C "#qbasic" /run %full_name'
     generate=''
     validate=''
     check=''

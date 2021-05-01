@@ -211,6 +211,15 @@ Display basic usage.
   * `--format cats|polygon` use given problem format. Default is `cats`.
   * `--verbose` display additional debug info
 
+## Configuration
+
+Configuration is located in `config.xml` file.
+
+Attribute values can contain variables, denoted by `%` sign, e.g. `%test_input`.
+Attribute values can contain defines, denoted by `#` sign, e.g. `#gnu_cpp`.
+There are special defines: `#rootdir` contains a path to `cats-judge` installation,
+`#env:name` contains a value of the environment variable `name`.
+
 ## Advanced installation
 
 ### Antivirus
