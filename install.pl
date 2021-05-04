@@ -168,6 +168,10 @@ step 'Detect proxy', sub {
     $proxy = CATS::DevEnv::Detector::Utils::detect_proxy() or return;
     $proxy =~ /^http/ or $proxy = "http://$proxy";
     print " $proxy ";
+    if ($ENV{HTTP_PROXY} // '' eq $proxy) {
+        $proxy = '#env:HTTP_PROXY';
+        print " -> $proxy ";
+    }
 };
 
 my $platform;
