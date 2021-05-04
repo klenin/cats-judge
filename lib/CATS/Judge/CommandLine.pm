@@ -31,7 +31,7 @@ Commands:
     #install# --problem <zip_or_directory_or_name> [--force-install]
     #run# --problem <zip_or_directory_or_name> [--force-install]
         --run <file>... [--de <de_code>] [--testset <testset>]
-        [--result text|html|none] [--result=columns <regexp>]
+        [--result text|html|none] [--use-plan all|acm]
     #list# --url <url> [--system cats|polygon]
     #download# --problem <zip_or_directory_or_name> --url <url>
         [--system cats|polygon]
@@ -43,6 +43,7 @@ Commands:
     #help#|-?
 
 Common options:
+    --config-file <name>
     --config-set <name>=<value> ...
     --db
     --format cats|polygon
@@ -86,7 +87,7 @@ my %commands = (
         'force-install',
         '!problem=s',
         'result=s',
-        '!run=s@',
+        '!run|r=s@',
         'testset=s',
         'use-plan=s',
     ],
@@ -113,11 +114,11 @@ sub get_options {
     my $command = $self->command;
     GetOptions(
         $self->opts,
-        'help|?',
-        'db',
-        'config-set|c=s%',
         'config-file=s',
+        'config-set|c=s%',
+        'db',
         'format=s',
+        'help|?',
         'verbose',
         map m/^\!?(.*)$/, @{$commands{$command}},
     ) or usage;
@@ -139,7 +140,7 @@ sub get_options {
     }
     for ($self->opts->{'use-plan'}) {
         $_ //= 'all';
-        /^(all|acm)$/ or usage(q~Option --plan must be either 'all', or 'acm'~);
+        /^(all|acm)$/ or usage(q~Option --use-plan must be either 'all', or 'acm'~);
     }
 }
 
