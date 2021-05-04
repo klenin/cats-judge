@@ -111,7 +111,7 @@ SKIP: {
         like run_judge(qw(install -p), $p_minimal)->stdout->[-1],
             qr/problem.*(cached|installed)/, 'minimal';
         like run_judge_sol(
-            $p_minimal, 'ok.cpp', 'config-set' => 'compile.memory_limit=1')->stdout->[-1],
+            $p_minimal, 'ok.cpp', 'config-set' => 'compile.memory_limit=4')->stdout->[-1],
             qr/compilation error/, 'CE on memory limit';
     };
 }
