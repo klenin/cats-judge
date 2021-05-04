@@ -240,13 +240,13 @@ Files contain:
 
 Available tags:
 
- ** `compile` defines compilation resource limits.
- ** `de` describes compilers / development environments.
- ** `default_limits` defines default resource limits, to be overridden by problem.
- ** `define` declares that `name` should be replaces by `value` in the attributes.
- ** `include` loads extra configuration from `file`.
- ** `judge` top-level tag.
- ** `security` defines passwords.
+  * `compile` defines compilation resource limits.
+  * `de` describes compilers / development environments.
+  * `default_limits` defines default resource limits, to be overridden by problem.
+  * `define` declares that `name` should be replaced by `value` in the attributes.
+  * `include` loads extra configuration from `file`.
+  * `judge` is a top-level tag.
+  * `security` defines passwords.
 
 ## Advanced installation
 
