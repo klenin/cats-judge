@@ -4,7 +4,7 @@ use warnings;
 use File::Spec;
 use FindBin;
 use Test::Exception;
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib');
 use lib File::Spec->catdir($FindBin::Bin, '..', 'lib', 'cats-problem');
@@ -126,6 +126,14 @@ my $end = q~</judge>~;
     throws_ok { $c->load(file => 'loop') } qr/loop/, 'include recursive';
     $c->load(src => qq~$default<include file="level2"/>$end~);
     is $c->name, 'included', 'include nested';
+}
+
+{
+    my $c = make_cfg(include_overrides => {
+      'zzz.xml' => '<?xml version="1.0"?><judge name="zzz"/>',
+    });
+    $c->load(src => qq~$default<define name="#f" value="zzz.xml"/><include file="#f"/>$end~);
+    is $c->name, 'zzz', 'include define';
 }
 
 {

@@ -135,7 +135,7 @@ sub load_part {
         },
         include => sub {
             $_[0]->{file} or die 'include: file required';
-            $self->load_file($_[0]->{file});
+            $self->load_file($self->apply_defines($_[0]->{file}));
         },
     };
 
