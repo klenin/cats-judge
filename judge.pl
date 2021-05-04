@@ -1340,7 +1340,9 @@ sub main_loop {
 $cli->parse;
 
 eval {
-    $cfg->load(file => $CATS::Judge::Config::main, override => $cli->opts->{'config-set'});
+    $cfg->load(
+        file => $cli->opts->{'config-file'} || $CATS::Judge::Config::main,
+        override => $cli->opts->{'config-set'});
 
     my $cfg_confess = $cfg->confess // '';
     $SIG{__WARN__} = sub { log_msg($cfg_confess =~ /w/i ? longmess(@_) : shortmess(@_)) };

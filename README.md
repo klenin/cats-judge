@@ -203,6 +203,7 @@ Display basic usage.
 
 ### Common options
 
+  * `--config-file <name>` use given file instead of `config/main.xml`.
   * `--config-set <name>=<value> ...` set configuration value before running the command. For example
      ```
      j run -p A.zip -run a.cpp -config-set rundir=./tmp
