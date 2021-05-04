@@ -149,7 +149,7 @@
     compile=''
     run=''
     generate=''
-    validate='#perl #formal -from INPUT="%full_name" -validate INPUT="%test_input"'
+    validate='#perl #formal -from INPUT="%full_name" -validate INPUT="%test_input" %args'
     check=''/>
 
 <!-- Quiz -->
@@ -174,7 +174,7 @@
 <!-- G++ -->
 <de
     code="102"
-    compile='"#gnu_cpp" -std=c++0x#gcc_stack -O3 "%full_name" -o "%name.exe"'
+    compile='"#gnu_cpp" -std=c++17#gcc_stack -O3 "%full_name" -o "%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -186,7 +186,7 @@
 <!-- Visual C++ -->
 <de
     code="103"
-    compile='"#ms_cpp" /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    compile='"#ms_cpp" /O2 /EHsc /nologo "%full_name" /Fe"%name.exe"'
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -202,7 +202,7 @@
     run='#env:comspec /C "%name.exe"'
     runfile='%name.exe'
     generate='#env:comspec /C "%name.exe" %args'
-    validate='#env:comspec /C "%name.exe" "%test_input"'
+    validate='#env:comspec /C "%name.exe" "%test_input" %args'
     check='#env:comspec /C "%name.exe" %checker_args'/>
 
 <!-- GCC C only -->
@@ -221,27 +221,6 @@
 <de
     code="106"
     compile='"#clang" "%full_name" -o "%name.exe"'
-    run='"%name.exe"'
-    run_interactive='"%name.exe"'
-    generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input" %args'
-    check='"%name.exe" %checker_args'/>
-
-<!-- gcc with sanitizers and werror. Change codes to 107 and 108 corresppondingly to make it work on linux judges -->
-<de
-    code="1007"
-    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=address -Wall -Werror'
-    memory_handicap="-1"
-    run='"%name.exe"'
-    run_interactive='"%name.exe"'
-    generate='"%name.exe" %args'
-    validate='"%name.exe" "%test_input"'
-    check='"%name.exe" %checker_args'/>
-    
-<de
-    code="1008"
-    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=thread -Wall -Werror'
-    memory_handicap="-1"
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     generate='"%name.exe" %args'
@@ -271,11 +250,13 @@
 <!-- BP -->
 <de
     code="201"
-    compile='#bpc "%full_name"'
-    run='#env:comspec /C "%name.exe"'
-    generate='#env:comspec /C "%name.exe" %args'
-    validate='#env:comspec /C "%name.exe" "%test_input" %args'
-    check='#env:comspec /C "%name.exe" %checker_args'/>
+    compile='"#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
 
 <!-- Free Pascal -->
 <de
@@ -316,7 +297,7 @@
 <de
     code="205"
     compile='"#pascalabc" "%full_name"'
-    encoding="CP866"
+    encoding="CP1251"
     run='"%name.exe"'
     run_interactive='"%name.exe"'
     runfile='%name.exe'
@@ -364,6 +345,7 @@
 <de
     code="402"
     compile='"#ms_csc" -out:main.exe "*.cs"'
+    encoding="CP866"
     run='"main.exe"'
     run_interactive='"main.exe"'
     runfile='main.exe'
