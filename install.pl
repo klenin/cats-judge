@@ -13,13 +13,17 @@ use IPC::Cmd;
 use List::Util qw(max);
 
 use lib File::Spec->catdir($FindBin::Bin, 'lib');
+use lib File::Spec->catdir($FindBin::Bin, 'lib', 'cats-problem');
 
 use CATS::ConsoleColor qw(colored);
 use CATS::DevEnv::Detector::Utils qw(globq run);
 use CATS::FileUtil;
+use CATS::Judge::Config;
 use CATS::Loggers;
 use CATS::MaybeDie qw(maybe_die);
 use CATS::Spawner::Platform;
+
+*cfg_file = *CATS::Judge::Config::cfg_file;
 
 $| = 1;
 
@@ -89,11 +93,15 @@ sub step_copy {
         -e $to and maybe_die "Destination already exists: $to";
         copy($from, $to) or maybe_die $!;
     };
+
+sub load_cfg {
+    CATS::Judge::Config->new(root => $FindBin::Bin)->load(file => $CATS::Judge::Config::main);
 }
 
 step 'Verify install', sub {
     -f 'judge.pl' && -d 'lib' or die 'Must run from cats-judge directory';
-    -f 'config.xml' and maybe_die 'Seems to be already installed';
+    eval { load_cfg; } and maybe_die 'Seems to be already installed';
+    say $@ if $opts{verbose};
 };
 
 step 'Verify git', sub {
@@ -273,16 +281,8 @@ sub parse_xml_file {
 }
 
 sub get_dirs {
-    -e 'config.xml' or die 'Missing config.xml';
-    my ($modulesdir, $cachedir);
-    parse_xml_file('config.xml', Start => sub {
-        my ($p, $el, %atts) = @_;
-        $el eq 'judge' or return;
-        $modulesdir = $atts{modulesdir};
-        $cachedir = $atts{cachedir};
-        $p->finish;
-    });
-    ($modulesdir, $cachedir);
+    my $cfg = load_cfg;
+    ($cfg->modulesdir, $cfg->cachedir);
 }
 
 sub check_module {
