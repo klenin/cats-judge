@@ -11,11 +11,11 @@ sub code { '510' }
 
 sub _detect {
     my ($self) = @_;
-    env_path($self, 'pypy');
-    which($self, 'pypy');
-    drives($self, 'pypy', 'pypy');
-    folder($self, '/usr/bin/', 'pypy');
-    pbox($self, 'pypy3', '', 'pypy');
+    env_path($self, 'pypy3');
+    which($self, 'pypy3');
+    drives($self, 'pypy', 'pypy3');
+    folder($self, '/usr/bin/', 'pypy3');
+    pbox($self, 'pypy3', '', 'pypy3');
 }
 
 sub hello_world {
