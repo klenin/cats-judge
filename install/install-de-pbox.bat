@@ -36,6 +36,7 @@ rem https://dotnet.microsoft.com/download/dotnet/thank-you/sdk-5.0.200-windows-x
 %PBOX_HOME%\bin\wget --output-document %TEMP%\dotnet.zip https://download.visualstudio.microsoft.com/download/pr/761159fa-2843-4abe-8052-147e6c873a78/77658948a9e0f7bc31e978b6bc271ec8/dotnet-sdk-5.0.200-win-x64.zip
 %PBOX_HOME%\bin\7za x -oC:\Lang\dotnet %TEMP%\dotnet.zip
 setx DOTNET_ROOT C:\Lang\dotnet
+setx DOTNET_CLI_TELEMETRY_OPTOUT 1
 
 rem Pbox provides only PascalABC 2.22
 mkdir C:\Lang\pascalabc

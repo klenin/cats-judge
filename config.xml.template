@@ -403,10 +403,10 @@
     check='"#java" -jar result.jar %checker_args'
     extension='kt'/>
 
-<!-- C# -->
+<!-- .NET Core C# -->
 <de
     code="407"
-    compile='"#dotnet" publish --nologo -o build'
+    compile='"#dotnet" publish --nologo -v quiet -o build'
     compile_precompile='#perl #copy_cat -i "../csharp.csproj" -o csharp.csproj'
     encoding="CP866"
     run='"build/csharp.exe"'

@@ -25,6 +25,8 @@ set CATS_JUDGE=1
 set SP_LOAD_RATIO=5%%
 set SP_LEGACY=sp00
 set SP_JSON=1
+set DOTNET_CLI_UI_LANGUAGE=en-us
+set VSLANG=1033
 
 perl judge.pl config --print "^name$" --bare | ^
 perl -MWin32::API -e "($x = <STDIN>) && Win32::API->new('kernel32', 'SetConsoleTitle', 'P', 'I')->Call($x)"
