@@ -79,7 +79,10 @@ sub new {
     my ($class, %p) = @_;
     $p{root} or die 'root required';
     my $self = {
-        root => $p{root}, defines => { '#rootdir' => $p{root} }, DEs => {}, checkers => {}, def_DEs => {},
+        root => $p{root}, defines => {
+            '#rootdir' => $p{root},
+            '#platform' => CATS::Spawner::Platform::get,
+        }, DEs => {}, checkers => {}, def_DEs => {},
         include => { stack => [], overrides => $p{include_overrides} // {} },
     };
     bless $self, $class;
