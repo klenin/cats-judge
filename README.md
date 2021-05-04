@@ -213,12 +213,40 @@ Display basic usage.
 
 ## Configuration
 
-Configuration is located in `config.xml` file.
+Configuration is located in `config` directory.
+It is loaded starting from `config/main.xml` file. This file references other files, which are loaded in order.
+If the same configuration value is defined in multiple files, the latest definition wins.
+
+Configuration files are split into local and global ones.
+Local files are `autodetect.xml`, `local.xml` and `local_devenv.xml` and contain changes specific to the current installation.
+Global files are under the version control and should apply to any `cats-judge` installation.
+It is recommended to change configuration by modifying local files unless you plan to push your changes upstream.
 
 Attribute values can contain variables, denoted by `%` sign, e.g. `%test_input`.
 Attribute values can contain defines, denoted by `#` sign, e.g. `#gnu_cpp`.
 There are special defines: `#rootdir` contains a path to `cats-judge` installation,
+`#platform` contains detected platform name,
 `#env:name` contains a value of the environment variable `name`.
+
+Files contain:
+
+  * `autodetect.xml` paths to compilers / development environments, as well as `enabled` flags for them.
+  * `default.xml` default simple values.
+  * `devenv.xml` description of compilers / development environments.
+  * `local.xml` local defines, for example judge name and password.
+  * `local_devent.xml` local changes for compilers / development environments, for example non-standard options or judge-unique development environment.
+  * `main.xml` references to other configuration files.
+  * `platform.???.xml` platform-specific configuration, for example non-portable compilers.
+
+Available tags:
+
+ ** `compile` defines compilation resource limits.
+ ** `de` describes compilers / development environments.
+ ** `default_limits` defines default resource limits, to be overridden by problem.
+ ** `define` declares that `name` should be replaces by `value` in the attributes.
+ ** `include` loads extra configuration from `file`.
+ ** `judge` top-level tag.
+ ** `security` defines passwords.
 
 ## Advanced installation
 
