@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<judge>
+
+<!-- Delphi -> FPC -->
+<de
+    code="203"
+    compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'
+/>
+
+</judge>

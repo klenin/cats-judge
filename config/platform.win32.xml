@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<judge>
+
+<!-- legacy checkers -->
+<checker
+    name="nums"
+    exec='"..\check\nums.exe" #checker_args'/>
+
+<checker
+    name="strs"
+    exec='"..\check\strs.exe" #checker_args'/>
+
+<checker
+    name="longstrs"
+    exec='"..\check\longstrs.exe" #checker_args'/>
+
+<checker
+    name="longnums"
+    exec='"..\check\longnums.exe" #checker_args'/>
+
+<checker
+    name="floats2"
+    exec='"..\check\floats2.exe" #checker_args'/>
+
+<checker
+    name="text"
+    exec='"..\check\text.exe" #checker_args'/>
+
+<define name="#gcc_stack" value=" -Wl,--stack=268435456"/>
+<define name="#spawner_name" value="sp.exe" />
+
+</judge>

@@ -51,6 +51,7 @@ sub de_fields() { qw(
     compile_error_flag
     compile_precompile
     compile_rename_regexp
+    enabled
     encoding
     extension
     generate
@@ -192,6 +193,13 @@ sub load {
     $self->_override($p{override});
     defined $self->{$_} or die "config: undefined $_" for required_fields;
     $_ = File::Spec->rel2abs($_, cats_dir) for @{$self}{dir_fields()};
+    for (keys %{$self->DEs}) {
+        $self->DEs->{$_}->{enabled} or delete $self->DEs->{$_};
+    }
+    for (keys %{$self->def_DEs}) {
+        $self->DEs->{$self->def_DEs->{$_}} or delete $self->def_DEs->{$_};
+    }
+    $self;
 }
 
 sub print_helper {

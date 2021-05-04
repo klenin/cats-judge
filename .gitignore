@@ -7,6 +7,9 @@ modules
 results
 log/*
 *.rar
-config.xml
+config/autodetect.xml
+config/local.xml
+config/local_devenv.xml
+config/*.bak
 judge.lock
 tmp

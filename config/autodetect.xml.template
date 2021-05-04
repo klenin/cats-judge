@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<judge>
+<!-- This file is used by install.pl -->
+
+<define name="#spawner" value="%workdir/spawner-bin/#platform/#spawner_name"/>
+
+<define name="#arch_7z" de_code_autodetect="2" value="C:\Lang\7-Zip\7z.exe" />
+<define name="#javac" de_code_autodetect="403" value="C:\Lang\jdk8\bin\javac.exe" />
+<define name="#java" de_code_autodetect="403.runtime" value="C:\Lang\jdk8\bin\java.exe" />
+<define name="#ms_csc" de_code_autodetect="402" value="C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
+<define name="#go" de_code_autodetect="404" value="C:\Lang\go\bin\go.exe" />
+<define name="#kotlin" de_code_autodetect="406.path" value="C:\Lang\kotlin" />
+<define name="#dotnet" de_code_autodetect="407" value="C:\Lang\dotnet\dotnet.exe" />
+
+<define name="#perl" de_code_autodetect="501" value="C:\Lang\perl\perl\bin\perl.exe" />
+<define name="#python" de_code_autodetect="502" value="C:\Lang\python3\python.exe" />
+<define name="#haskell" de_code_autodetect="503" value="C:\Program Files\Haskell Platform\2014.2.0.0\bin\ghc.exe" />
+<define name="#ruby" de_code_autodetect="504" value="C:\Lang\ruby\bin\ruby.exe" />
+<define name="#php" de_code_autodetect="505" value="C:\Lang\php\php.exe" />
+<define name="#erlang" de_code_autodetect="506" value="C:\Lang\erlang\bin" />
+<define name="#nodejs" de_code_autodetect="507" value="C:\Lang\nodejs\node.exe" />
+<define name="#prolog" de_code_autodetect="509" value="C:\Lang\swipl\bin\swipl.exe" />
+<define name="#pypy" de_code_autodetect="510" value="C:\Lang\pypy\pypy3.exe" />
+
+<define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
+<define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\freebasic\fbc.exe" />
+
+<define name="#ms_cpp" de_code_autodetect="103" value="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\cl.exe" />
+<define name="#gnu_c" de_code_autodetect="105" value="C:\Lang\mingw-w64-7\bin\gcc.exe" />
+<define name="#gnu_cpp" de_code_autodetect="102" value="C:\Lang\mingw-w64-7\bin\g++.exe" />
+<define name="#bcc" de_code_autodetect="104" value="#env:comspec /C ..\bcc.cmd" />
+<define name="#clang" de_code_autodetect="106" value="C:\Lang\clang\bin\clang++.exe" />
+
+<define name="#rust" de_code_autodetect="120" value="C:\Lang\rust\bin\rustc.exe" />
+
+<define name="#delphi" de_code_autodetect="203" value="C:\Lang\delphi\Bin\DCC32.EXE" />
+<define name="#delphi_units" de_code_autodetect="203.units" value="C:\Lang\delphi\Bin" />
+<define name="#fpc" de_code_autodetect="202" value="C:\Lang\lazarus\fpc\3.0.2\bin\i386-win32\fpc.exe" />
+<define name="#pascalabc" de_code_autodetect="205" value="C:\Lang\pascalabc\pabcnetcclear.exe" />
+<define name="#bpc" de_code_autodetect="201" value="#env:comspec /C ..\bpc.cmd" />
+
+<define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
+<define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
+<define name="#unreal_engine4" de_code_autodetect="605" value="C:\Dev\UE_4.24\Engine\Binaries\DotNET\AutomationTool.exe" />
+
+<de code="101" enabled="0" />
+<de code="102" enabled="0" />
+<de code="103" enabled="0" />
+<de code="104" enabled="0" />
+<de code="105" enabled="0" />
+<de code="106" enabled="0" />
+<de code="113" enabled="0" />
+<de code="120" enabled="0" />
+<de code="201" enabled="0" />
+<de code="202" enabled="0" />
+<de code="203" enabled="0" />
+<de code="204" enabled="0" />
+<de code="205" enabled="0" />
+<de code="301" enabled="0" />
+<de code="302" enabled="0" />
+<de code="401" enabled="0" />
+<de code="402" enabled="0" />
+<de code="403" enabled="0" />
+<de code="404" enabled="0" />
+<de code="406" enabled="0" />
+<de code="407" enabled="0" />
+<de code="501" enabled="0" />
+<de code="502" enabled="0" />
+<de code="503" enabled="0" />
+<de code="504" enabled="0" />
+<de code="505" enabled="0" />
+<de code="506" enabled="0" />
+<de code="507" enabled="0" />
+<de code="509" enabled="0" />
+<de code="510" enabled="0" />
+<de code="602" enabled="0" />
+<de code="604" enabled="0" />
+<de code="605" enabled="0" />
+<de code="651" enabled="0" />
+<de code="652" enabled="0" />
+<de code="653" enabled="0" />
+
+</judge>

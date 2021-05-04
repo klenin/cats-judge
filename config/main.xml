@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<judge>
+
+<include file="config/default.xml"/>
+<include file="config/platform.#platform.xml"/>
+<include file="config/autodetect.xml"/>
+<include file="config/local.xml"/>
+<include file="config/devenv.xml"/>
+<include file="config/platform.#platform.xml"/>
+<include file="config/local_devenv.xml"/>
+
+</judge>

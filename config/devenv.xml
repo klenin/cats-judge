@@ -1,0 +1,440 @@
+<?xml version="1.0"?>
+<judge>
+
+<!-- development environments (de) -->
+<!-- Special: do not compile this file, used for modules -->
+<de
+    code="1"
+    compile=''
+    run=''
+    generate=''
+    check=''
+    enabled="1"/>
+
+<!-- Special: unzip answers -->
+<de
+    code="2"
+    compile=''
+    run='-so:%output_file -ho:1 "#arch_7z" x -so "%full_name" %test_rank.out'
+    generate=''
+    check=''
+    extension='zip'
+    enabled="1"/>
+
+<!-- Special: copy text as an answer -->
+<de
+    code="3"
+    compile='#perl #copy_cat -i "%full_name" -o _cats_output_copy'
+    run='#perl #copy_cat -i _cats_output_copy -o %output_file -m %original_output'
+    generate=''
+    check=''
+    enabled="1"/>
+
+<!-- Special: zip code -->
+<de
+    code="4"
+    compile='"#arch_7z" x "%full_name"'
+    run=''
+    generate=''
+    check=''
+    enabled="0"/>
+
+<!-- Special: CATS::Formal code -->
+<de
+    code="5"
+    compile=''
+    run=''
+    generate=''
+    validate='#perl #formal -from INPUT="%full_name" -validate INPUT="%test_input" %args'
+    check=''
+    enabled="1"/>
+
+<!-- Quiz -->
+<de
+    code="6"
+    compile=''
+    run='#perl #copy_cat -i "%full_name" -m *STDOUT -l %test_rank'
+    extension='quiz'
+    enabled="1"/>
+
+<!-- Cross-platform C/C++ compiler -->
+<de
+    code="101"
+    compile='"#gnu_cpp"#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='cc'/>
+
+<!-- G++ -->
+<de
+    code="102"
+    compile='"#gnu_cpp" -std=c++17#gcc_stack -O3 "%full_name" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='cpp cxx'/>
+
+<!-- Visual C++ -->
+<de
+    code="103"
+    compile='"#ms_cpp" /O2 /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='cpp-vs'/>
+
+<!-- BC 3.1 -->
+<de
+    code="104"
+    compile='#bcc -ml "%full_name"'
+    run='#env:comspec /C "%name.exe"'
+    runfile='%name.exe'
+    generate='#env:comspec /C "%name.exe" %args'
+    validate='#env:comspec /C "%name.exe" "%test_input" %args'
+    check='#env:comspec /C "%name.exe" %checker_args'/>
+
+<!-- GCC C only -->
+<de
+    code="105"
+    compile='"#gnu_c" -x c#gcc_stack -O2 "%full_name" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='c'/>
+
+<!-- CLang -->
+<de
+    code="106"
+    compile='"#clang" "%full_name" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- Visual C++ 2003 compatible -->
+<de
+    code="113"
+    compile='"#ms_cpp" /Dstdext=std /Zc:forScope- /Ox /EHsc /nologo "%full_name" /Fe"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- Rust -->
+<de
+    code="120"
+    compile='"#rust" "%full_name" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- BP -->
+<de
+    code="201"
+    compile='"#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- Free Pascal -->
+<de
+    code="202"
+    compile='"#fpc" -Mobjfpc "%full_name" -o"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='lpr pas pp'/>
+
+<!-- Delphi -->
+<de
+    code="203"
+    compile='"#delphi" "-U#delphi_units" -CC "%full_name"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- Free Pascal in Delphi mode -->
+<de
+    code="204"
+    compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='dpr'/>
+
+<!-- PascalABC.NET -->
+<de
+    code="205"
+    compile='"#pascalabc" "%full_name"'
+    encoding="CP1251"
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- QBasic -->
+<de
+    code="301"
+    compile=''
+    run='#env:comspec /C "#qbasic" /run %full_name'
+    generate=''
+    validate=''
+    check=''
+    extension='qb'/>
+
+<!-- FreeBasic -->
+<de
+    code="302"
+    compile='"#freeBasic" -lang qb %full_name'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='bas'/>
+
+<!-- Java -->
+<de
+    code="401"
+    compile='"#javac" "%full_name"'
+    compile_rename_regexp='is public, should be declared in a file named (\w+\.java)'
+    run='"#java" -Xss64m "%name"'
+    interactor_name='"#java" -Xss64m "Interact"'
+    run_interactive='"#java" -Xss64m "%name"'
+    runfile='%name.class'
+    generate='"#java" -Xmx256m -Xss64m "%name" %args'
+    validate='"#java" -Xmx256m -Xss64m "%name" "%test_input" %args'
+    check='"#java" -Xss64m "%name" %checker_args'
+    extension='java'/>
+
+<!-- C# -->
+<de
+    code="402"
+    compile='"#ms_csc" -out:main.exe "*.cs"'
+    encoding="CP866"
+    run='"main.exe"'
+    run_interactive='"main.exe"'
+    runfile='main.exe'
+    generate='"main.exe" %args'
+    validate='"main.exe" "%test_input" %args'
+    check='"main.exe" %checker_args'
+    extension='cs'/>
+
+<!-- Java + testlib4j.jar -->
+<de
+    code="403"
+    compile='"#javac" "%full_name" -cp testlib4j.jar'
+    run='"#java" -Xss64m "%name"'
+    generate='"#java" -Xss64m "%name" %args'
+    check='"#java" -Xss64m -cp testlib4j.jar;. ru.ifmo.testlib.CheckerFramework %name %checker_args'/>
+
+<!-- The Go Programming Language -->
+<de
+    code="404"
+    compile='"#go" build -o "%name.exe" "%full_name" '
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    runfile='%name.exe'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='go'/>
+
+<!-- Kotlin -->
+<de
+    code="406"
+    compile='"#java" -Xmx256M -Xms32M -noverify -cp #kotlin\lib\kotlin-preloader.jar org.jetbrains.kotlin.preloading.Preloader -cp #kotlin\lib\kotlin-compiler.jar org.jetbrains.kotlin.cli.jvm.K2JVMCompiler "%full_name" -include-runtime -d result.jar'
+    run='"#java" -Xmx256m -Xss64m -jar result.jar'
+    runfile='result.jar'
+    generate='"#java" -Xmx256m -Xss64m -jar result.jar %args'
+    validate='"#java" -Xmx256m -Xss64m -jar result.jar "%test_input" %args'
+    check='"#java" -jar result.jar %checker_args'
+    extension='kt'/>
+
+<!-- .NET Core C# -->
+<de
+    code="407"
+    compile='"#dotnet" publish --nologo -v quiet -o build'
+    compile_precompile='#perl #copy_cat -i "../csharp.csproj" -o csharp.csproj'
+    encoding="CP866"
+    run='"build/csharp.exe"'
+    run_interactive='"build/csharp.exe"'
+    runfile='build/csharp.exe'
+    generate='"build/csharp.exe" %args'
+    validate='"build/csharp.exe" "%test_input" %args'
+    check='"build/csharp.exe" %checker_args'
+    />
+
+<!-- Perl -->
+<de
+    code="501"
+    compile='"#perl" -c "%full_name"'
+    run='"#perl" %full_name'
+    run_interactive='"#perl" %full_name'
+    generate='"#perl" %full_name %args'
+    validate='"#perl" %full_name "%test_input" %args'
+    check='"#perl" %full_name %checker_args'
+    extension='pl'/>
+
+<!-- Python -->
+<de
+    code="502"
+    compile='"#python" -m py_compile "%full_name"'
+    run='"#python" %full_name'
+    run_interactive='"#python" %full_name'
+    generate='"#python" %full_name %args'
+    validate='"#python" %full_name "%test_input" %args'
+    check='"#python" %full_name %checker_args'
+    extension='py'/>
+
+<!-- Haskell -->
+<de
+    code="503"
+    compile='"#haskell" %full_name'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'
+    extension='hs'/>
+
+<!-- Ruby -->
+<de
+    code="504"
+    compile='"#ruby" -c "%full_name"'
+    run='"#ruby" %full_name'
+    run_interactive='"#ruby" %full_name'
+    generate='"#ruby" %full_name %args'
+    validate='"#ruby" %full_name "%test_input" %args'
+    check='"#ruby" %full_name %checker_args'
+    extension='rb'/>
+
+<!-- PHP -->
+<de
+    code="505"
+    compile='"#php" -l "%full_name"'
+    run='"#php" %full_name'
+    run_interactive='"#php" %full_name'
+    generate='#php %full_name %args'
+    validate='"#php" %full_name "%test_input" %args'
+    check='"#php" %full_name %checker_args'
+    extension='php'/>
+
+<!-- Erlang -->
+<de
+    code="506"
+    compile='"#erlang\erlc.exe" "%full_name"'
+    run='"#erlang\erl.exe" -run "%name" -run init stop'
+    runfile='%name.beam'
+    generate='"#erlang\erl.exe" -run "%name" %args -run init stop'
+    validate='"#erlang\erl.exe" -run "%name" "%test_input" -run init stop'
+    check='"#erlang\erl.exe" -run "%name" %checker_args -run init stop'
+    extension='erl'/>
+
+<!-- NodeJS -->
+<de
+    code="507"
+    compile='"#nodejs" -c "%full_name"'
+    run='"#nodejs" "%full_name"'
+    generate='"#nodejs" "%name" %args'
+    validate='"#nodejs" %full_name "%test_input" %args'
+    check='"#nodejs" %full_name %checker_args'
+    extension='js'/>
+
+<!-- SWI Prolog -->
+<de
+    code="509"
+    compile='"#prolog" -q -c "%full_name"'
+    compile_error_flag='ERROR'
+    run='"#prolog" -g main -g halt -l "%full_name"'
+    extension='pro'/>
+
+<!-- PyPy -->
+<de
+    code="510"
+    compile='"#pypy" -m py_compile "%full_name"'
+    run='"#pypy" %full_name'
+    run_interactive='"#pypy" %full_name'
+    generate='"#pypy" %full_name %args'
+    validate='"#pypy" %full_name "%test_input" %args'
+    check='"#pypy" %full_name %checker_args'
+    extension='pypy'/>
+
+<!-- Unity -->
+<de
+    code="602"
+    compile='"#unity" -batchmode -quit -projectPath "project" -nographics -buildWindowsPlayer ./build/main.exe -logFile out.txt'
+    run='./project/build/main.exe -batchmode -nographics'
+    extension=''/>
+
+<!-- OBJ/Python -->
+<de
+    code="604"
+    compile=''
+    run='"#blender" -b scene.blend --python scene.py --python-exit-code 77 -o //output_# -f 1'
+    extension='obj'/>
+
+<!-- Unreal Engine 4 -->
+<de
+    code="605"
+    compile='"#unreal_engine4" BuildCookRun -project="#rootdir\run\Project\Project.uproject" -noP4 -platform=Win64 -clientconfig=Development -cook -build -pak -stage -archive -archivedirectory="#rootdir\run"'
+    run='.\WindowsNoEditor\Project.exe'
+    extension=''/>
+
+<!-- Digital simulator -->
+<de
+    code="651"
+    compile=''
+    run='"#java" -cp C:\Lang\digitalsim\Digital.jar de.neemann.digital.testing.CommandLineTester "%full_name" %input_file'
+    run_exit_code='ignore'
+    extension='dig'/>
+
+<!-- Logisim table -->
+<define name="#jdk11" value="C:\Lang\jdk11\bin\java.exe" />
+<de
+    code="652"
+    compile=''
+    run='"#jdk11" -jar C:\Lang\logisim\logisim.jar -tty table "%full_name"'
+    extension=''/>
+
+<!-- Logisim test vector -->
+<define name="#jdk11" value="C:\Lang\jdk11\bin\java.exe" />
+<de
+    code="653"
+    compile=''
+    run='"#jdk11" -jar C:\Lang\logisim\logisim.jar -testvector main %input_file "%full_name"'
+    extension='circ'/>
+
+</judge>

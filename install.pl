@@ -87,12 +87,12 @@ sub step($&) {
     }
 }
 
-sub step_copy {
+sub my_copy {
     my ($from, $to) = @_;
-    step "Copy $from -> $to", sub {
-        -e $to and maybe_die "Destination already exists: $to";
-        copy($from, $to) or maybe_die $!;
-    };
+    print "\nCopying: $from -> $to" if $opts{verbose};
+    -e $to and maybe_die "Destination already exists: $to";
+    copy($from, $to) or maybe_die $!;
+}
 
 sub load_cfg {
     CATS::Judge::Config->new(root => $FindBin::Bin)->load(file => $CATS::Judge::Config::main);
@@ -236,45 +236,62 @@ step 'Prepare spawner binary', sub {
     unlink $zip_file;
 };
 
-my @p = qw(lib cats-problem CATS);
-step_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p, 'Config.pm'));
+step 'Copy Config.pm', sub {
+    my @p = qw(lib cats-problem CATS);
+    my_copy(File::Spec->catfile(@p, 'Config.pm.template'), File::Spec->catfile(@p, 'Config.pm'));
+};
 
-step_copy('config.xml.template', 'config.xml');
+step 'Copy configuration from templates', sub {
+    for (qw(autodetect local local_devenv)) {
+        my $fn = cfg_file("$_.xml");
+        my_copy("$fn.template", $fn);
+    }
+};
 
-step 'Save configuration', sub {
+sub transform_file {
+    my ($name, $transform_line) = @_;
+    open my $fin, '<', $name or die "Can't open $name: $!";
+    open my $fout, '>', "$name.tmp" or die "Can't open $name.tmp: $!";
+    while (<$fin>) {
+        my $orig = $_;
+        my $result = $transform_line->($_);
+        print $fout $result;
+        print "\n    $orig -> $result" if $opts{verbose} && $result ne $orig;
+    }
+    close $fin;
+    close $fout;
+    copy $name, "$name.bak" or die "backup: $!";
+    rename "$name.tmp", $name or die "rename: $!";
+}
+
+step 'Update configuration', sub {
     @detected_DEs || defined $proxy || defined $platform or return;
-    open my $conf_in, '<', 'config.xml' or die "Can't open config.xml";
-    open my $conf_out, '>', 'config.xml.tmp' or die "Can't open config.xml.tmp";
+
+    transform_file(cfg_file('local.xml'), sub {
+        defined $proxy and s~(\s+proxy=")"~$1$proxy"~ for $_[0];
+        $_[0];
+    });
     my %path_idx;
     $path_idx{$_->{code}} = $_ for @detected_DEs;
-    my $flag = 0;
-    my $sp = $platform ?
-        File::Spec->rel2abs(CATS::Spawner::Platform::get_path($platform)) : undef;
-    while (<$conf_in>) {
-        my $orig = $_;
-        s~(\s+proxy=")"~$1$proxy"~ if defined $proxy;
-        s~(\sname="#spawner"\s+value=")[^"]+"~$1$sp"~ if defined $platform;
-        if (($platform // '') ne 'win32') {
-            s~(\sname="#gcc_stack"\s+value=")[^"]+"~$1"~;
-            s~compile='"#delphi"\s"-U#delphi_units"\s-CC\s"%full_name"'~compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'~;
-
-            # Hack: Use G++ instead of Visual C++
-            s~extension='cpp'~extension='cpp1'~;
-            s~extension='cxx'~extension='cpp cxx'~;
+    transform_file(cfg_file('autodetect.xml'), sub {
+        for ($_[0]) {
+            if (/^<!--.* install.pl -->$/) {
+                s/used/generated/;
+            }
+            elsif (my ($code, $extra) = /de_code_autodetect="(\d+)(?:\.([a-zA-Z]+))?"/) {
+                if (my $de = $path_idx{$code}) {
+                    my $path = $extra ? $de->{extra_paths}->{$extra} : $de->{path};
+                    s/value="[^"]*"/value="$path"/;
+                }
+            }
+            elsif (my ($code_enable) = /<de code="(\d+)" enabled="(?:\d+)"/) {
+                if (my $de = $path_idx{$code_enable}) {
+                    s/enabled="\d+"/enabled="1"/;
+                }
+            }
         }
-
-        $flag = $flag ? $_ !~ m/<!-- END -->/ : $_ =~ m/<!-- This code is touched by install.pl -->/;
-        my ($code, $extra) = /de_code_autodetect="(\d+)(?:\.([a-zA-Z]+))?"/;
-        if ($flag && $code && (my $de = $path_idx{$code})) {
-            my $path = $extra ? $de->{extra_paths}->{$extra} : $de->{path};
-            s/value="[^"]*"/value="$path"/;
-        }
-        print $conf_out $_;
-        print "\n    $orig -> $_" if $opts{verbose} && $orig ne $_;
-    }
-    close $conf_in;
-    close $conf_out;
-    rename 'config.xml.tmp', 'config.xml' or die "rename: $!";
+        $_[0];
+    });
 };
 
 sub parse_xml_file {

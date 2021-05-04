@@ -53,7 +53,7 @@ my $end = q~</judge>~;
 {
     my $c = make_cfg;
     $c->load(
-        src => qq~$default<de code="333" run="aaa"/>$end~,
+        src => qq~$default<de code="333" run="aaa" enabled="1"/>$end~,
         override => { 'DEs.333.run' => 'bbb' });
     is $c->DEs->{333}->{run}, 'bbb', 'override path';
 }
@@ -109,13 +109,13 @@ my $end = q~</judge>~;
     throws_ok { $c->load(src => qq~$default<include file="qqq"/>$end~) } qr/qqq/, 'include bad file';
     $c->load(src => qq~$default
       <judge name="zzz"/>
-      <de code="111" compile="zzz" run="qqq" />
+      <de code="111" compile="zzz" run="qqq" enabled="1" />
       <include file="t/cfg_include.xml" />
       <de code="111" check="zzz#inc 1" />
       $end~);
     is $c->name, 'included', 'include name';
     is_deeply $c->DEs->{111}, {
-        compile => 'bbb', run => 'qqq', check => 'zzzabc 1' }, 'include de';
+        compile => 'bbb', run => 'qqq', check => 'zzzabc 1', enabled => 1 }, 'include de';
 }
 
 {

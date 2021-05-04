@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<judge>
+
+<!-- GCC with address sanitizers and werror. -->
+<de
+    code="107"
+    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=address -Wall -Werror'
+    memory_handicap="-1"
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input"'
+    check='"%name.exe" %checker_args'/>
+
+<!-- GCC with thread sanitizers and werror. -->
+<de
+    code="108"
+    compile='"#gnu_cpp" "%full_name" -o "%name.exe" -fsanitize=thread -Wall -Werror'
+    memory_handicap="-1"
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
+<!-- Delphi -> FPC -->
+<de
+    code="203"
+    compile='"#fpc" -Mdelphi "%full_name" -o"%name.exe"'
+/>
+
+</judge>

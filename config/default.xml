@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<judge
+    name="local-judge"
+    report_file="report.txt"
+    stdout_file="stdout.txt"
+    stderr_file="stderr.txt"
+    sleep_time="2"
+    workdir=""
+    cachedir="cache"
+    solutionsdir="solutions"
+    logdir="log"
+    rundir="run"
+    modulesdir="modules"
+    resultsdir="results"
+    formal_input_fname="formal.input"
+    show_child_stdout="0"
+    save_child_stdout="1"
+    show_child_stderr="0"
+    save_child_stderr="1"
+    cats_url="https://imcs.dvfu.ru/cats"
+    polygon_url="https://polygon.codeforces.com"
+    proxy=""
+    api="DirectDatabase"
+    columns="RVPTMWCO"
+    log_dump_size="200000"
+    runtime_stderr_size="10000"
+    confess=""
+>
+<!-- api: WebApi | DirectDatabase -->
+
+<compile time_limit="30" memory_limit="512" write_limit="128M" />
+
+<default_limits idle_time="1" deadline_add="5" deadline_min="30"/>
+
+<define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
+<define name="#copy_cat" value="../copy_cat.pl"/>
+<define name="#gcc_stack" value=""/>
+<define name="#formal" value="%workdir/lib/cats-problem/CATS/Formal/Formal.pl"/>
+<define name="#spawner_name" value="sp" />
+
+</judge>
