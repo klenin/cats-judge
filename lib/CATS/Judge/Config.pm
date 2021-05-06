@@ -10,10 +10,6 @@ use CATS::Config;
 use CATS::Constants;
 use CATS::Spawner::Platform;
 
-sub cfg_file { File::Spec->catfile('config', $_[0]) }
-
-our $main = cfg_file('main.xml');
-
 sub dir_fields() { qw(cachedir logdir modulesdir solutionsdir resultsdir rundir workdir) }
 sub required_fields() {
     dir_fields, qw(
