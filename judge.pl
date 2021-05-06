@@ -1263,8 +1263,13 @@ sub main_loop {
     log_msg("judge: %s, api: %s, version: %s\n", $judge->name, $cfg->api, $judge->version);
     log_msg("supported DEs: %s\n", join ',', sort { $a <=> $b } keys %{$cfg->DEs});
 
+    my $current_sleep = 0;
     for (my $i = 0; !$cfg->restart_count || $i < $cfg->restart_count; $i++) {
-        sleep $cfg->sleep_time;
+        sleep $current_sleep;
+        $current_sleep =
+            $current_sleep * 2 > $cfg->sleep_time ? $cfg->sleep_time :
+            $current_sleep == 0 ? 1 :
+            $current_sleep * 2;
         $log->rollover;
         syswrite STDOUT, "\b" . (qw(/ - \ |))[$i % 4];
         my $timer = timer_start;
@@ -1277,6 +1282,7 @@ sub main_loop {
             log_msg("pong\n");
         }
         $r or next;
+        $current_sleep = 0;
 
         $current_job_id = $r->{job_id};
         $log->clear_dump;
