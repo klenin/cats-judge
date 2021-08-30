@@ -400,7 +400,7 @@ sub save_input_test_data {
         f => 'api_judge_save_input_test_data',
         problem_id => $problem_id,
         test_rank => $test_rank,
-        input => MIME::Base64::encode_base64($input, ''),
+        input => MIME::Base64::encode_base64($input // '', ''),
         input_size => $input_size,
         hash => $hash,
         sid => $self->{sid},
