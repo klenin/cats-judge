@@ -349,7 +349,7 @@ sub check_input_hash {
             or die "Unsupported hash algorithm $alg";
         my $new_hash_val = $hash_fn->($input);
         $old_hash_val eq $new_hash_val
-            or die "Invalid hash for test $test->{rank}: old=$old_hash_val new=$new_hash_val";
+            or die "Invalid hash for test $test->{rank}: old=$old_hash_val new=$new_hash_val. Check if randseed is set in generator";
         return undef;
     }
     else {
