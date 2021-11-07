@@ -99,6 +99,21 @@ sub update_self {
     1;
 }
 
+sub run_command {
+    my ($r) = @_;
+    my $job_src = $r->{job_src} // '';
+    my @commands = split "\n", $job_src;
+    for my $cmd (@commands) {
+        log_msg("Running: $job_src\n");
+        my $rr = $fu->run([ split /\s+/, $cmd ]);
+        log_msg("O> $_") for @{$rr->stdout};
+        log_msg("E> $_") for @{$rr->stderr};
+        return log_msg("failure: %s\n", $rr->exit_code) if $rr->exit_code;
+    }
+    log_msg("success\n");
+    1;
+}
+
 sub set_name_parts {
     my ($r) = @_;
     (undef, undef, $_->{full_name}, $_->{name}, undef) = split_fname($r->{fname})
@@ -1292,6 +1307,12 @@ sub main_loop {
             $judge->finish_job($r->{job_id}, $updated ? $cats::job_st_finished : $cats::job_st_failed);
             $judge->save_logs($r->{job_id}, $log->get_dump);
             $updated ? exit : next;
+        }
+
+        if ($r->{type} == $cats::job_type_run_command) {
+            $judge->finish_job($r->{job_id}, run_command($r) ? $cats::job_st_finished : $cats::job_st_failed);
+            $judge->save_logs($r->{job_id}, $log->get_dump);
+            next;
         }
 
         my $state = prepare_problem($r);
