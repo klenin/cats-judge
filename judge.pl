@@ -126,8 +126,9 @@ sub get_run_params {
 
     my $is_interactive = $run_info->{method} == $cats::rm_interactive;
     my $is_competititve = $run_info->{method} == $cats::rm_competitive;
+    my $is_comp_modules = $run_info->{method} == $cats::rm_competitive_modules;
 
-    die if !$is_competititve && @$rs != 1;
+    die if !($is_competititve || $is_comp_modules) && @$rs != 1;
 
     my @programs;
 
@@ -135,6 +136,7 @@ sub get_run_params {
     for my $r (@$rs) {
         my %limits = $src_proc->get_limits($r, $problem);
         $time_limit_sum += $limits{time_limit};
+        next if $is_comp_modules;
 
         my $solution_opts;
         if ($is_interactive || $is_competititve) {
@@ -156,7 +158,7 @@ sub get_run_params {
 
     my $deadline_min = $cfg->default_limits->{deadline_min} // 30;
     my $sd = $time_limit_sum + ($cfg->default_limits->{deadline_add} // 5);
-    my $deadline = $is_competititve ? max($sd, $deadline_min) : $sd;
+    my $deadline = $is_competititve || $is_comp_modules ? max($sd, $deadline_min) : $sd;
 
     my $global_opts = {
         deadline => $deadline,
@@ -164,7 +166,7 @@ sub get_run_params {
         stdout => '*null',
     };
 
-    if ($is_interactive || $is_competititve) {
+    if ($is_interactive || $is_competititve || $is_comp_modules) {
         my $i = $run_info->{interactor}
             or return log_msg("No interactor specified in get_run_params\n");
         my %limits = $src_proc->get_limits($run_info->{interactor}, $problem);
@@ -174,7 +176,8 @@ sub get_run_params {
         my $run_cmd = $src_proc->require_property(run => $i, {}) or return;
 
         unshift @programs, CATS::Spawner::Program->new($run_cmd,
-            $is_competititve ? [ scalar @programs ] : [],
+            $is_competititve ? [ scalar @programs ] :
+            $is_comp_modules ? [ map $_->{name_parts}->{full_name}, @$rs ] : [],
             { controller => $is_competititve, idle_time_limit => $deadline - 1, %limits }
         );
     }
@@ -299,6 +302,13 @@ sub get_interactor {
     $interactors[0];
 }
 
+sub _is_group_run {
+    grep $_ == $_[0],
+        ($cats::rm_interactive, $cats::rm_competitive, $cats::rm_competitive_modules)
+}
+
+sub _is_competitive_run { grep $_ == $_[0], ($cats::rm_competitive, $cats::rm_competitive_modules) }
+
 sub prepare_solution_environment {
     my ($pid, $solution_dir, $run_dir, $run_info, $safe) = @_;
 
@@ -306,7 +316,7 @@ sub prepare_solution_environment {
 
     $copy_func->([ @$solution_dir, '*' ], $run_dir) or return;
 
-    if ($run_info->{method} == $cats::rm_interactive || $run_info->{method} == $cats::rm_competitive) {
+    if (_is_group_run($run_info->{method})) {
         my $interactor = $run_info->{interactor} or return;
         if (!$interactor->{legacy}) {
             $copy_func->($problem_cache->source_path($pid, $interactor->{id}, '*'), $run_dir)
@@ -319,11 +329,8 @@ sub prepare_solution_environment {
 
 sub get_run_info {
     my ($run_method) = @_;
-
-    my %p = $run_method == $cats::rm_interactive || $run_method == $cats::rm_competitive ?
-        ( interactor => get_interactor() ) : ();
-
-    { method => $run_method, %p, }
+    my %p = _is_group_run($run_method) ? ( interactor => get_interactor() ) : ();
+    { method => $run_method, %p }
 }
 
 sub validate_test {
@@ -424,7 +431,7 @@ sub prepare_tests {
             $fu->write_to_file($af, $t->{out_file}) or return;
         }
         elsif (defined $t->{std_solution_id}) {
-            if ($problem->{run_method} == $cats::rm_competitive) {
+            if (_is_competitive_run($problem->{run_method})) {
                 return log_msg("run solution in competitive problem not implemented");
             }
 
@@ -651,6 +658,7 @@ sub run_single_test {
 
     for my $req (@$r) {
         push @$test_run_details, { req_id => $req->{id}, test_rank => $p{rank}, checker_comment => '' };
+        # TODO: Copy interactor once after loop.
         prepare_solution_environment($problem->{id},
             [ $cfg->solutionsdir, $req->{id} ], $cfg->rundir, $problem->{run_info}, 1) or return;
     }
@@ -658,7 +666,7 @@ sub run_single_test {
     my $tf = $problem_cache->test_file($problem->{id}, \%p);
     my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
 
-    my $competitive_test_output;
+    my $competitive_test_output = {};
     {
 
         my @run_params = get_run_params($problem, $r, { test_rank => sprintf('%02d', $p{rank}) })
@@ -676,7 +684,7 @@ sub run_single_test {
 
         my $sp_report = $sp->run(@run_params) or return;
         my @report_items = @{$sp_report->items};
-        if ($problem->{run_method} == $cats::rm_interactive || $problem->{run_method} == $cats::rm_competitive) {
+        if (_is_group_run($problem->{run_method} )) {
             my $interactor_report = shift @report_items;
             if (!$interactor_report->ok && $interactor_report->{terminate_reason} != $TR_IDLENESS_LIMIT) {
                 return;
@@ -707,14 +715,14 @@ sub run_single_test {
             }
 
             save_output_prefix($test_run_details->[$i], $problem, $r->[$i])
-                if $problem->{run_method} != $cats::rm_competitive;
+                if !_is_competitive_run($problem->{run_method});
         }
 
         save_output_prefix($competitive_test_output, $problem, $r->[0]) # Controller is always first.
-            if $problem->{run_method} == $cats::rm_competitive;
+            if _is_competitive_run($problem->{run_method});
 
         return $test_run_details
-            if $problem->{run_method} != $cats::rm_competitive && $result != $cats::st_accepted;
+            if !_is_competitive_run($problem->{run_method}) && $result != $cats::st_accepted;
     }
 
     my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
@@ -751,10 +759,11 @@ sub run_single_test {
         };
 
         my $result = $cats::st_accepted;
-        if ($problem->{run_method} == $cats::rm_competitive) {
+        if (_is_competitive_run($problem->{run_method})) {
             return log_msg("competitive checker exit code is not zero (exit code '$sp_report->{exit_code}')\n")
                 if $sp_report->{exit_code} != 0;
             $checker_output or return log_msg("competitive checker stdout is empty\n");
+            $checker_points = '';
             for my $line (split(/[\r\n]+/, $checker_output)) {
                 my @agent_result = split(/\t/, $line);
                 return log_msg("competitive checker stdout bad format\n") if @agent_result < 3;
@@ -764,9 +773,10 @@ sub run_single_test {
                     if $agent < 0 || $agent > @$test_run_details;
 
                 my $agent_verdict = $get_verdict->($agent_result[1]) // return;
-                $result = $agent_verdict if $agent_verdict != $cats::st_accepted;
+                #$result = $agent_verdict if $agent_verdict != $cats::st_accepted;
                 $test_run_details->[$agent]->{result} = $agent_verdict;
                 $test_run_details->[$agent]->{points} = int $agent_result[2];
+                $checker_points .= " $agent_result[2]";
                 $save_comment->($agent, $agent_result[3]) if $agent_result[3];
             }
             0 == grep !defined $_->{result}, @$test_run_details
@@ -860,6 +870,7 @@ sub run_testplan {
     my ($tp, $problem, $requests, %tests_snippet_names) = @_;
     $inserted_details{$_->{id}} = {} for @$requests;
     my $run_verdict = $cats::st_accepted;
+    my $is_competitive = _is_competitive_run($problem->{run_method});
     my $competitive_outputs = {};
     for ($tp->start; $tp->current; ) {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
@@ -874,13 +885,16 @@ sub run_testplan {
             $test_verdict = $details->{result} if $test_verdict == $cats::st_accepted;
             insert_test_run_details(%$details) or return;
             $inserted_details{$details->{req_id}}->{$tp->current} = $details->{result};
-            $judge->set_request_state($requests->[$i], $details->{result}, $current_job_id, %{$requests->[$i]})
-                or return if $problem->{run_method} == $cats::rm_competitive;
+            if ($is_competitive) {
+                $judge->set_request_state(
+                    $requests->[$i], $details->{result}, $current_job_id, %{$requests->[$i]}) or return;
+            }
         }
 
         my $ok = $test_verdict == $cats::st_accepted ? 1 : 0;
         # For a run, set verdict to the lowest ranked non-accepted test verdict.
-        $run_verdict = $test_verdict if !$ok && $tp->current < ($tp->first_failed || 1e10);
+        $run_verdict = $test_verdict
+            if !$ok && $tp->current < ($tp->first_failed || 1e10) && !$is_competitive;
         $tp->set_test_result($ok);
     }
     ($run_verdict, $competitive_outputs);
@@ -1034,7 +1048,7 @@ sub test_solution {
             return $st if !$st || $st != $cats::st_testing;
         }
         my %tests =
-            $problem->{run_method} == $cats::rm_competitive || $r->{type} == $cats::job_type_submission ?
+            _is_competitive_run($problem->{run_method}) || $r->{type} == $cats::job_type_submission ?
             $judge->get_testset('reqs', $r->{id}, 1) : $judge->get_testset('jobs', $r->{job_id});
 
         %tests or do {
@@ -1045,7 +1059,7 @@ sub test_solution {
         my %tests_snippet_names = map { $_->{rank} => $_->{snippet_name} } @$problem_tests;
         my %tp_params = (tests => \%tests);
 
-        if ($problem->{run_method} == $cats::rm_competitive) {
+        if (_is_competitive_run($problem->{run_method})) {
             my $tp = CATS::TestPlan::All->new(%tp_params);
             ($solution_status, my $test_outputs) =
                 run_testplan($tp, $problem, \@run_requests, %tests_snippet_names) or return;
@@ -1338,7 +1352,7 @@ sub main_loop {
                 $r->{split_strategy} = get_split_strategy($r);
                 my $problem = $judge->get_problem($r->{problem_id});
 
-                if ($problem->{run_method} == $cats::rm_competitive ||
+                if (_is_competitive_run($problem->{run_method}) ||
                     $r->{type} == $cats::job_type_submission_part ||
                     $r->{split_strategy}->{method} eq $cats::split_none) {
                         test_problem($r, $problem);
