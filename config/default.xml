@@ -28,7 +28,7 @@
 >
 <!-- api: WebApi | DirectDatabase -->
 
-<compile time_limit="30" memory_limit="512" write_limit="128M" />
+<compile time_limit="30" memory_limit="1024" write_limit="128M" />
 
 <default_limits idle_time="1" deadline_add="5" deadline_min="30"/>
 
