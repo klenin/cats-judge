@@ -90,42 +90,31 @@ sub prepare_redirect {
 
 my $stderr_encoding = $^O eq 'MSWin32' ? 'WINDOWS-1251' : 'UTF-8';
 
-# file, show, save, duplicate_to, encoding
+# file, show, save
 sub _dump_child {
-    my ($self, %p) = @_;
+    my ($self, $globals, %p) = @_;
     my $log = $self->opts->{logger};
+    my $show = $self->opts->{$p{show}} || $globals->{show_output};
+    my $save = $self->opts->{$p{save}} || $globals->{section} || $globals->{save_output};
+    my $duplicate_to = $globals->{duplicate_output};
 
     open(my $fstdout, '<', $self->opts->{$p{file}})
         or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{$p{file}});
 
     my $eol = 0;
     while (<$fstdout>) {
-        $_ = Encode::decode($p{encoding}, $_) if $p{encoding};
-        print STDERR Encode::encode($stderr_encoding, $_) if $self->opts->{$p{show}};
-        $log->dump_write($_) if $self->opts->{$p{save}};
-        ${$p{duplicate_to}} .= $_ if $p{duplicate_to};
+        $_ = Encode::decode($globals->{encoding}, $_) if $globals->{encoding};
+        print STDERR Encode::encode($stderr_encoding, $_) if $show;
+        $log->dump_write($_) if $save;
+        $$duplicate_to .= $_ if $duplicate_to;
         $eol = substr($_, -2, 2) eq '\n';
     }
     if ($eol) {
-        print STDERR "\n" if $self->opts->{$p{show}};
-        $log->dump_write("\n") if $self->opts->{$p{save}};
-        ${$p{duplicate_to}} .= "\n" if $p{duplicate_to};
+        print STDERR "\n" if $show;
+        $log->dump_write("\n") if $save;
+        $$duplicate_to .= "\n" if $duplicate_to;
     }
     1;
-}
-
-sub dump_child_stdout {
-    my ($self, $globals) = @_;
-    $self->_dump_child(
-        file => 'stdout_file', show => 'show_child_stdout', save => 'save_child_stdout',
-        duplicate_to => $globals->{duplicate_output}, encoding => $globals->{encoding});
-}
-
-sub dump_child_stderr {
-    my ($self, $globals) = @_;
-    $self->_dump_child(
-        file => 'stderr_file', show => 'show_child_stderr', save => 'save_child_stderr',
-        duplicate_to => $globals->{duplicate_output}, encoding => $globals->{encoding});
 }
 
 sub _run {
@@ -173,12 +162,17 @@ sub _run {
     $report->exit_code(system($exec_str));
 
     open my $file, '<', $opts->{report}
-        or return $report->error("unable to open report '$opts->{report}': $!")->write_to_log($opts->{logger});
+        or return $report->error("unable to open report '$opts->{report}': $!")->
+            write_to_log($opts->{logger});
 
-    $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n") if $globals->{section};
-    $self->dump_child_stdout($globals) if %stdouts;
-    $self->dump_child_stderr($globals) if %stderrs;
-    $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n") if $globals->{section};
+    $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n")
+        if $globals->{section};
+    $self->_dump_child($globals,
+        file => 'stdout_file', show => 'show_child_stdout', save => 'save_child_stdout') if %stdouts;
+    $self->_dump_child($globals,
+        file => 'stderr_file', show => 'show_child_stderr', save => 'save_child_stderr') if %stderrs;
+    $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n")
+        if $globals->{section};
 
     my $parsed_report = $opts->{json} ?
         $self->parse_json_report($report, $file) :

@@ -84,6 +84,8 @@ sub compile {
 
     my $sp_report = $self->sp->run_single({
         ($opt->{section} ? (section => $cats::log_section_compile) : ()),
+        show_output => 1,
+        save_output => 1,
         encoding => $de->{encoding},
         %limits, %env },
         apply_params($de->{compile}, $name_parts)
