@@ -25,12 +25,23 @@
     log_dump_size="200000"
     runtime_stderr_size="10000"
     confess=""
+    console_encoding="CP866"
 >
 <!-- api: WebApi | DirectDatabase -->
 
 <compile time_limit="30" memory_limit="1024" write_limit="128M" />
 
 <default_limits idle_time="1" deadline_add="5" deadline_min="30"/>
+
+<color
+    child_stdout="bold white"
+    child_stderr="bold white"
+    testing_start="cyan"
+    problem_cached="cyan"
+    install_start="cyan"
+    install_ok="cyan"
+    install_fail="bold white on_red"
+/>
 
 <define name='#checker_args' value='"%test_answer" "%test_output" "%test_input"'/>
 <define name="#copy_cat" value="../copy_cat.pl"/>

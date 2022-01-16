@@ -8,9 +8,11 @@ use Encode;
 use POSIX qw(strftime);
 use File::Spec;
 
+use CATS::ConsoleColor qw();
+
 sub new {
     my ($class) = shift;
-    my $self = { last_line => '', dump => '', dump_size => 0 };
+    my $self = { last_line => '', dump => '', dump_size => 0, color => undef };
     bless $self, $class;
     $self;
 }
@@ -50,11 +52,27 @@ sub add_dump {
     $self->{dump} .= substr($s, 0, $capacity);
 }
 
+sub colored {
+    my ($self, $color) = @_;
+    $self->{color} = $color;
+    $self;
+}
+
 sub msg {
     my ($self, $fmt, @rest) = @_;
     # In case of message with interpolated string containing %.
     my $s = @rest ? sprintf $fmt, @rest : $fmt;
-    syswrite STDOUT, Encode::encode_utf8($s);
+    my $encoded = Encode::encode_utf8($s);
+    if ($self->{color}) {
+        # Aviod spilling color across new line.
+        my ($line, $eol) = $encoded =~ /^(.*)(\r?\n)?\z/;
+        syswrite STDOUT, CATS::ConsoleColor::colored($line, $self->{color});
+        syswrite STDOUT, $eol;
+        $self->{color} = undef;
+    }
+    else {
+        syswrite STDOUT, $encoded;
+    }
     if ($self->{last_line} ne $s) {
         syswrite $self->{file}, Encode::encode_utf8(strftime('%d.%m %H:%M:%S', localtime) . " $s");
         $self->{last_line} = $s;

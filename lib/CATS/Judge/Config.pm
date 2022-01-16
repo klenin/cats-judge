@@ -40,7 +40,15 @@ sub special_fields() { qw(checkers def_DEs defines DEs) }
 sub security_fields() { qw(cats_password) }
 sub compile_fields() { @cats::limits_fields }
 sub default_limits_fields() { qw(deadline_add deadline_min idle_time) }
-sub color_fields() { qw(child_stdout child_stderr) }
+sub color_fields() { qw(
+    child_stderr
+    child_stdout
+    install_fail
+    install_ok
+    install_start
+    problem_cached
+    testing_start
+) }
 sub de_fields() { qw(
     check
     compile

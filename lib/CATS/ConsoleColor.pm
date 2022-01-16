@@ -6,13 +6,18 @@ use warnings;
 use Term::ANSIColor;
 
 use parent qw(Exporter);
-our @EXPORT_OK = qw(colored);
+our @EXPORT_OK = qw(colored maybe_colored);
 
 my $use_color = 0;
 
 sub _no_color {
     ref $_[0] ? shift : pop;
     @_;
+}
+
+sub maybe_colored {
+    my ($text, $color) = @_;
+    $color ? colored($text, $color) : $text;
 }
 
 BEGIN {

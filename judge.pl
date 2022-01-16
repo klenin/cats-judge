@@ -1021,7 +1021,8 @@ sub split_solution {
 sub test_solution {
     my ($r, $problem) = @_;
 
-    log_msg("Testing solution part: $r->{id} for problem: $r->{problem_id}\n");
+    $log->colored($cfg->color->{testing_start})->
+        msg("Testing solution part: $r->{id} for problem: $r->{problem_id}\n");
 
     $problem->{run_info} = get_run_info($problem->{run_method});
 
@@ -1126,7 +1127,8 @@ sub prepare_problem {
     my $state = $cats::st_testing;
     my $is_ready = $problem_cache->is_ready($r->{problem_id});
     if (!$is_ready || $cli->opts->{'force-install'}) {
-        log_msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
+        $log->colored($cfg->color->{install_start})->
+            msg("installing problem $r->{problem_id}%s\n", $is_ready ? ' - forced' : '');
         eval {
             $r->{type} == $cats::job_type_initialize_problem ? 
             initialize_problem($r->{problem_id}) : initialize_problem_wrapper($r->{problem_id});
@@ -1134,12 +1136,13 @@ sub prepare_problem {
             $state = $cats::st_unhandled_error;
             log_msg("error: $@\n") if $@;
         };
-        log_msg(
-            "problem '$r->{problem_id}' " .
-            ($state != $cats::st_unhandled_error ? "installed\n" : "failed to install\n"));
+        $log->colored(
+            $cfg->color->{$state != $cats::st_unhandled_error ? 'install_ok' : 'install_fail'})->
+            msg("problem '%d' %s\n", $r->{problem_id},
+                ($state != $cats::st_unhandled_error ? 'installed' : 'failed to install'));
     }
     else {
-        log_msg("problem '$r->{problem_id}' cached\n");
+        $log->colored($cfg->color->{problem_cached})->msg("problem '$r->{problem_id}' cached\n");
     }
 
     $judge->set_request_state($r, $state, $current_job_id, %$r) if $state == $cats::st_unhandled_error;
@@ -1208,7 +1211,6 @@ sub set_verdict {
 sub test_problem {
     my ($r, $problem) = @_;
 
-    log_msg("test log:\n");
     my $orig_name = $r->{fname};
     sanitize_file_name($r->{fname}) and log_msg("renamed from '$orig_name'\n");
 
