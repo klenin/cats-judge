@@ -125,7 +125,7 @@ sub dump_child_stderr {
     my ($self, $globals) = @_;
     $self->_dump_child(
         file => 'stderr_file', show => 'show_child_stderr', save => 'save_child_stderr',
-        duplicate_to => $globals->{duplicate_stderr}, encoding => $globals->{encoding});
+        duplicate_to => $globals->{duplicate_output}, encoding => $globals->{encoding});
 }
 
 sub _run {
