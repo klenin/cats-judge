@@ -6,6 +6,7 @@ use warnings;
 use Encode qw();
 use JSON::XS qw(decode_json);
 
+use CATS::ConsoleColor qw(colored);
 use CATS::FileUtil;
 use CATS::Spawner::Const ':all';
 
@@ -90,13 +91,14 @@ sub prepare_redirect {
 
 my $stderr_encoding = $^O eq 'MSWin32' ? 'WINDOWS-1251' : 'UTF-8';
 
-# file, show, save
+# file, show, save, color
 sub _dump_child {
     my ($self, $globals, %p) = @_;
     my $log = $self->opts->{logger};
     my $show = $self->opts->{$p{show}} || $globals->{show_output};
     my $save = $self->opts->{$p{save}} || $globals->{section} || $globals->{save_output};
     my $duplicate_to = $globals->{duplicate_output};
+    my $color = $self->opts->{color}->{$p{color}};
 
     open(my $fstdout, '<', $self->opts->{$p{file}})
         or return $log->msg("open failed: '%s' ($!)\n", $self->opts->{$p{file}});
@@ -104,7 +106,10 @@ sub _dump_child {
     my $eol = 0;
     while (<$fstdout>) {
         $_ = Encode::decode($globals->{encoding}, $_) if $globals->{encoding};
-        print STDERR Encode::encode($stderr_encoding, $_) if $show;
+        if ($show) {
+            my $e = Encode::encode($stderr_encoding, $_);
+            print STDERR $color ? colored($e, $color) : $e;
+        }
         $log->dump_write($_) if $save;
         $$duplicate_to .= $_ if $duplicate_to;
         $eol = substr($_, -2, 2) eq '\n';
@@ -168,9 +173,13 @@ sub _run {
     $opts->{logger}->dump_write("$cats::log_section_start_prefix$globals->{section}\n")
         if $globals->{section};
     $self->_dump_child($globals,
-        file => 'stdout_file', show => 'show_child_stdout', save => 'save_child_stdout') if %stdouts;
+        file => 'stdout_file', show => 'show_child_stdout', save => 'save_child_stdout',
+        color => 'child_stdout',
+    ) if %stdouts;
     $self->_dump_child($globals,
-        file => 'stderr_file', show => 'show_child_stderr', save => 'save_child_stderr') if %stderrs;
+        file => 'stderr_file', show => 'show_child_stderr', save => 'save_child_stderr',
+        color => 'child_stderr',
+    ) if %stderrs;
     $opts->{logger}->dump_write("$cats::log_section_end_prefix$globals->{section}\n")
         if $globals->{section};
 
