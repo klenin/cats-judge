@@ -145,6 +145,16 @@
     validate='"%name.exe" "%test_input" %args'
     check='"%name.exe" %checker_args'/>
 
+<!-- Nasm -->
+<de
+    code="130"
+    compile='"#nasm" -f win32 "%full_name" -o "%name.obj" | "#gnu_cpp" "%name.obj" -o "%name.exe"'
+    run='"%name.exe"'
+    run_interactive='"%name.exe"'
+    generate='"%name.exe" %args'
+    validate='"%name.exe" "%test_input" %args'
+    check='"%name.exe" %checker_args'/>
+
 <!-- BP -->
 <de
     code="201"

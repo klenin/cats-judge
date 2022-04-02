@@ -82,5 +82,8 @@ mkdir C:\Lang\digitalsim
 %PBOX_HOME%\bin\wget --output-document %TEMP%\digitalsim.zip https://github.com/hneemann/Digital/releases/download/v0.24/Digital.zip
 %PBOX_HOME%\bin\7za e -oC:\Lang\digitalsim %TEMP%\digitalsim.zip */*.jar
 
+%PBOX_HOME%\bin\wget --output-document %TEMP%\nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-win64.zip
+%PBOX_HOME%\bin\7za e -oC:\Lang\nasm %TEMP%\nasm.zip
+
 rem IDE only, separate GUI action required to install C++
 choco install visualstudio2015community -y --execution-timeout 27000

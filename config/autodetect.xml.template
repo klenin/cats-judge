@@ -33,6 +33,8 @@
 
 <define name="#rust" de_code_autodetect="120" value="C:\Lang\rust\bin\rustc.exe" />
 
+<define name="#nasm" de_code_autodetect="130" value="C:\Lang\nasm\nasm.exe" />
+
 <define name="#delphi" de_code_autodetect="203" value="C:\Lang\delphi\Bin\DCC32.EXE" />
 <define name="#delphi_units" de_code_autodetect="203.units" value="C:\Lang\delphi\Bin" />
 <define name="#fpc" de_code_autodetect="202" value="C:\Lang\lazarus\fpc\3.0.2\bin\i386-win32\fpc.exe" />
@@ -51,6 +53,7 @@
 <de code="106" enabled="0" />
 <de code="113" enabled="0" />
 <de code="120" enabled="0" />
+<de code="130" enabled="0" />
 <de code="201" enabled="0" />
 <de code="202" enabled="0" />
 <de code="203" enabled="0" />
