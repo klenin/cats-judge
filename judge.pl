@@ -104,7 +104,7 @@ sub run_command {
     my $job_src = $r->{job_src} // '';
     my @commands = split "\n", $job_src;
     for my $cmd (@commands) {
-        log_msg("Running: $job_src\n");
+        log_msg("Running:\n$job_src\n");
         my $rr = $fu->run([ split /\s+/, $cmd ]);
         log_msg("O> $_") for @{$rr->stdout};
         log_msg("E> $_") for @{$rr->stderr};
