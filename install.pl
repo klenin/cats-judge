@@ -144,11 +144,12 @@ step 'Detect development environments', sub {
     IPC::Cmd->can_capture_buffer or print ' IPC::Cmd is inadequate, will use emulation';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs();
+    my %de_cache;
     for (globq(File::Spec->catfile($FindBin::Bin, qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;
         next if $name =~ /^(Utils|Base)$/ || $opts{devenv} && $name !~ qr/$opts{devenv}/i;
         require $_;
-        my $d = "CATS::DevEnv::Detector::$name"->new;
+        my $d = "CATS::DevEnv::Detector::$name"->new(cache => \%de_cache);
         printf "    Detecting %s:\n", $d->name;
         for (values %{$d->detect}){
             printf "      %s %-12s %s\n",
@@ -157,8 +158,9 @@ step 'Detect development environments', sub {
             for (sort keys %{$ep}) {
                 printf "        %12s %s\n", $_, $ep->{$_};
             }
-            push @detected_DEs, { path => $_->{path}, code => $d->code, extra_paths => $ep }
-                if $_->{preferred};
+            $_->{preferred} or next;
+            $de_cache{$name} = { path => $_->{path}, code => $d->code, extra_paths => $ep };
+            push @detected_DEs, $de_cache{$name};
         }
     }
 };
