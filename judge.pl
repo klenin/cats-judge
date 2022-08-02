@@ -1250,7 +1250,7 @@ sub generate_snippets {
 
     # TODO: move to select_request
     my $snippets = $judge->get_problem_snippets($r->{problem_id});
-    my $tags = $judge->get_problem_tags($r->{problem_id}, $r->{contest_id}) // '';
+    my $tags = $judge->get_problem_tags($r->{problem_id}, $r->{contest_id}, $r->{account_id}) // '';
     $tags =~ s/\s+//g;
 
     my $generators = {};

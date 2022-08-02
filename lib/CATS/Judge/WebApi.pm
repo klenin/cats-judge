@@ -128,12 +128,13 @@ sub get_problem_snippets {
 }
 
 sub get_problem_tags {
-    my ($self, $pid, $cid) = @_;
+    my ($self, $pid, $cid, $aid) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_get_problem_tags',
         pid => $pid,
         cid => $cid,
+        aid => $aid,
         sid => $self->{sid},
     ]);
 
