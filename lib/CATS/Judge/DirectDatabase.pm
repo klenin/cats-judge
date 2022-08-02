@@ -165,9 +165,9 @@ sub insert_req_details {
     CATS::JudgeDB::insert_req_details($job_id, %$p, judge_id => $self->{id});
 }
 
-sub save_problem_snippet {
+sub save_problem_snippets {
     my ($self, @rest) = @_;
-    CATS::JudgeDB::save_problem_snippet(@rest);
+    CATS::JudgeDB::save_problem_snippets(@rest);
 }
 
 sub save_input_test_data {

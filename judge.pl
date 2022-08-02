@@ -1257,6 +1257,7 @@ sub generate_snippets {
     push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for @$snippets;
 
     my $job_state = $cats::job_st_finished;
+    my $results = {};
     eval {
         for my $gen_id (keys %$generators) {
             my ($ps) = grep $_->{id} == $gen_id, @$problem_sources or die;
@@ -1269,11 +1270,13 @@ sub generate_snippets {
             my $sp_report = $sp->run_single({}, $generate_cmd, [ $tags ]) or die; #TODO limits
 
             for my $sn (@{$generators->{$gen_id}}) {
-                CATS::BinaryFile::load(CATS::FileUtil::fn([$cfg->rundir, $sn]), \my $data);
-                $judge->save_problem_snippet($r->{problem_id}, $r->{contest_id}, $r->{account_id},
-                    $sn, $data) or die;
+                CATS::BinaryFile::load(CATS::FileUtil::fn([ $cfg->rundir, $sn ]), \my $data);
+                $results->{$sn} = $data;
             }
+            log_msg("Generated: %s\n", join ', ', @{$generators->{$gen_id}});
         }
+        $judge->save_problem_snippets(
+            $r->{problem_id}, $r->{contest_id}, $r->{account_id}, $results) or die;
         1;
     } or do { log_msg($@); $job_state = $cats::job_st_failed; };
 

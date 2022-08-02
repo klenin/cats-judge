@@ -425,16 +425,17 @@ sub save_answer_test_data {
     die "save_answer_test_data: $response->{error}" if $response->{error};
 }
 
-sub save_problem_snippet {
-    my ($self, $problem_id, $contest_id, $account_id, $snippet_name, $text) = @_;
+# snippets: { name => text }
+sub save_problem_snippets {
+    my ($self, $problem_id, $contest_id, $account_id, $snippets) = @_;
 
     my $response = $self->get_json([
-        f => 'api_judge_save_problem_snippet',
+        f => 'api_judge_save_problem_snippets',
         problem_id => $problem_id,
         contest_id => $contest_id,
         account_id => $account_id,
-        snippet_name => $snippet_name,
-        text => $text,
+        (map { +name => $_ } sort keys %$snippets),
+        (map { +text => $snippets->{$_} // '' } sort keys %$snippets),
         sid => $self->{sid},
     ]);
 
