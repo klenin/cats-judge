@@ -731,14 +731,14 @@ sub run_single_test {
         # @$r[0]
         my $snippet_answer = $judge->get_snippet_text(
             $problem->{id}, $r->[0]->{contest_id}, $r->[0]->{account_id}, $p{snippet_name});
-        defined $snippet_answer or return log_msg('Answer snippet not found');
-        my $out = $problem_cache->answer_file($problem->{id}, \%p);
-        $fu->write_to_file($out, $snippet_answer);
+        defined $snippet_answer or return log_msg("Answer snippet not found\n");
+        $fu->write_to_file([ $cfg->rundir, "$p{rank}.ans" ], $snippet_answer) or return;
     }
-
-    my_safe_copy(
-        $problem_cache->answer_file($problem->{id}, \%p),
-        [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
+    else {
+        my_safe_copy(
+            $problem_cache->answer_file($problem->{id}, \%p),
+            [ $cfg->rundir, "$p{rank}.ans" ], $problem->{id}) or return;
+    }
 
     {
         my $checker_result = run_checker(problem => $problem, rank => $p{rank}) or return;
