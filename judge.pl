@@ -730,8 +730,8 @@ sub run_single_test {
     if (defined $p{snippet_name}) {
         # @$r[0]
         my $snippet_answer = $judge->get_snippet_text(
-            $problem->{id}, $r->[0]->{contest_id}, $r->[0]->{account_id}, $p{snippet_name});
-        defined $snippet_answer or return log_msg("Answer snippet not found\n");
+            $problem->{id}, $r->[0]->{contest_id}, $r->[0]->{account_id}, [ $p{snippet_name} ])->[0];
+        defined $snippet_answer or return log_msg("Answer snippet '%s' not found\n", $p{snippet_name});
         $fu->write_to_file([ $cfg->rundir, "$p{rank}.ans" ], $snippet_answer) or return;
     }
     else {

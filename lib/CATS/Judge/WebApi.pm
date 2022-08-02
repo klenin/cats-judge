@@ -143,20 +143,20 @@ sub get_problem_tags {
 }
 
 sub get_snippet_text {
-    my ($self, $problem_id, $contest_id, $account_id, $name) = @_;
+    my ($self, $problem_id, $contest_id, $account_id, $names) = @_;
 
     my $response = $self->get_json([
         f => 'api_judge_get_snippet_text',
         pid => $problem_id,
         cid => $contest_id,
         uid => $account_id,
-        name => $name,
+        (map { +name => $_ } @$names),
         sid => $self->{sid},
     ]);
 
     die "get_snippet_text: $response->{error}" if $response->{error};
 
-    $response->{text};
+    $response->{texts};
 }
 
 sub get_problem_sources {
