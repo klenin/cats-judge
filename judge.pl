@@ -1260,16 +1260,23 @@ sub generate_snippets {
     my $job_state = $cats::job_st_finished;
     my $results = {};
     eval {
-        for my $gen_id (keys %$generators) {
-            my ($ps) = grep $_->{id} == $gen_id, @$problem_sources or die;
+        clear_rundir or die;
 
-            clear_rundir or die;
+        my $old_snippets = $judge->get_snippet_text(
+            $r->{problem_id}, $r->{contest_id}, $r->{account_id}, [ map $_->{name}, @$snippets ]);
+        for (my $i = 0; $i < @$snippets; ++$i) {
+            $fu->write_to_file([ $cfg->rundir, $snippets->[$i]->{name} ], $old_snippets->[$i] // '') or die;
+        }
+
+        for my $gen_id (sort keys %$generators) {
+            my ($ps) = grep $_->{id} == $gen_id, @$problem_sources or die;
 
             $fu->copy($problem_cache->source_path($r->{problem_id}, $gen_id, '*'), $cfg->rundir) or die;
 
             my $generate_cmd = $src_proc->require_property(generate => $ps, { args => '' }) or die;
             my %limits = $src_proc->get_limits($ps, $problem);
-            my $sp_report = $sp->run_single({}, $generate_cmd, [ $tags ], \%limits) or die;
+            my $sp_report = $sp->run_single(
+                { save_output => 1, show_output => 1 }, $generate_cmd, [ $tags ], \%limits) or die;
             $sp_report->ok or die;
 
             for my $sn (@{$generators->{$gen_id}}) {
