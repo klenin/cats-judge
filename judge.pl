@@ -1248,6 +1248,7 @@ sub test_problem {
 sub generate_snippets {
     my ($r) = @_;
 
+    my $problem = $judge->get_problem($r->{problem_id});
     # TODO: move to select_request
     my $snippets = $judge->get_problem_snippets($r->{problem_id});
     my $tags = $judge->get_problem_tags($r->{problem_id}, $r->{contest_id}, $r->{account_id}) // '';
@@ -1267,7 +1268,9 @@ sub generate_snippets {
             $fu->copy($problem_cache->source_path($r->{problem_id}, $gen_id, '*'), $cfg->rundir) or die;
 
             my $generate_cmd = $src_proc->require_property(generate => $ps, { args => '' }) or die;
-            my $sp_report = $sp->run_single({}, $generate_cmd, [ $tags ]) or die; #TODO limits
+            my %limits = $src_proc->get_limits($ps, $problem);
+            my $sp_report = $sp->run_single({}, $generate_cmd, [ $tags ], \%limits) or die;
+            $sp_report->ok or die;
 
             for my $sn (@{$generators->{$gen_id}}) {
                 CATS::BinaryFile::load(CATS::FileUtil::fn([ $cfg->rundir, $sn ]), \my $data);
