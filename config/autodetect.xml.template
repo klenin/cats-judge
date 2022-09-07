@@ -21,6 +21,7 @@
 <define name="#nodejs" de_code_autodetect="507" value="C:\Lang\nodejs\node.exe" />
 <define name="#prolog" de_code_autodetect="509" value="C:\Lang\swipl\bin\swipl.exe" />
 <define name="#pypy" de_code_autodetect="510" value="C:\Lang\pypy\pypy3.exe" />
+<define name="#R_lang" de_code_autodetect="511" value="C:\Lang\r\bin\R.exe" />
 
 <define name="#qbasic" de_code_autodetect="301" value="C:\Lang\QBasic\1.0\QBASIC.EXE" />
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\freebasic\fbc.exe" />
@@ -76,6 +77,7 @@
 <de code="507" enabled="0" />
 <de code="509" enabled="0" />
 <de code="510" enabled="0" />
+<de code="511" enabled="0" />
 <de code="602" enabled="0" />
 <de code="604" enabled="0" />
 <de code="605" enabled="0" />

@@ -59,6 +59,9 @@ choco install erlang -ia "'/D=C:\Lang\erlang'"
 rem Change Prolog's assocated extension, since default .pl conflicts with Perl.
 %TEMP%\swi-prolog.exe /S /EXT=pro /INSTDIR=C:\Lang\swipl
 
+%PBOX_HOME%\bin\wget.exe --output-document %TEMP%\R-win.exe https://mirror.truenetwork.ru/CRAN/bin/windows/base/R-4.2.1-win.exe
+if exist %TEMP%\R-win.exe %TEMP%\R-win.exe /verysilent /dir=C:\Lang\r
+
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 

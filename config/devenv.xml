@@ -402,6 +402,17 @@
     check='"#pypy" %full_name %checker_args'
     extension='pypy'/>
 
+<!-- R -->
+<de
+    code="511"
+    compile='"#R_lang" --slave --vanilla -e "x&lt;-parse(&apos;%full_name&apos;)" LANG=C'
+    run='"#R_lang" --slave --vanilla -f "%full_name" LANG=C'
+    run_interactive='"#R_lang" --slave --vanilla -f "%full_name" LANG=C'
+    generate='"#R_lang" --slave --vanilla -f "%full_name" LANG=C --args %args'
+    validate='"#R_lang" --slave --vanilla -f "%full_name" LANG=C --args "%test_input" %args'
+    check='"#R_lang" --slave --vanilla -f "%full_name" LANG=C --args %checker_args'
+    extension='r'/>
+
 <!-- Unity -->
 <de
     code="602"
