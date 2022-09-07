@@ -9,6 +9,7 @@ use if $^O ne 'MSWin32', 'CATS::DevEnv::Detector::Utils::WindowsStub';
 
 use parent qw(Exporter);
 our @EXPORT = qw(
+    allow_methods
     clear
     debug_log
     drives

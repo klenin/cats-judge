@@ -37,11 +37,12 @@ use constant REGISTRY_PREFIX => qw(
 
 sub registry {
     my ($detector, $reg, $key, $local_path, $file) = @_;
+    $allowed{registry} or return;
     $local_path ||= '';
     for my $reg_prefix (REGISTRY_PREFIX) {
         my $registry = get_registry_obj("$reg_prefix$reg") or next;
         my $folder = $registry->GetValue($key) or next;
-        folder($detector, FS->catdir($folder, $local_path), $file);
+        folder($detector, FS->catdir($folder, $local_path), $file, { force => 1 });
     }
 }
 
@@ -66,6 +67,7 @@ sub get_registry_obj {
 
 sub registry_assoc {
     my ($detector, %p) = @_;
+    $allowed{registry} or return;
     my $assoc = $p{assoc} or die;
     my $local_path = $p{local_path} // '';
     my $file = $p{file} or die;
@@ -73,7 +75,7 @@ sub registry_assoc {
     my $cmd_key = get_registry_obj("HKEY_CLASSES_ROOT/$assoc/Shell/$command/Command") or return;
     my $cmd_line = $cmd_key->GetValue('') or return;
     my ($folder) = ($cmd_line =~ /^\"([^"]+)\\[^\\]+\"/) or return;
-    folder($detector, FS->catdir($folder, $local_path), $file);
+    folder($detector, FS->catdir($folder, $local_path), $file, { force => 1 });
 }
 
 sub SubKeyNames_fixup {
@@ -96,7 +98,7 @@ sub _registry_rec {
     my ($detector, $parent, $local_path, $file, $key, @rest) = @_;
     if (!@rest) {
         my $folder = $parent->GetValue($key) or return;
-        folder($detector, FS->catdir($folder, $local_path), $file);
+        folder($detector, FS->catdir($folder, $local_path), $file, { force => 1 });
         return;
     }
 
@@ -119,6 +121,7 @@ sub _registry_rec {
 
 sub registry_glob {
     my ($detector, $reg_path, $local_path, $file) = @_;
+    $allowed{registry} or return;
     $local_path ||= '';
     my @r = split '/', $reg_path, -1;
     for (REGISTRY_PREFIX) {
@@ -129,6 +132,7 @@ sub registry_glob {
 
 sub program_files {
     my ($detector, $local_path, $file) = @_;
+    $allowed{folder} or return;
     my @keys = (
         'ProgramFilesDir',
         'ProgramFilesDir (x86)'
@@ -140,6 +144,7 @@ sub program_files {
 
 sub drives {
     my ($detector, $folder, $file) = @_;
+    $allowed{folder} or return;
     $folder or die;
     my @drives = getLogicalDrives();
     foreach my $drive (@drives) {
@@ -149,6 +154,7 @@ sub drives {
 
 sub lang_dirs {
     my ($detector, $folder, $subfolder, $file) = @_;
+    $allowed{folder} or return;
     drives($detector, FS->catfile(@$_), $file) for
         [ 'lang', $folder, $subfolder ],
         [ 'langs', $folder, $subfolder ],
@@ -223,6 +229,7 @@ sub add_to_path {
 
 sub pbox {
     my ($detector, $name, $folder, $file) = @_;
+    $allowed{pbox} or return;
     $name or die;
     my $pbox = $ENV{PBOX_HOME} or return;
     my $fname = FS->catfile($pbox, 'registry', $name, ".$name.pbox");

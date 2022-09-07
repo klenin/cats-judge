@@ -33,7 +33,8 @@ Usage:
     $cmd
     $cmd --step <num> ...
         [--bin <download[:version[:remote-repository]]|build>]
-        [--devenv <devenv-filter>] [--modules <modules-filter>]
+        [--devenv <devenv-filter>] [--method <devenv-detection-method>]
+        [--modules <modules-filter>]
         [--verbose] [--force]
     $cmd --help|-?
 USAGE
@@ -45,6 +46,7 @@ GetOptions(
     'step=i@',
     'bin=s',
     'devenv=s',
+    'method=s@',
     'modules=s',
     'verbose',
     'force',
@@ -144,6 +146,7 @@ step 'Detect development environments', sub {
     IPC::Cmd->can_capture_buffer or print ' IPC::Cmd is inadequate, will use emulation';
     print "\n";
     CATS::DevEnv::Detector::Utils::disable_error_dialogs();
+    CATS::DevEnv::Detector::Utils::allow_methods($opts{method}) if $opts{method};
     my %de_cache;
     for (globq(File::Spec->catfile($FindBin::Bin, qw[lib CATS DevEnv Detector *.pm]))) {
         my ($name) = /(\w+)\.pm$/;

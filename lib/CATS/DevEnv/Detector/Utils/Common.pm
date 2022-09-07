@@ -14,6 +14,8 @@ use constant TEMP_SUBDIR => 'tmp';
 
 use parent qw(Exporter);
 our @EXPORT = qw(
+    allow_methods
+    %allowed
     clear
     debug_log
     env_path
@@ -29,6 +31,17 @@ our @EXPORT = qw(
 );
 
 our ($log, $debug);
+our %allowed = (folder => 1, path => 1, pbox => 1, registry => 1);
+
+sub allow_methods {
+    my ($new_allowed) = @_;
+    my @bad = grep !exists $allowed{$_}, @$new_allowed;
+    @bad and die sprintf 'Unknown method %s, must be one of: %s',
+        join(', ', @bad), join(', ', sort keys %allowed);
+    my %n;
+    @n{@$new_allowed} = undef;
+    $allowed{$_} = exists($n{$_}) // 0 for keys %allowed;
+}
 
 sub debug_log { print $log @_, "\n" if $debug; }
 
@@ -54,6 +67,7 @@ sub write_temp_file {
 
 sub which {
     my ($detector, $file) = @_;
+    $allowed{path} or return;
     return if $^O eq 'MSWin32';
     my ($ok, undef, undef, $out) = run(command => [ 'which', $file ]);
     $ok or return;
@@ -65,8 +79,9 @@ sub which {
 
 sub env_path {
     my ($detector, $file) = @_;
+    $allowed{path} or return;
     for my $dir (FS->path) {
-        folder($detector, $dir, $file);
+        folder($detector, $dir, $file, { force => 1 });
     }
 }
 
@@ -79,7 +94,8 @@ sub extension {
 }
 
 sub folder {
-    my ($detector, $folder, $file) = @_;
+    my ($detector, $folder, $file, $opts) = @_;
+    $allowed{folder} || $opts->{force} or return;
     debug_log("folder: $folder / $file");
     for (globq $folder) {
         extension($detector, FS->catfile($_, $file));
