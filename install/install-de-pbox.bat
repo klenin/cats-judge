@@ -65,17 +65,23 @@ if exist %TEMP%\R-win.exe %TEMP%\R-win.exe /verysilent /dir=C:\Lang\r
 mkdir C:\git\
 call pbox install git --homedir=C:\git
 
+if not exist "%PYTHON3_HOME%\python.exe" (
+rem pbox has 3.9.7, this version supports Win7
+%PBOX_HOME%\bin\wget --output-document %TEMP%\python.exe https://github.com/adang1345/PythonWin7/raw/master/3.10.7/python-3.10.7-amd64-full.exe
+%TEMP%\python.exe /quiet InstallAllUsers=1 TargetDir="C:\Lang\python3"
+setx PYTHON3_HOME C:\Lang\python3
+)
+
 rem PYTHON3_HOME is set by pbox installer.
 if exist "%PYTHON3_HOME%\python.exe" (
     rem Update sqlite3 library
-    %PBOX_HOME%\bin\wget --output-document %TEMP%\sqlite3.zip http://www.sqlite.org/2018/sqlite-dll-win64-x64-3250200.zip
+    %PBOX_HOME%\bin\wget --output-document %TEMP%\sqlite3.zip https://www.sqlite.org/2022/sqlite-dll-win64-x64-3390300.zip
     %PBOX_HOME%\bin\7za x -y -o"%PYTHON3_HOME%\DLLs" %TEMP%\sqlite3.zip
     rem Includes numpy
-    "%PYTHON3_HOME%\python.exe" -m pip install pandas sklearn opencv-python matplotlib
+    "%PYTHON3_HOME%\python.exe" -m pip install pandas sklearn opencv-python matplotlib requests
     rem Install cython
     "%PYTHON3_HOME%\python.exe" -m pip install cython
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
-    "%PYTHON3_HOME%\python.exe" -m pip install requests
 )
 
 mkdir C:\Lang\logisim
