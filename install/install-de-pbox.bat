@@ -33,7 +33,9 @@ call pbox install go --homedir=C:\Lang\go
 rem call pbox install dotnet-core-sdk --homedir=C:\Lang\dotnet
 
 rem https://dotnet.microsoft.com/download/dotnet/thank-you/sdk-5.0.200-windows-x64-binaries
-%PBOX_HOME%\bin\wget --output-document %TEMP%\dotnet.zip https://download.visualstudio.microsoft.com/download/pr/761159fa-2843-4abe-8052-147e6c873a78/77658948a9e0f7bc31e978b6bc271ec8/dotnet-sdk-5.0.200-win-x64.zip
+rem %PBOX_HOME%\bin\wget --output-document %TEMP%\dotnet.zip https://download.visualstudio.microsoft.com/download/pr/761159fa-2843-4abe-8052-147e6c873a78/77658948a9e0f7bc31e978b6bc271ec8/dotnet-sdk-5.0.200-win-x64.zip
+rem https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.401-windows-x64-binaries
+%PBOX_HOME%\bin\wget --output-document %TEMP%\dotnet.zip https://download.visualstudio.microsoft.com/download/pr/aa0b6cf3-c5dc-40ff-8b2f-f2970ca7b9e3/5b4a9999ea41ca5897e01a3e0e1accad/dotnet-sdk-6.0.401-win-x64.zip
 %PBOX_HOME%\bin\7za x -oC:\Lang\dotnet %TEMP%\dotnet.zip
 setx DOTNET_ROOT C:\Lang\dotnet
 setx DOTNET_CLI_TELEMETRY_OPTOUT 1
