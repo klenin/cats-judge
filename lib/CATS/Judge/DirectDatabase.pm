@@ -65,6 +65,7 @@ sub set_request_state {
         req_id      => $req->{id},
         state       => $state,
         job_id      => $job_id,
+        account_id  => $p{account_id},
         contest_id  => $p{contest_id},
         problem_id  => $p{problem_id},
         failed_test => $p{failed_test},
