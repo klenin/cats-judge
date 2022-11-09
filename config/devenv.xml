@@ -434,6 +434,13 @@
     run='.\WindowsNoEditor\Project.exe'
     extension=''/>
 
+<!-- LaTeX -->
+<de
+    code="606"
+    compile='"#pdflatex" --interaction=nonstopmode "%full_name"'
+    run='"#latexmk" --pdflatex --jobname=%output_noext "%full_name"'
+    extension='tex'/>
+
 <!-- Digital simulator -->
 <de
     code="651"

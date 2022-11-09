@@ -96,5 +96,9 @@ mkdir C:\Lang\digitalsim
 %PBOX_HOME%\bin\wget --output-document %TEMP%\nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-win64.zip
 %PBOX_HOME%\bin\7za e -oC:\Lang\nasm %TEMP%\nasm.zip
 
+%PBOX_HOME%\bin\wget --output-document %TEMP%\tinytex.zip https://github.com/rstudio/tinytex-releases/releases/download/v2022.11/TinyTeX-v2022.11.zip
+rem 7z from PBOX does not support -spe
+C:\Lang\7-Zip\7z x -spe -oC:\Lang\TinyTeX %TEMP%\tinytex.zip
+
 rem IDE only, separate GUI action required to install C++
 choco install visualstudio2015community -y --execution-timeout 27000

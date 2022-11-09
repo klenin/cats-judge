@@ -46,6 +46,10 @@
 <define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
 <define name="#unreal_engine4" de_code_autodetect="605" value="C:\Dev\UE_4.24\Engine\Binaries\DotNET\AutomationTool.exe" />
 
+<define name="#latex" de_code_autodetect="606" value="C:\Lang\TinyTeX\bin\win32" />
+<define name="#pdflatex" de_code_autodetect="606.pdf" value="#latex\pdflatex.exe" />
+<define name="#latexmk" de_code_autodetect="606.mk" value="#latex\latexmk.exe" />
+
 <de code="101" enabled="0" />
 <de code="102" enabled="0" />
 <de code="103" enabled="0" />
@@ -81,6 +85,7 @@
 <de code="602" enabled="0" />
 <de code="604" enabled="0" />
 <de code="605" enabled="0" />
+<de code="606" enabled="0" />
 <de code="651" enabled="0" />
 <de code="652" enabled="0" />
 <de code="653" enabled="0" />
