@@ -151,6 +151,7 @@ sub get_run_params {
             %$run_cmd_opts,
             input_file => input_or_default($problem->{input_file}),
             output_file => output_or_default($problem->{output_file}),
+            output_noext => ($problem->{output_file} =~ /^(\w+)\.(?:\w+)$/ ? $1 : 'output'),
             original_output => $problem->{output_file},
         }) or return;
         push @programs, CATS::Spawner::Program->new($run_cmd, [], $solution_opts);
@@ -459,8 +460,7 @@ sub prepare_tests {
             ) if $problem->{save_answer_prefix} && !defined $t->{out_file};
         }
         elsif (!defined $t->{snippet_name}) {
-            log_msg("no output file defined for test #$t->{rank}\n");
-            return undef;
+            return log_msg("no output file defined for test #$t->{rank}\n");
         }
     }
 
