@@ -65,6 +65,7 @@ sub make_sp_params {
         ml => $p->{memory_limit},
         wl => $p->{write_limit},
         'active-connection-count' => $p->{active_connections},
+        'active-process-count' => $p->{active_processes},
         (map { +D => "{$_=$p->{env}->{$_}}" } sort keys %{$p->{env} // {}}),
     );
     ($p->{json} // $self->opts->{json} ? '--json' : ()),
@@ -221,6 +222,7 @@ my $terminate_reasons = {
     AbnormalExitProcess => $TR_ABORT,
     TerminatedByController => $TR_CONTROLLER,
     ActiveConnectionCountLimitExceeded => $TR_SECURITY,
+    ActiveProcessesCountLimitExceeded => $TR_SECURITY,
 };
 
 sub mb_to_bytes { defined $_[0] ? int($_[0]  * 1024 * 1024 + 0.5) : undef }
