@@ -354,9 +354,10 @@ Sample JSON report
 =cut
 
     for my $ji (@$json) {
-        my $e = $ji->{SpawnerError};
+        my $errors = $ji->{SpawnerError};
+        $errors = [] if @$errors && $errors->[0] eq '<none>';
         my $tr =  $terminate_reasons->{$ji->{TerminateReason}}
-            or return $report->error("Unknown terminate reason: $ji->{TerminateReason}");
+            or die "Unknown terminate reason: $ji->{TerminateReason}";
         my $lim = $ji->{Limit};
         my $res = $ji->{Result};
         $report->add({
@@ -366,7 +367,7 @@ Sample JSON report
             security => {
                 user_name => $ji->{UserName},
             },
-            errors => (@$e == 0 || $e->[0] eq '<none>' ? [] : $e),
+            errors => $errors,
             limits => {
                 wall_clock_time => $lim->{WallClockTime},
                 user_time => $lim->{Time},
