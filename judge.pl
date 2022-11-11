@@ -165,6 +165,7 @@ sub get_run_params {
         deadline => $deadline,
         idle_time_limit => $cfg->default_limits->{idle_time} // 1,
         stdout => '*null',
+        active_connections => 0,
     };
 
     if ($is_interactive || $is_competititve || $is_comp_modules) {
@@ -678,7 +679,8 @@ sub run_single_test {
                 $TR_TIME_LIMIT     => $cats::st_time_limit_exceeded,
                 $TR_MEMORY_LIMIT   => $cats::st_memory_limit_exceeded,
                 $TR_WRITE_LIMIT    => $cats::st_write_limit_exceeded,
-                $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded
+                $TR_IDLENESS_LIMIT => $cats::st_idleness_limit_exceeded,
+                # $TR_SECURITY       => log_msg("security problem, setting UH\n"),
             }->{$_[0]} // log_msg("unknown terminate reason: $_[0]\n");
         };
 

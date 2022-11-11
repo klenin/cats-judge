@@ -167,6 +167,7 @@ sub write_to_log {
             $TR_IDLENESS_LIMIT => "idleness limit exceeded\n",
             $TR_WRITE_LIMIT => "write limit exceeded\n",
             $TR_MEMORY_LIMIT => "memory limit exceeded\n",
+            $TR_SECURITY => "security violated\n",
         }->{$reason};
 
         if ($msg) {
