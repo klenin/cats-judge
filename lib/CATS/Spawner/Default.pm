@@ -379,6 +379,7 @@ Sample JSON report
                 load_ratio => $lim->{IdlenessProcessorLoad},
             },
             terminate_reason => $tr,
+            original_terminate_reason => $ji->{TerminateReason},
             exit_status => $ji->{ExitStatus},
             exit_code => $ji->{ExitCode} // die('ExitCode not found'),
             consumed => {

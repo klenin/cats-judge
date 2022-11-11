@@ -79,6 +79,7 @@ my $item_schema = {
         load_ratio => OPT | FLOAT,
     },
     terminate_reason => INT,
+    original_terminate_reason => STR,
     exit_status => STR,
     exit_code => INT,
     consumed => {
@@ -167,7 +168,6 @@ sub write_to_log {
             $TR_IDLENESS_LIMIT => "idleness limit exceeded\n",
             $TR_WRITE_LIMIT => "write limit exceeded\n",
             $TR_MEMORY_LIMIT => "memory limit exceeded\n",
-            $TR_SECURITY => "security violated\n",
         }->{$reason};
 
         if ($msg) {
@@ -178,6 +178,9 @@ sub write_to_log {
         }
         elsif ($reason == $TR_ABORT) {
             $log->msg("abnormal termination. code: $item->{exit_code}, status: $item->{exit_code}\n");
+        }
+        elsif ($reason == $TR_SECURITY) {
+            $log->msg("secirity violated: $item->{original_terminate_reason}\n");
         }
         my $c = $item->{consumed};
         $log->msg(sprintf
