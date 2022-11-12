@@ -166,7 +166,7 @@ sub get_run_params {
         idle_time_limit => $cfg->default_limits->{idle_time} // 1,
         stdout => '*null',
         active_connections => 0,
-        active_processes => 1,
+        active_processes => 2,
     };
 
     if ($is_interactive || $is_competititve || $is_comp_modules) {
