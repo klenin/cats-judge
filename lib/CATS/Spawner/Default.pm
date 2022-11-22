@@ -66,6 +66,8 @@ sub make_sp_params {
         wl => $p->{write_limit},
         'active-connection-count' => $p->{active_connections},
         'active-process-count' => $p->{active_processes},
+        u => $p->{user}->{name},
+        p => $p->{user}->{password},
         (map { +D => "{$_=$p->{env}->{$_}}" } sort keys %{$p->{env} // {}}),
     );
     ($p->{json} // $self->opts->{json} ? '--json' : ()),

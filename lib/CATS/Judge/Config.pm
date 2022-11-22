@@ -37,7 +37,7 @@ sub optional_fields() { qw(
     runtime_stderr_size
 ) }
 sub special_fields() { qw(checkers def_DEs defines DEs) }
-sub security_fields() { qw(cats_password) }
+sub security_fields() { qw(cats_password sp_password sp_user) }
 sub compile_fields() { @cats::limits_fields }
 sub default_limits_fields() { qw(deadline_add deadline_min idle_time) }
 sub color_fields() { qw(

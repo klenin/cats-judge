@@ -8,6 +8,8 @@
 
 <security
     cats_password=""
+    sp_user=""
+    sp_password=""
 />
 
 </judge>

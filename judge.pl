@@ -167,6 +167,7 @@ sub get_run_params {
         stdout => '*null',
         active_connections => 0,
         active_processes => 2,
+        ($cfg->sp_user ? (user => { name => $cfg->sp_user, password => $cfg->sp_password, }) : ()),
     };
 
     if ($is_interactive || $is_competititve || $is_comp_modules) {
