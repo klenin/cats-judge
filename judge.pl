@@ -133,6 +133,8 @@ sub get_run_params {
     my @programs;
 
     my $time_limit_sum = 0;
+    my $safe = 1;
+
     for my $r (@$rs) {
         my %limits = $src_proc->get_limits($r, $problem);
         $time_limit_sum += $limits{time_limit};
@@ -147,6 +149,7 @@ sub get_run_params {
                 %limits, input_output_redir($problem->{input_file}, $problem->{output_file}) };
         }
         $r->{cfg_exit_code} = $src_proc->property(run_exit_code => $r->{de_id});
+        $safe &&= $src_proc->property(safe => $r->{de_id});
         my $run_cmd = $src_proc->require_property(run => $r, {
             %$run_cmd_opts,
             input_file => input_or_default($problem->{input_file}),
@@ -167,7 +170,8 @@ sub get_run_params {
         stdout => '*null',
         active_connections => 0,
         active_processes => 2,
-        ($cfg->sp_user ? (user => { name => $cfg->sp_user, password => $cfg->sp_password, }) : ()),
+        ($cfg->sp_user && !$safe ?
+            (user => { name => $cfg->sp_user, password => $cfg->sp_password, }) : ()),
     };
 
     if ($is_interactive || $is_competititve || $is_comp_modules) {

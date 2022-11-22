@@ -66,6 +66,7 @@ sub de_fields() { qw(
     run_exit_code
     run_interactive
     runfile
+    safe
     validate
 ) }
 sub param_fields() { required_fields, optional_fields, special_fields }

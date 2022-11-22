@@ -28,6 +28,7 @@
     run='#perl #copy_cat -i _cats_output_copy -o %output_file -m %original_output'
     generate=''
     check=''
+    safe="1"
     enabled="1"/>
 
 <!-- Special: zip code -->
@@ -55,6 +56,7 @@
     compile=''
     run='#perl #copy_cat -i "%full_name" -m *STDOUT -l %test_rank'
     extension='quiz'
+    safe="1"
     enabled="1"/>
 
 <!-- Cross-platform C/C++ compiler -->
