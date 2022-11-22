@@ -80,7 +80,7 @@ if exist "%PYTHON3_HOME%\python.exe" (
     %PBOX_HOME%\bin\wget --output-document %TEMP%\sqlite3.zip https://www.sqlite.org/2022/sqlite-dll-win64-x64-3390300.zip
     %PBOX_HOME%\bin\7za x -y -o"%PYTHON3_HOME%\DLLs" %TEMP%\sqlite3.zip
     rem Includes numpy
-    "%PYTHON3_HOME%\python.exe" -m pip install pandas sklearn opencv-python matplotlib requests
+    "%PYTHON3_HOME%\python.exe" -m pip install pandas sklearn opencv-python matplotlib requests scikit-image
     rem Install cython
     "%PYTHON3_HOME%\python.exe" -m pip install cython
     copy /y cython.bat "%PYTHON3_HOME%\cython.bat"
