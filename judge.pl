@@ -642,20 +642,20 @@ sub run_checker {
 }
 
 sub save_output_prefix {
-    my ($dest, $problem, $req) = @_;
-    return if $dest->{output_size}; # Runtime error message
-    my $len =
-        $req->{req_save_output_prefix} //
-        $req->{cp_save_output_prefix} //
+    my ($destination, $problem, $request) = @_;
+    return if $destination->{output_size}; # Runtime error message
+    my $output_size =
+        $request->{req_save_output_prefix} //
+        $request->{cp_save_output_prefix} //
         $problem->{save_output_prefix} or return;
-    my $out = output_or_default($problem->{output_file});
-    ($dest->{output}, $dest->{output_size}) = $fu->load_file($out, $len);
+    my $output = output_or_default($problem->{output_file});
+    ($destination->{output}, $destination->{output_size}) = $fu->load_file($output, $output_size);
 }
 
 sub run_single_test {
     my %p = @_;
     my $problem = $p{problem};
-    my $r = $p{requests};
+    my $requests = $p{requests};
 
     log_msg("[test $p{rank}]\n");
 
@@ -663,7 +663,7 @@ sub run_single_test {
 
     my $test_run_details = [];
 
-    for my $req (@$r) {
+    for my $req (@$requests) {
         push @$test_run_details, { req_id => $req->{id}, test_rank => $p{rank}, checker_comment => '' };
         # TODO: Copy interactor once after loop.
         prepare_solution_environment($problem->{id},
@@ -676,7 +676,7 @@ sub run_single_test {
     my $competitive_test_output = {};
     {
 
-        my @run_params = get_run_params($problem, $r, { test_rank => sprintf('%02d', $p{rank}) })
+        my @run_params = get_run_params($problem, $requests, { test_rank => sprintf('%02d', $p{rank}) })
             or return;
 
         my $get_tr_status = sub {
@@ -702,31 +702,36 @@ sub run_single_test {
         for my $i (0 .. $#report_items) {
             my $solution_report = $report_items[$i];
             return if @{$solution_report->{errors}};
-            my $d = $test_run_details->[$i];
 
-            $d->{time_used} = $solution_report->{consumed}->{user_time};
-            $d->{memory_used} = $solution_report->{consumed}->{memory};
-            $d->{disk_used} = $solution_report->{consumed}->{write};
+            my $destination = $test_run_details->[$i];
+            $destination->{time_used} = $solution_report->{consumed}->{user_time};
+            $destination->{memory_used} = $solution_report->{consumed}->{memory};
+            $destination->{disk_used} = $solution_report->{consumed}->{write};
 
             my $tr = $solution_report->{terminate_reason};
+            my $request = $requests->[$i];
+
             if ($tr == $TR_OK || ($problem->{run_method} == $cats::rm_competitive && $tr == $TR_CONTROLLER)) {
-                if (($r->[$i]->{cfg_exit_code} // '') ne 'ignore' && $solution_report->{exit_code} != 0) {
-                    $result = $d->{result} = $cats::st_runtime_error;
+                if (($request->{cfg_exit_code} // '') ne 'ignore' && $solution_report->{exit_code} != 0) {
+                    $result = $destination->{result} = $cats::st_runtime_error;
                 }
             } else {
-                $result = $d->{result} = $get_tr_status->($tr) or return;
+                $result = $destination->{result} = $get_tr_status->($tr) or return;
             }
             if ($result == $cats::st_runtime_error) {
-                $d->{checker_comment} = $solution_report->{exit_code};
+                $destination->{checker_comment} = $solution_report->{exit_code};
                 my $stderr_file = File::Spec->catfile($cfg->rundir, $cfg->stderr_file);
-                ($d->{output}, $d->{output_size}) = $fu->load_file($stderr_file, $cfg->runtime_stderr_size);
+                my $output_size = $problem->{save_error_prefix} //
+                    $cfg->runtime_stderr_size //
+                    0;
+                ($destination->{output}, $destination->{output_size}) = $fu->load_file($stderr_file, $output_size);
             }
 
-            save_output_prefix($test_run_details->[$i], $problem, $r->[$i])
+            save_output_prefix($destination, $problem, $request)
                 if !_is_competitive_run($problem->{run_method});
         }
 
-        save_output_prefix($competitive_test_output, $problem, $r->[0]) # Controller is always first.
+        save_output_prefix($competitive_test_output, $problem, $requests->[0]) # Controller is always first.
             if _is_competitive_run($problem->{run_method});
 
         return $test_run_details
@@ -736,9 +741,9 @@ sub run_single_test {
     my_safe_copy($tf, input_or_default($problem->{input_file}), $problem->{id}) or return;
 
     if (defined $p{snippet_name}) {
-        # @$r[0]
+        # @$requests[0]
         my $snippet_answer = $judge->get_snippet_text(
-            $problem->{id}, $r->[0]->{contest_id}, $r->[0]->{account_id}, [ $p{snippet_name} ])->[0];
+            $problem->{id}, $requests->[0]->{contest_id}, $requests->[0]->{account_id}, [ $p{snippet_name} ])->[0];
         defined $snippet_answer or return log_msg("Answer snippet '%s' not found\n", $p{snippet_name});
         $fu->write_to_file([ $cfg->rundir, "$p{rank}.ans" ], $snippet_answer) or return;
     }
