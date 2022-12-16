@@ -1263,7 +1263,7 @@ sub generate_snippets {
     $tags =~ s/\s+//g;
 
     my $generators = {};
-    push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for @$snippets;
+    push @{$generators->{$_->{generator_id}} //= []}, $_->{name} for grep $_->{generator_id}, @$snippets;
 
     my $job_state = $cats::job_st_finished;
     my $results = {};
