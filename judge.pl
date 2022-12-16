@@ -108,7 +108,7 @@ sub run_command {
         my $rr = $fu->run([ split /\s+/, $cmd ]);
         log_msg("O> $_") for @{$rr->stdout};
         log_msg("E> $_") for @{$rr->stderr};
-        return log_msg("failure: %s\n", $rr->exit_code) if $rr->exit_code;
+        return log_msg("failure: %s\n", $rr->exit_code) if !$rr->ok || $rr->exit_code;
     }
     log_msg("success\n");
     1;
