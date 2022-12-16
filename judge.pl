@@ -250,6 +250,7 @@ sub generate_test {
         my ($ps1) = grep $_->{name_parts}->{name} eq $cmd, @modules
             or return log_msg("Unknown pipe element '%s' for test #%d\n", $cmd, $test->{rank});
         my $pipe_cmd = $src_proc->require_property(generate => $ps1, { args => $args1 }) or return;
+        #TODO: my %pipe_limits = $src_proc->get_limits($ps1, $problem);
         my $prev = $out;
         $out = sprintf('stdout%d.txt', ++$i);
         my $sp_report = $sp->run_single(
@@ -846,6 +847,7 @@ sub compile {
         $r->{fname} = $main->{fname};
         set_name_parts($r);
     } else {
+        # TODO: Prevent name conflicts in competitive runs!!
         $fu->write_to_file([ $cfg->rundir, $r->{name_parts}->{full_name} ], $r->{src}) or return;
     }
 
@@ -875,7 +877,7 @@ sub compile {
 }
 
 sub run_testplan {
-    my ($tp, $problem, $requests, %tests_snippet_names) = @_;
+    my ($tp, $problem, $requests, $tests_snippet_names) = @_;
     $inserted_details{$_->{id}} = {} for @$requests;
     my $run_verdict = $cats::st_accepted;
     my $is_competitive = _is_competitive_run($problem->{run_method});
@@ -883,7 +885,7 @@ sub run_testplan {
     for ($tp->start; $tp->current; ) {
         (my $test_run_details, $competitive_outputs->{$tp->current}) =
             run_single_test(problem => $problem, requests => $requests, rank => $tp->current,
-                snippet_name => $tests_snippet_names{$tp->current}) or return;
+                snippet_name => $tests_snippet_names->{$tp->current}) or return;
         # In case run_single_test returns a list of single undef via log_msg.
         $test_run_details or return;
         my $test_verdict = $cats::st_accepted;
@@ -1071,7 +1073,7 @@ sub test_solution {
         if (_is_competitive_run($problem->{run_method})) {
             my $tp = CATS::TestPlan::All->new(%tp_params);
             ($solution_status, my $test_outputs) =
-                run_testplan($tp, $problem, \@run_requests, %tests_snippet_names) or return;
+                run_testplan($tp, $problem, \@run_requests, \%tests_snippet_names) or return;
             if (my $failed_test = $tp->first_failed) {
                 $r->{failed_test} = $failed_test;
             }
@@ -1087,7 +1089,8 @@ sub test_solution {
                 my $tp = $r->{run_all_tests} ?
                     CATS::TestPlan::ScoringGroups->new(%tp_params) :
                     CATS::TestPlan::ACM->new(%tp_params);
-                my ($run_verdict, undef) = run_testplan($tp, $problem, [ $run_req ], %tests_snippet_names) or return;
+                my ($run_verdict, undef) =
+                    run_testplan($tp, $problem, [ $run_req ], \%tests_snippet_names) or return;
                 if (my $failed_test = $tp->first_failed) {
                     $run_req->{failed_test} = $r->{failed_test} = $failed_test;
                 }
