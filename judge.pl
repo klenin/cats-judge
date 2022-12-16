@@ -1287,11 +1287,12 @@ sub generate_snippets {
                 { save_output => 1, show_output => 1 }, $generate_cmd, [ $tags ], \%limits) or die;
             $sp_report->ok or die;
 
-            for my $sn (@{$generators->{$gen_id}}) {
+            my @snippet_names = @{$generators->{$gen_id}};
+            for my $sn (@snippet_names) {
                 CATS::BinaryFile::load(CATS::FileUtil::fn([ $cfg->rundir, $sn ]), \my $data);
                 $results->{$sn} = $data;
             }
-            log_msg("Generated: %s\n", join ', ', @{$generators->{$gen_id}});
+            log_msg("Generated: %s\n", join ', ', sort @snippet_names);
         }
         $judge->save_problem_snippets(
             $r->{problem_id}, $r->{contest_id}, $r->{account_id}, $results) or die;
