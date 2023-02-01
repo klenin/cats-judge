@@ -16,7 +16,7 @@ set PATH=%PATH%;%FIREBIRD_HOME%;C:\Lang\perl\perl\bin
 setx PATH %PATH%
 call cpanm DBD::Firebird
 
-call pbox install mingw-w64-7 --homedir=C:\Lang\mingw-w64-7
+call pbox install gcc11-64-winlibs --homedir=C:\Lang\gcc11
 call pbox install jdk8 --homedir=C:\Lang\jdk8
 call pbox install kotlin --homedir=C:\Lang\kotlin
 call pbox install python3 --homedir=C:\Lang\python3

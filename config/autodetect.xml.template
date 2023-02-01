@@ -27,8 +27,8 @@
 <define name="#freeBasic" de_code_autodetect="302" value="C:\Lang\freebasic\fbc.exe" />
 
 <define name="#ms_cpp" de_code_autodetect="103" value="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\cl.exe" />
-<define name="#gnu_c" de_code_autodetect="105" value="C:\Lang\mingw-w64-7\bin\gcc.exe" />
-<define name="#gnu_cpp" de_code_autodetect="102" value="C:\Lang\mingw-w64-7\bin\g++.exe" />
+<define name="#gnu_c" de_code_autodetect="105" value="C:\Lang\gcc11\bin\gcc.exe" />
+<define name="#gnu_cpp" de_code_autodetect="102" value="C:\Lang\gcc11\bin\g++.exe" />
 <define name="#bcc" de_code_autodetect="104" value="#env:comspec /C ..\bcc.cmd" />
 <define name="#clang" de_code_autodetect="106" value="C:\Lang\clang\bin\clang++.exe" />
 
