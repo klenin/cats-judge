@@ -754,7 +754,8 @@ sub run_single_test {
 
     {
         my $checker_result = run_checker(problem => $problem, rank => $p{rank}) or return;
-        my ($sp_report, $checker_output, $checker_points) = @$checker_result;
+        my ($sp_checker_report, $checker_output, $checker_points) = @$checker_result;
+        my $checker_exit_code = $sp_checker_report->{exit_code};
 
         my $save_comment = sub {
             #Encode::from_to($$c, 'cp866', 'utf8');
@@ -772,8 +773,8 @@ sub run_single_test {
 
         my $result = $cats::st_accepted;
         if (_is_competitive_run($problem->{run_method})) {
-            return log_msg("competitive checker exit code is not zero (exit code '$sp_report->{exit_code}')\n")
-                if $sp_report->{exit_code} != 0;
+            return log_msg("competitive checker exit code is not zero (exit code '$checker_exit_code')\n")
+                if $checker_exit_code != 0;
             $checker_output or return log_msg("competitive checker stdout is empty\n");
             $checker_points = '';
             for my $line (split(/[\r\n]+/, $checker_output)) {
@@ -796,7 +797,7 @@ sub run_single_test {
         } else {
             $save_comment->(0, $checker_output) if defined $checker_output;
             $result = $test_run_details->[0]->{result} =
-                $get_verdict->($sp_report->{exit_code}) // return;
+                $get_verdict->($checker_exit_code) // return;
             if ($result == $cats::st_accepted && defined $checker_points) {
                 $test_run_details->[0]->{points} = $checker_points;
             }
