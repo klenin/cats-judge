@@ -607,7 +607,7 @@ sub run_checker {
         $checker_cmd = CATS::Judge::Config::apply_params($checker_cmd, $checker_params);
         %limits = $src_proc->get_limits({}, $problem);
     }
-    else {
+    elsif ($problem->{checker_id}) {
         my ($ps) = grep $_->{id} eq $problem->{checker_id}, @$problem_sources;
 
         my_safe_copy(
@@ -624,6 +624,9 @@ sub run_checker {
         %limits = $src_proc->get_limits($ps, $problem);
 
         $checker_cmd = $src_proc->require_property(check => $ps, $checker_params) or return;
+    }
+    else { # No checker defined, assume 'OK'.
+        return [ { exit_code => 0 } ];
     }
 
     my $sp_report = $sp->run_single({ duplicate_output => \my $output },
@@ -1040,9 +1043,11 @@ sub test_solution {
         { ($cats::source_modules{$_->{stype}} || -1) == $cats::checker_module }
         @$problem_sources;
 
-    if (!defined $problem->{checker_id} && !defined $problem->{std_checker}) {
-        log_msg("no checker defined!\n");
-        return;
+    if (
+        $problem->{run_method} != $cats::rm_none &&
+        !defined $problem->{checker_id} && !defined $problem->{std_checker}
+    ) {
+        return log_msg("no checker defined!\n");
     }
 
     my ($is_group_req, @run_requests) = get_run_reqs($r);
