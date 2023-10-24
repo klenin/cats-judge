@@ -52,9 +52,10 @@ sub write_to_file {
 }
 
 sub read_lines {
-    my ($self, $file_name) = @_;
+    my ($self, $file_name, %opts) = @_;
     my $fn = fn($file_name);
-    open my $f, '<', $fn or return $self->log("read_lines failed: '$fn' ($!)\n");
+    open my $f, '<' . ($opts{io} // ''), $fn
+        or return $self->log("read_lines failed: '$fn' ($!)\n");
     [ <$f> ];
 }
 
@@ -68,9 +69,10 @@ sub load_file {
 }
 
 sub read_lines_chomp {
-    my ($self, $file_name) = @_;
+    my ($self, $file_name, %opts) = @_;
     my $fn = fn($file_name);
-    open my $f, '<', $fn  or return $self->log("read_lines_chomp failed: '$fn' ($!)\n");
+    open my $f, '<' . ($opts{io} // ''), $fn
+        or return $self->log("read_lines_chomp failed: '$fn' ($!)\n");
     [ map { chomp; $_ } <$f> ];
 }
 
