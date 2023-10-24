@@ -368,6 +368,7 @@ sub validate_test {
 sub check_input_hash {
     my ($pid, $test, $filename) = @_;
 
+    my $data = $fu->read_lines($filename, io => ':crlf');
     my $data = $fu->read_lines($filename);
     my $input = join '\n', @$data;
 
