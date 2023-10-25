@@ -1160,7 +1160,7 @@ sub prepare_problem {
         };
         $log->colored(
             $cfg->color->{$state != $cats::st_unhandled_error ? 'install_ok' : 'install_fail'})->
-            msg("problem '%d' %s\n", $r->{problem_id},
+            msg("problem '%s' %s\n", $r->{problem_id},
                 ($state != $cats::st_unhandled_error ? 'installed' : 'failed to install'));
     }
     else {

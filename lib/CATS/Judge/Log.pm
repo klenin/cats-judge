@@ -66,8 +66,9 @@ sub msg {
     if ($self->{color}) {
         # Aviod spilling color across new line.
         my ($line, $eol) = $encoded =~ /^(.*)(\r?\n)?\z/;
+        defined $line or confess 'Empty log message';
         syswrite STDOUT, CATS::ConsoleColor::colored($line, $self->{color});
-        syswrite STDOUT, $eol;
+        syswrite STDOUT, $eol if defined $eol;
         $self->{color} = undef;
     }
     else {
