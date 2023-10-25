@@ -365,12 +365,16 @@ sub validate_test {
     $sp_report->ok;
 }
 
+sub read_lines_for_hash {
+    my ($filename) = @_;
+    my $data = $fu->read_lines($filename, io => ':crlf');
+    join '\n', @$data;
+}
+
 sub check_input_hash {
     my ($pid, $test, $filename) = @_;
 
-    my $data = $fu->read_lines($filename, io => ':crlf');
-    my $data = $fu->read_lines($filename);
-    my $input = join '\n', @$data;
+    my $input = read_lines_for_hash($filename);
 
     my $hash = $test->{in_file_hash};
 
@@ -1515,9 +1519,7 @@ elsif ($cli->command =~ /^(clear-cache)$/) {
     $problem_cache->remove_current;
 }
 elsif ($cli->command =~ /^(hash)$/) {
-    my $data = $fu->read_lines($cli->opts->{file});
-    my $input = join '\n', @$data;
-    print '$sha$' . sha1_hex($input);
+    print '$sha$' . sha1_hex(read_lines_for_hash($cli->opts->{file}));
 }
 elsif ($cli->command =~ /^(install|run)$/) {
     for my $rr (@{$cli->opts->{run} || [ '' ]}) {
