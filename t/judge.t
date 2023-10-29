@@ -289,7 +289,7 @@ my $p_hash = FS->catfile($path, 'p_hash');
 
 maybe_subtest 'hash', 4, sub {
     like run_judge(qw(i -p), $p_hash)->stdout->[-3],
-        qr/Invalid hash for test 3.*old=ea4.*new=da4/, 'hash';
+        qr/Invalid hash for test 3.*old=ea4.*new=da4.*Check if randseed is set in generator/, 'hash';
 };
 
 my $p_module = FS->catfile($path, 'p_module');
