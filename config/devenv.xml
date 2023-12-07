@@ -443,6 +443,21 @@
     run='"#latexmk" --pdflatex --jobname=%output_noext "%full_name"'
     extension='tex'/>
 
+<!-- Godot -->
+<de
+    code="607"
+    compile='"#godot" --headless --path "project" --export-release "Windows Desktop" ./../game.exe --quit'
+    run='./game.exe --headless'
+    extension=''/>
+
+
+<de
+    code="608"
+    compile='"#godot_dotnet" --headless --path "project" --export-release "Windows Desktop" ./../game.exe --quit'
+    run='./game.exe --headless'
+    extension=''/>
+
+
 <!-- Digital simulator -->
 <de
     code="651"
