@@ -45,6 +45,8 @@
 <define name="#unity" de_code_autodetect="602" value="C:\Program Files\Unity\Hub\Editor\2018.3.0f2\Editor\Unity.exe" />
 <define name="#blender" de_code_autodetect="604" value="C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" />
 <define name="#unreal_engine4" de_code_autodetect="605" value="C:\Dev\UE_4.24\Engine\Binaries\DotNET\AutomationTool.exe" />
+<define name="#godot" de_code_autodetect="607" value="C:\Program Files\Godot\Godot_v4.1.3-stable_mono_win64_console.exe" />
+<define name="#godot_dotnet" de_code_autodetect="608" value="C:\Program Files\Godot\Godot_v4.1.3-stable_mono_win64_console.exe" /> 
 
 <define name="#latex" de_code_autodetect="606" value="C:\Lang\TinyTeX\bin\win32" />
 <define name="#pdflatex" de_code_autodetect="606.pdf" value="#latex\pdflatex.exe" />
@@ -86,6 +88,8 @@
 <de code="604" enabled="0" />
 <de code="605" enabled="0" />
 <de code="606" enabled="0" />
+<de code="607" enabled="0" />
+<de code="608" enabled="0" />
 <de code="651" enabled="0" />
 <de code="652" enabled="0" />
 <de code="653" enabled="0" />
